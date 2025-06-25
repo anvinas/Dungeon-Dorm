@@ -2,47 +2,45 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
   pull_request:
-    branches:
-      - main
+    branches: [main]
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v2
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: 20.16.0
-
-      - name: Install dependencies
-        run: npm install
+          node-version: 20
+      - run: npm ci
+      - run: npm test --if-present   # optional sanity check
 
   deploy:
     needs: build
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Install sshpass
-        run: sudo apt-get install -y sshpass
-
-      - name: Deploy to DigitalOcean Droplet
-        env:
-          SSH_HOST: ${{ secrets.SSH_HOST }}
-          SSH_KEY: ${{ secrets.SSH_KEY }}
-          SSH_USERNAME: ${{ secrets.SSH_USERNAME }}
+      - name: Add SSH key
         run: |
-          sshpass -p "${SSH_KEY}" ssh -o StrictHostKeyChecking=no ${SSH_USERNAME}@${SSH_HOST} << 'EOF'
-            cd /var/www//html
-            git pull origin main
-            npm install
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H "${{ secrets.SSH_HOST }}" >> ~/.ssh/known_hosts
+
+      - name: Deploy to Droplet
+        env:
+          HOST: ${{ secrets.SSH_HOST }}
+          USER: ${{ secrets.SSH_USERNAME }}
+          SHA: ${{ github.sha }}
+        run: |
+          ssh -i ~/.ssh/id_rsa $USER@$HOST <<'EOF'
+            set -euo pipefail
+            cd /var/www/html
+            git fetch origin
+            git checkout main
+            git reset --hard $SHA        # exact commit that triggered the workflow
+            npm ci --production
             npm run build
-            sudo systemctl restart nginx
+            sudo systemctl reload nginx  # avoid full restart if possible
           EOF
