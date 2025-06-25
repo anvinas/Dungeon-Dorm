@@ -17,13 +17,10 @@ jobs:
         with:
           node-version: 20.16.0
 
-      - name: Install dependencies
+      - name: Install and build project
         run: |
-          cd client
           npm install
           npm run build
-          cd ../
-          npm install
 
   deploy:
     needs: build
@@ -44,15 +41,7 @@ jobs:
           ssh -i ~/.ssh/id_rsa ${SSH_USERNAME}@${SSH_HOST} << 'EOF'
             cd /var/www/html
             git pull origin main
-
-            # Build frontend
-            cd client
             npm install
             npm run build
-            cd ..
-
-            # Install backend dependencies and restart server
-            npm install
-
             pm2 reload server.js || pm2 start server.js --name "mern-app"
           EOF
