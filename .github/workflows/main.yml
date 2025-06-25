@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - main
+  pull_request:
+    branches:
+      - main
 
 jobs:
   build:
@@ -17,31 +20,29 @@ jobs:
         with:
           node-version: 20.16.0
 
-      - name: Install and build project
-        run: |
-          npm install
-          npm run build
+      - name: Install dependencies
+        run: npm install
 
   deploy:
     needs: build
     runs-on: ubuntu-latest
     steps:
-      - name: Set up SSH key
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Install sshpass
+        run: sudo apt-get install -y sshpass
 
       - name: Deploy to DigitalOcean Droplet
         env:
           SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_KEY: ${{ secrets.SSH_KEY }}
           SSH_USERNAME: ${{ secrets.SSH_USERNAME }}
         run: |
-          ssh -i ~/.ssh/id_rsa ${SSH_USERNAME}@${SSH_HOST} << 'EOF'
-            cd /var/www/html
+          sshpass -p "${SSH_KEY}" ssh -o StrictHostKeyChecking=no ${SSH_USERNAME}@${SSH_HOST} << 'EOF'
+            cd /var/www//html
             git pull origin main
             npm install
             npm run build
-            pm2 reload server.js || pm2 start server.js --name "mern-app"
+            sudo systemctl restart nginx
           EOF
