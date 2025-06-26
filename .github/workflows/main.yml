@@ -21,44 +21,23 @@ jobs:
     - name: Install dependencies
       run: npm install
   deploy:
+    needs: build
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v2
-        with:
-          node-version: 20.16.0
-
       - name: Install sshpass
         run: sudo apt-get install -y sshpass
-
-      - name: Deploy Frontend and Backend to DigitalOcean Droplet
+      - name: Deploy to Digital Ocean Droplet
         env:
-          SSH_HOST: ${{ secrets.SSH_HOST }}
-          SSH_KEY: ${{ secrets.SSH_KEY }}
-          SSH_USERNAME: ${{ secrets.SSH_USERNAME }}
+          SSH_HOST: ${{secrets.SSH_HOST}}
+          SSH_KEY: ${{secrets.SSH_KEY}}
+          SSH_USERNAME: ${{secrets.SSH_KEY}}
         run: |
-          sshpass -p "${SSH_KEY}" ssh -o StrictHostKeyChecking=no ${SSH_USERNAME}@${SSH_HOST} << 'EOF'
-
-           # Go to backend directory
-            git pull origin main
-            npm install
-            pm2 restart server
-
-            # Go to frontend directory
+          sshpass -p "${SSH_KEY}" ssh -o  StrictHostKeyChecking=no ${SSH_USERNAME}@${SSH_HOST} <<'EOF'
             cd /var/www/html
-            git pull origin main
-            cd frontend
+            git pull origin master
             npm install
             npm run build
-
-            # Deploy built frontend to NGINX
-            sudo rm -rf /var/www/html/*
-            sudo cp -r dist/* /var/www/html/
-
-            # Restart NGINX
-            sudo systemctl restart nginx
-          EOF
+            systemctl restart nginx
+            EOF
