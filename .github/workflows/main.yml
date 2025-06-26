@@ -44,7 +44,9 @@ jobs:
             npm install
             npm run build
 
-           
+            # Deploy built frontend to NGINX
+            sudo rm -rf /var/www/html/*
+            sudo cp -r dist/* /var/www/html/
 
             # Restart NGINX
             sudo systemctl restart nginx
