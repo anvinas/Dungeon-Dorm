@@ -24,6 +24,7 @@ jobs:
         run: |
           sshpass -p "${SSH_KEY}" ssh -o StrictHostKeyChecking=no "${SSH_USERNAME}@${SSH_HOST}" <<'EOF'
             # remote commands
+            cd /var/www/html
             git pull origin main
             npm install --production
             pm2 restart server
