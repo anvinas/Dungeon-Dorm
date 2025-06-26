@@ -9,13 +9,13 @@ function App() {
             <img src="/img/pixel_bg.png" className={`w-screen max-w-screen h-screen ${styles.bgContainer}`}/>
 
             {/* Left Chain */}
-            <img src="/img/pixel_chain.png" className="h-100 absolute z-2 translate-x-[-50%] translate-y-[-50%] top-[0%] left-[37%] "/>
+            <img src="/img/pixel_chain.png" className={`h-100 absolute z-2 translate-x-[-50%] translate-y-[-50%] top-[0%] left-[37%] ${styles.chain}`}/>
             
             {/* Right Chain */}
-            <img src="/img/pixel_chain.png" className="h-100 absolute z-2 translate-x-[-50%] translate-y-[-50%] top-[0%] left-[63%] " />
+            <img src="/img/pixel_chain.png" className={`h-100 absolute z-2 translate-x-[-50%] translate-y-[-50%] top-[0%] left-[63%] ${styles.chain}`} />
             
             {/* Banner */}
-            <div className="absolute h-fit w-full h-fit translate-x-[50%] translate-y-[-50%]  top-[43%] right-[50%] z-3">
+            <div className={`absolute h-fit w-full h-fit translate-x-[50%] translate-y-[-50%]  top-[43%] right-[50%] z-3 ${styles.banner}`}>
                 <div className="relative w-full h-fit flex items-center justify-center">
                     <img src="/img/wood_texture.png" className="h-120 "/>
                     <div className={`absolute text-4xl font-bold translate-x-[50%] translate-y-[-50%]  top-[12%] right-[50%] ${styles.headerText}`}>Dungeons and Dorm</div>

@@ -20,15 +20,42 @@
     1px 1px 2px rgba(0, 0, 0, 0.3);
 }
 
+.chain{
+  animation: slideDownChain 1s ease-in-out forwards ;
+}
+.banner{
+  animation: slideDownBanner 1s ease-in-out forwards ;
+}
+
+
+@keyframes slideDownBanner {
+  0% {
+    top: -50%;
+  }
+
+  100% {
+    top: 43%; /* Back to normal */
+  }
+}
+@keyframes slideDownChain {
+  0% {
+    top: -50%;
+  }
+
+  100% {
+    top: 0; /* Back to normal */
+  }
+}
+
 
 @keyframes lowerExposure {
   0% {
-    filter: brightness(0.7);
+    filter: brightness(0.6);
   }
   50% {
-    filter: brightness(0.55); /* Lower exposure */
+    filter: brightness(0.45); /* Lower exposure */
   }
   100% {
-    filter: brightness(0.7); /* Back to normal */
+    filter: brightness(0.6); /* Back to normal */
   }
 }
