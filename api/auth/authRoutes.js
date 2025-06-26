@@ -4,7 +4,7 @@ const { registerUser, loginUser } = require ('./authController');
 const verifyToken = require('../global/verifyToken.js');
 
 
-router.post('./register', registerUser);
+router.post('/register', registerUser);
 router.post('/login', loginUser);
 //router.post('/profile', verifyToken, getUserProfile);
 
