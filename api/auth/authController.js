@@ -1,0 +1,60 @@
+const User = require ('./authModel');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+
+exports.registerUser = async (req, res) => {
+    const { gamerTag, email, password} = req.body;
+    try 
+    {
+        const existingUser = await User.findOne({$or: [{email}, {gamerTag}]});
+
+        if(existingUser) return res.status(400).json({error : "Email or gamerTag already in use"});
+
+        const salt = await bcrypt.genSalt(10);
+        const passwordHash = await bcrypt.hash(password, salt);
+
+        const newUser = new User
+        (
+            {
+                gamerTag,
+                email, 
+                passwordHash,
+                level: 1,
+                Bosses: null,
+                Currency: 0,
+                CurrentLoot: [],
+                Character: null
+            }
+        )
+
+        await newUser.save();
+
+        const token = jwt.sign({userId: newUser._id}, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN || '1h'});
+
+        res.json({ token, user: {gamerTag, email}});
+    }
+    catch (err) 
+    {
+        res.status(500).json({error: "Server error"});
+    }
+};
+
+exports.loginUser = async (req, res) => 
+{
+    const {gamerTag, password} = req.body;
+    try 
+    {
+        const user = await User.findOne({gamerTag});
+        if (!user) return  res.status(400).json({ error : "User not found" });
+
+        const passwordMatch = await bcrypt.compare(password, user.passwordHash);
+        if (!isMatch) return res.status(400).json({ error: "Incorrect user/password combination"});
+
+        const token = jwt.sign({ userId: user._id}, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN || '1h'});
+        res.json({token, user: {gamerTag, level}})
+    }
+    catch (err) 
+    {
+        res.status(500).json({ error: "Server error"});
+    }
+};
