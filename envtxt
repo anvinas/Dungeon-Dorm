@@ -2,7 +2,7 @@
 MONGO_URI=mongodb+srv://tu340511:COP4331@largeproject.7s2b9hz.mongodb.net/
 
 # JWT
-JWT_SECRET=TEST
+JWT_SECRET=d5bc8b83bb92adb6c5c2ff72b7c964f3ebe83f600b71470a78242b26aca21185
 JWT_EXPIRES_IN=1h
 
 # Server
