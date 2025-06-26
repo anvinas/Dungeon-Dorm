@@ -1,8 +1,8 @@
 # MongoDB
-MONGO_URI=mongodb+srv://tu340511:COP4331@largeproject.7s2b9hz.mongodb.net/
+MONGO_URI=TEST
 
 # JWT
-JWT_SECRET=d5bc8b83bb92adb6c5c2ff72b7c964f3ebe83f600b71470a78242b26aca21185
+JWT_SECRET=TEST
 JWT_EXPIRES_IN=1h
 
 # Server
