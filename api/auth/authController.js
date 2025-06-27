@@ -31,7 +31,7 @@ exports.registerUser = async (req, res) => {
 
         const token = jwt.sign({userId: newUser._id}, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN || '1h'});
 
-        res.json({ token, user: {gamerTag, email}});
+        res.json({ token, user: {gamerTag: gamerTag, email}});
     }
     catch (err) 
     {
@@ -48,10 +48,10 @@ exports.loginUser = async (req, res) =>
         if (!user) return  res.status(400).json({ error : "User not found" });
 
         const passwordMatch = await bcrypt.compare(password, user.passwordHash);
-        if (!isMatch) return res.status(400).json({ error: "Incorrect user/password combination"});
+        if (!passwordMatch) return res.status(400).json({ error: "Incorrect user/password combination"});
 
         const token = jwt.sign({ userId: user._id}, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN || '1h'});
-        res.json({token, user: {gamerTag, level}})
+        res.json({token, user: {gamerTag: user.gamerTag, level: user.level}})
     }
     catch (err) 
     {
