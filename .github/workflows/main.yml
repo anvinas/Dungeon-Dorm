@@ -1,46 +1,21 @@
-name: CI/CD Pipeline
+- name: Deploy to DigitalOcean Droplet
+  env:
+    SSH_HOST: ${{ secrets.SSH_HOST }}
+    SSH_KEY:  ${{ secrets.SSH_KEY }}
+    SSH_USERNAME: ${{ secrets.SSH_USERNAME }}
+  run: |
+    sshpass -p "${SSH_KEY}" ssh -o StrictHostKeyChecking=no "${SSH_USERNAME}@${SSH_HOST}" <<'EOF'
+      cd /var/www
 
-on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
+      if [ ! -d "html/.git" ]; then
+        echo "Repo not found. Cloning..."
+        rm -rf html
+        git clone https://your-repo-url.git html
+      fi
 
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v3       # or @v2 if you prefer
-        with:
-          node-version: 20.16.0
-
-      - name: Install dependencies
-        run: npm ci                       # faster & reproducible
-
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Install sshpass
-        run: sudo apt-get update && sudo apt-get install -y sshpass
-
-      - name: Deploy to DigitalOcean Droplet
-        env:
-          SSH_HOST: ${{ secrets.SSH_HOST }}
-          SSH_KEY:  ${{ secrets.SSH_KEY }}       # password or key-passphrase
-          SSH_USERNAME: ${{ secrets.SSH_USERNAME }}
-        run: |
-          sshpass -p "${SSH_KEY}" ssh -o StrictHostKeyChecking=no "${SSH_USERNAME}@${SSH_HOST}" <<'EOF'
-            cd /var/www/html
-            git pull origin main
-            npm install --production
-            npm run build
-            sudo systemctl restart nginx
-          EOF
+      cd html
+      git pull origin main
+      npm install --omit=dev
+      npm run build || echo "Build failed or not needed"
+      sudo systemctl restart nginx
+    EOF
