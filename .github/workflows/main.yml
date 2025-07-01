@@ -1,21 +1,34 @@
-- name: Deploy to DigitalOcean Droplet
-  env:
-    SSH_HOST: ${{ secrets.SSH_HOST }}
-    SSH_KEY:  ${{ secrets.SSH_KEY }}
-    SSH_USERNAME: ${{ secrets.SSH_USERNAME }}
-  run: |
-    sshpass -p "${SSH_KEY}" ssh -o StrictHostKeyChecking=no "${SSH_USERNAME}@${SSH_HOST}" <<'EOF'
-      cd /var/www
+name: CI/CD Pipeline
 
-      if [ ! -d "html/.git" ]; then
-        echo "Repo not found. Cloning..."
-        rm -rf html
-        git clone https://your-repo-url.git html
-      fi
+on:
+  push:
+    branches: [main]
 
-      cd html
-      git pull origin main
-      npm install --omit=dev
-      npm run build || echo "Build failed or not needed"
-      sudo systemctl restart nginx
-    EOF
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install sshpass
+        run: sudo apt-get update && sudo apt-get install -y sshpass
+
+      - name: Deploy to DigitalOcean Droplet
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_KEY: ${{ secrets.SSH_KEY }}
+          SSH_USERNAME: ${{ secrets.SSH_USERNAME }}
+        run: |
+          sshpass -p "${SSH_KEY}" ssh -o StrictHostKeyChecking=no "${SSH_USERNAME}@${SSH_HOST}" <<'EOF'
+            cd /var/www
+
+            if [ ! -d "html/.git" ]; then
+              echo "Repo not found. Cloning..."
+              rm -rf html
+              git clone https://github.com/anvinas/Dungeon-Dorm.git html
+            fi
+
+            cd html
+            git pull origin main
+            npm install --omit=dev
+            npm run build || echo "Build failed or not needed"
+            sudo systemctl restart nginx
+          EOF

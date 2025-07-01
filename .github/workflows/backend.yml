@@ -1,22 +1,35 @@
-- name: Deploy to server
-  env:
-    SSH_HOST: ${{ secrets.SSH_HOST }}
-    SSH_KEY: ${{ secrets.SSH_KEY }}
-    SSH_USERNAME: ${{ secrets.SSH_USERNAME }}
-  run: |
-    sshpass -p "${SSH_KEY}" ssh -o StrictHostKeyChecking=no "${SSH_USERNAME}@${SSH_HOST}" <<'EOF'
-      cd /var/www
+name: Backend CI/CD
 
-      if [ ! -d "html/.git" ]; then
-        echo "Repo not found. Cloning..."
-        rm -rf html
-        git clone https://your-repo-url.git html
-      fi
+on:
+  push:
+    branches: [main]
 
-      cd html
-      git pull origin main
-      npm install --omit=dev
+jobs:
+  deploy_backend:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install sshpass
+        run: sudo apt-get update && sudo apt-get install -y sshpass
 
-      # Restart PM2 or start it if it's not already running
-      pm2 restart server || pm2 start index.js --name server
-    EOF
+      - name: Deploy to server
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_KEY: ${{ secrets.SSH_KEY }}
+          SSH_USERNAME: ${{ secrets.SSH_USERNAME }}
+        run: |
+          sshpass -p "${SSH_KEY}" ssh -o StrictHostKeyChecking=no "${SSH_USERNAME}@${SSH_HOST}" <<'EOF'
+            cd /var/www
+
+            if [ ! -d "html/.git" ]; then
+              echo "Repo not found. Cloning..."
+              rm -rf html
+              git clone https://github.com/anvinas/Dungeon-Dorm.git html
+            fi
+
+            cd html
+            git pull origin main
+            npm install --omit=dev
+
+            # Restart PM2 or start the app
+            pm2 restart server || pm2 start server.js --name server
+          EOF
