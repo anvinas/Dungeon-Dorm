@@ -1,17 +1,19 @@
-name: CI/CD Pipeline
+name: Frontend CI/CD
 
 on:
   push:
+    paths:
+      - 'frontend/**'
     branches: [main]
 
 jobs:
-  deploy:
+  deploy_frontend:
     runs-on: ubuntu-latest
     steps:
       - name: Install sshpass
         run: sudo apt-get update && sudo apt-get install -y sshpass
 
-      - name: Deploy to DigitalOcean Droplet
+      - name: Deploy React Frontend to Server
         env:
           SSH_HOST: ${{ secrets.SSH_HOST }}
           SSH_KEY: ${{ secrets.SSH_KEY }}
@@ -20,15 +22,22 @@ jobs:
           sshpass -p "${SSH_KEY}" ssh -o StrictHostKeyChecking=no "${SSH_USERNAME}@${SSH_HOST}" <<'EOF'
             cd /var/www
 
-            if [ ! -d "html/.git" ]; then
-              echo "Repo not found. Cloning..."
-              rm -rf html
-              git clone https://github.com/anvinas/Dungeon-Dorm.git html
+            if [ ! -d "Dungeon-Dorm/.git" ]; then
+              rm -rf Dungeon-Dorm
+              git clone https://github.com/anvinas/Dungeon-Dorm.git
             fi
 
-            cd html
+            cd Dungeon-Dorm
             git pull origin main
-            npm install --omit=dev
-            npm run build || echo "Build failed or not needed"
+
+            cd frontend
+            npm install
+            npm run build
+
+            # Deploy to nginx folder
+            sudo rm -rf /var/www/html/*
+            sudo cp -r build/* /var/www/html/
+
+            # Restart nginx
             sudo systemctl restart nginx
           EOF
