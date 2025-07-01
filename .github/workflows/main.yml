@@ -37,7 +37,7 @@ jobs:
 
             # Deploy to nginx folder
             sudo rm -rf /var/www/html/*
-            sudo cp -r dist/* /var/www/html/
+            sudo cp -r /var/www/Dungeon-Dorm/frontend/dist/* /var/www/html/
 
             # Restart nginx
             sudo systemctl restart nginx
