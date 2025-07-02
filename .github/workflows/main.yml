@@ -14,15 +14,16 @@ jobs:
       - name: Install sshpass
         run: sudo apt-get update && sudo apt-get install -y sshpass
 
-      - name: Deploy React Frontend to Server
+      - name: Deploy Frontend to Server
         env:
           SSH_HOST: ${{ secrets.SSH_HOST }}
-          SSH_KEY: ${{ secrets.SSH_KEY }}
           SSH_USERNAME: ${{ secrets.SSH_USERNAME }}
+          SSH_PASSWORD: ${{ secrets.SSH_KEY }}  # Note: You're using SSH_KEY as a password
         run: |
           sshpass -p "${SSH_KEY}" ssh -o StrictHostKeyChecking=no "${SSH_USERNAME}@${SSH_HOST}" <<'EOF'
             cd /var/www
 
+            # Clone repo if not present
             if [ ! -d "Dungeon-Dorm/.git" ]; then
               rm -rf Dungeon-Dorm
               git clone https://github.com/anvinas/Dungeon-Dorm.git
@@ -35,10 +36,8 @@ jobs:
             npm install
             npm run build
 
-            # Deploy to nginx folder
-            sudo rm -rf /var/www/html/*
-            sudo cp -r /var/www/Dungeon-Dorm/frontend/dist/* /var/www/html/
+            # No need to move files if Nginx serves from here:
+            # /var/www/Dungeon-Dorm/frontend/dist
 
-            # Restart nginx
             sudo systemctl restart nginx
           EOF
