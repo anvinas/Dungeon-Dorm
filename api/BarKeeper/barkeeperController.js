@@ -24,8 +24,7 @@ exports.registerUser = async (req, res) => {
                 Bosses: null,
                 Currency: 0,
                 CurrentLoot: [],
-                Character: null,
-                isEmailVerified: false
+                Character: null
             }
         )
 
@@ -58,27 +57,5 @@ exports.loginUser = async (req, res) =>
     catch (err) 
     {
         res.status(500).json({ error: "Server error"});
-    }
-};
-
-exports.findUserProfile = async (req, res) =>
-{
-    const {gamerTag} = req.body;
-    try
-    {
-        if (gamerTag == null || gamerTag == undefined) return (res.status(400).json({error: "Please enter a valid gamertag"}));
-
-        const allUsers = await User.find({});
-        console.log("All users in DB:");
-        console.log(allUsers);
-
-        const existingUser = await User.findOne({gamerTag}).select('-passwordHash -isEmailVerified -__v');
-        if (!existingUser) return (res.status(404).json({error: "User does not exist"}))
-        
-        res.json({existingUser});
-    }
-    catch (err)
-    {
-        res.status(500).json({error: "Server error"});
     }
 };
