@@ -2,6 +2,9 @@ const User = require ('./authModel');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
+//Dave was here
+
+
 exports.registerUser = async (req, res) => {
     const { gamerTag, email, password} = req.body;
     try 
