@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { registerUser, loginUser } = require ('./authController');
+const { registerUser, loginUser } = require ('./barkeeperController.js');
 const verifyToken = require('../global/verifyToken.js');
 
 
