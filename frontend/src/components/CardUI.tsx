@@ -24,7 +24,7 @@ function CardUI()
 
         try
         {
-            const response = await fetch('http://localhost:5000/api/addcard',
+            const response = await fetch('http://134.122.4.183:5000/api/addcard',
             {method:'POST',body:js,headers:{'Content-Type': 'application/json'}});
 
             let txt = await response.text();
