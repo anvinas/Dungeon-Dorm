@@ -114,7 +114,7 @@ function SignupModal({onClickClose,isOpen}:SignupModalProps) {
               {/* Password */}
               <div className="flex flex-col gap-1">
                 <div className="font-bold">Password</div>
-                <input onChange={(e)=>setSignupData((oldData)=>{oldData.password = e.target.value; return oldData})} placeholder="xxxxxxxxxxxxx" className="border border-gray-400 rounded-sm h-10 pl-5" />
+                <input type="password" onChange={(e)=>setSignupData((oldData)=>{oldData.password = e.target.value; return oldData})} placeholder="xxxxxxxxxxxxx" className="border border-gray-400 rounded-sm h-10 pl-5" />
                 {inputErrorDisplay.password &&<div className="text-red-500 text-sm">Please Input a valid password</div>}           
               </div>
 
