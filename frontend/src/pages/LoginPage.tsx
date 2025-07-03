@@ -1,9 +1,9 @@
 import styles from "./loginPage.module.css"
-
+import LoginModal from "../components/LoginModal.tsx"
 function App() {
   return (
     <div className="relative w-screen h-screen overflow-hidden">
-
+        <LoginModal/>
         {/* BG container */}
         <div className="relative w-screen h-screen ">
             <img src="/img/pixel_bg2.png" className={`w-screen max-w-screen h-screen ${styles.bgContainer}`}/>
