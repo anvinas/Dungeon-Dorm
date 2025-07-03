@@ -5,7 +5,9 @@ const mongoose = require('mongoose');
 const app = express();
 
 app.use(cors({
-  origin: 'https://dungeons-dorms.online',  // your real frontend domain
+  origin: 'https://dungeons-dorms.online',
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
 app.use(express.json());
