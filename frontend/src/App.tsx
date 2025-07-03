@@ -4,14 +4,15 @@ import { BrowserRouter as Router, Routes, Route, } from 'react-router-dom';
 import './App.css';
 
 import LoginPage from './pages/LoginPage';
-import CardPage from './pages/CardPage';
+import PlayPage from './pages/PlayPage';
 
 function App() {
   return (
    <Router>
       <Routes>
         <Route path="/" element={<LoginPage/>} />
-        <Route path="about" element={<CardPage/>} />
+        <Route path="/play" element={<LoginPage/>} />
+        {/* <Route path="about" element={<CardPage/>} /> */}
       </Routes>
       </Router>
   );

@@ -3,7 +3,7 @@ import LoginModal from "../components/LoginModal.tsx"
 import SignupModal from "../components/SignupModal.tsx"
 
 import { useState ,useEffect} from "react"
-function LoginPage() {
+function PlayPage() {
 
   useEffect(()=>{
     //Check if already logged in -> HANDLE LATER
@@ -60,4 +60,4 @@ function LoginPage() {
   )
 }
 
-export default LoginPage
+export default PlayPage

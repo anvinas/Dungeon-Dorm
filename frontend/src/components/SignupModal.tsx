@@ -1,37 +1,42 @@
 // import styles from "./styles/loginModal.module.css"
-import {useState} from "react"
+import {useState,useEffect} from "react"
+import GetServerPath from "../lib/GetServerPath.js"
+import {storeJWT} from "../lib/JWT.js"
 import axios from "axios"
-import GetServerPath from "../lib/GetServerPath.ts"
-import {storeJWT} from "../lib/JWT.ts"
 import { useNavigate } from 'react-router-dom';
+
 
 type LoginData = {
   gamerTag: string;
+  email: string;
   password: string; 
   showPassword:boolean
 };
 
-type LoginModalProps = {
+type SignupModalProps = {
   onClickClose: () => void;
   isOpen: boolean;
 };
 
-function LoginModal({onClickClose,isOpen} : LoginModalProps) {
+function SignupModal({onClickClose,isOpen}:SignupModalProps) {
+
   const navigate = useNavigate();
 
   const [error,setError] = useState("")
   const [inputErrorDisplay,setInputErrorDisplay] = useState({
     gamerTag:false,
+    email:false,
     password:false
   })
-  const [loginData,setLoginData] = useState<LoginData>({
+  const [signupData,setSignupData] = useState<LoginData>({
     gamerTag:"",
+    email:"",
     password:"",
     showPassword:false
   })
 
 
-  const handleLogin = async()=>{
+  const handleSignup = async ()=>{
     let hasErrors= false;
     setError("")
     
@@ -43,12 +48,15 @@ function LoginModal({onClickClose,isOpen} : LoginModalProps) {
     }
 
     //Check input validation 
-    if(loginData.gamerTag == ""){
+    if(signupData.gamerTag == ""){
       tempInputErrorDisplay.gamerTag = true;
       hasErrors = true;
     }
-
-    if(loginData.password == ""){
+    if(signupData.email == ""){
+      tempInputErrorDisplay.email = true;
+      hasErrors = true;
+    }
+    if(signupData.password == ""){
       tempInputErrorDisplay.password = true;
       hasErrors = true;
     }
@@ -57,8 +65,8 @@ function LoginModal({onClickClose,isOpen} : LoginModalProps) {
 
     // Completed Validation!
     try{
-      let response = await axios.post(`${GetServerPath()}/api/auth/login`,{
-        ...loginData
+      let response = await axios.post(`${GetServerPath()}/api/auth/register`,{
+        ...signupData
       })
 
       // Succes
@@ -85,23 +93,28 @@ function LoginModal({onClickClose,isOpen} : LoginModalProps) {
       <div className="bg-white rounded-lg shadow-md min-w-[30%]">
           {/* Header */}
           <div className="flex justify-between bg-blue-400 rounded-t-lg  p-5">
-            <div className="font-semibold text-2xl text-white">Login</div>
+            <div className="font-semibold text-2xl text-white">Signup</div>
             <div className="font-semibold text-2xl text-white hover:cursor-pointer hover:text-red-300" onClick={()=>onClickClose()}>X</div>
           </div>
           <div className="p-10 flex flex-col gap-3">
               
-              {/* Gamertag */}
+              {/* First Name */}
               <div className="flex flex-col gap-1">
-                <div className="font-bold">Gamertag</div>
-                <input onChange={(e)=>setLoginData((oldData)=>{oldData.gamerTag = e.target.value; return oldData})} placeholder="Johny345" className="border border-gray-400 rounded-sm h-10  pl-5" />
-                {inputErrorDisplay.gamerTag &&<div className="text-red-500 text-sm">Please Input a valid gamertag</div>}
+                <div className="font-bold">gamerTag</div>
+                <input onChange={(e)=>setSignupData((oldData)=>{oldData.gamerTag = e.target.value; return oldData})} placeholder="Johny345" className="border border-gray-400 rounded-sm h-10  pl-5" />
+                {inputErrorDisplay.gamerTag &&<div className="text-red-500 text-sm">Please Input a valid gamerTag</div>}
               </div>
-
+              {/* Last Name */}
+              <div className="flex flex-col gap-1">
+                <div className="font-bold">Email</div>
+                <input onChange={(e)=>setSignupData((oldData)=>{oldData.email = e.target.value; return oldData})}placeholder="john@domain.com" className="border border-gray-400 rounded-sm h-10  pl-5" />
+                {inputErrorDisplay.email &&<div className="text-red-500 text-sm">Please Input a valid email</div>}
+              </div>
 
               {/* Password */}
               <div className="flex flex-col gap-1">
                 <div className="font-bold">Password</div>
-                <input onChange={(e)=>setLoginData((oldData)=>{oldData.password = e.target.value; return oldData})} placeholder="xxxxxxxxxxxxx" className="border border-gray-400 rounded-sm h-10 pl-5" />
+                <input onChange={(e)=>setSignupData((oldData)=>{oldData.password = e.target.value; return oldData})} placeholder="xxxxxxxxxxxxx" className="border border-gray-400 rounded-sm h-10 pl-5" />
                 {inputErrorDisplay.password &&<div className="text-red-500 text-sm">Please Input a valid password</div>}           
               </div>
 
@@ -113,13 +126,13 @@ function LoginModal({onClickClose,isOpen} : LoginModalProps) {
           <div className="flex justify-between border-t-1 border-gray-200 p-5"> 
               <div></div>
               <div className="flex gap-3">
-                  <div className="p-5 pt-3 pb-3 rounded-md bg-green-400 hover:bg-green-500 hover:cursor-pointer" onClick={()=>handleLogin()}>Login</div>
+                  <div className="p-5 pt-3 pb-3 rounded-md bg-green-400 hover:bg-green-500 hover:cursor-pointer" onClick={()=>handleSignup()}>Login</div>
               </div>
           </div>
       </div>
     </div>
-    
+ 
   )
 }
 
-export default LoginModal
+export default SignupModal
