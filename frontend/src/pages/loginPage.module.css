@@ -2,7 +2,9 @@
 @import url('https://fonts.googleapis.com/css2?family=Jersey+10&display=swap');
 
 .bgContainer{
-    animation: lowerExposure 2s ease-in-out forwards infinite;
+    animation: lowerExposure 3s ease-in-out forwards infinite;
+    object-fit: cover;
+    overflow:hidden
 }
 
 .headerText{
@@ -21,11 +23,41 @@
 }
 
 .chain{
-  animation: slideDownChain 1s ease-in-out forwards ;
+  transform: translate(-50%, -100%);
+  top: 30px;
+  transform-origin: top center;
+  /* animation: chainSway 6s linear infinite; */
 }
-.banner{
-  animation: slideDownBanner 1s ease-in-out forwards ;
+.bannerContainer{
+  /* First animation */
+  animation: slideDownBanner 1s ease-in-out forwards, 
+             bobbing 7s ease-in-out infinite;
+  animation-delay: 0s, 1s; /* 0s for first, 1s delay for second */
 }
+
+/* .banner{
+  transform-origin: top center;
+  animation: bobbing 6s ease-in infinite;
+  animation-delay: 1s;
+} */
+
+@keyframes chainSway {
+  0%   { transform: translate(-50%, -100%) rotate(0deg); }
+  25%  { transform: translate(-50%, -100%) rotate(0.3deg); }
+  50%  { transform: translate(-50%, -100%) rotate(0deg); }
+  75%  { transform: translate(-50%, -100%) rotate(-0.3deg); }
+  100% { transform: translate(-50%, -100%)rotate(0deg); }
+}
+
+
+@keyframes bobbing {
+  0%   { transform: translateX(0px) rotate(0deg); }
+  20%  { transform: translateX(3px) rotate(0.4deg); }
+  50%  { transform: translateX(-3px) rotate(-0.4deg); }
+  80%  { transform: translateX(3px) rotate(0.4deg); }
+  100% { transform: translateX(0px) rotate(0deg); }
+}
+
 
 
 @keyframes slideDownBanner {
@@ -43,19 +75,19 @@
   }
 
   100% {
-    top: 0; /* Back to normal */
+    top: 1%; /* Back to normal */
   }
 }
 
 
 @keyframes lowerExposure {
   0% {
-    filter: brightness(0.6);
+    filter: brightness(0.7);
   }
   50% {
-    filter: brightness(0.45); /* Lower exposure */
+    filter: brightness(0.35); /* Lower exposure */
   }
   100% {
-    filter: brightness(0.6); /* Back to normal */
+    filter: brightness(0.7); /* Back to normal */
   }
 }
