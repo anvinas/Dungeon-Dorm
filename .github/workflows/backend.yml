@@ -1,20 +1,20 @@
-name: Frontend CI/CD
+name: API CI/CD
 
 on:
   push:
     paths:
-      - 'frontend/**'
+      - 'api/**'
     branches: [main]
   workflow_dispatch:
 
 jobs:
-  deploy_frontend:
+  deploy_backend:
     runs-on: ubuntu-latest
     steps:
       - name: Install sshpass
         run: sudo apt-get update && sudo apt-get install -y sshpass
 
-      - name: Deploy React Frontend to Server
+      - name: Deploy Express Backend to Server
         env:
           SSH_HOST: ${{ secrets.SSH_HOST }}
           SSH_KEY: ${{ secrets.SSH_KEY }}
@@ -23,7 +23,7 @@ jobs:
           sshpass -p "${SSH_KEY}" ssh -o StrictHostKeyChecking=no "${SSH_USERNAME}@${SSH_HOST}" <<'EOF'
             cd /var/www
 
-          if [ ! -d "Dungeon-Dorm/.git" ]; then
+            if [ ! -d "Dungeon-Dorm/.git" ]; then
               rm -rf Dungeon-Dorm
               git clone https://github.com/anvinas/Dungeon-Dorm.git
             fi
@@ -31,12 +31,9 @@ jobs:
             cd Dungeon-Dorm
             git pull origin main
 
-            cd frontend
+            cd backend
             npm install
-            npm run build
 
-            # No need to move files if Nginx serves from here:
-            # /var/www/Dungeon-Dorm/frontend/dist
-
-            sudo systemctl restart nginx
+            # Restart PM2 process or start if not running
+            pm2 restart server || pm2 start server.js --name server
           EOF
