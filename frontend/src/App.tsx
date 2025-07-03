@@ -1,43 +1,18 @@
-
-//import React from 'react';
-import { BrowserRouter as Router, Routes, Route, } from 'react-router-dom';
 import './App.css';
-
 import LoginPage from './pages/LoginPage';
-import PlayPage from './pages/PlayPage';
+import CardPage from './pages/CardPage';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'; // Updated imports
 
 function App() {
   return (
-   <Router>
-      <Routes>
-        <Route path="/" element={<LoginPage/>} />
-        <Route path="/play" element={<PlayPage/>} />
-        {/* <Route path="about" element={<CardPage/>} /> */}
+    <BrowserRouter>
+      <Routes> {/* Replaced <Switch> with <Routes> */}
+        <Route path="/" element={<LoginPage />} /> {/* Updated Route syntax */}
+        <Route path="/cards" element={<CardPage />} /> {/* Updated Route syntax */}
+        <Route path="*" element={<Navigate to="/" />} /> {/* Replaced <Redirect> with <Navigate> and set as catch-all */}
       </Routes>
-      </Router>
+    </BrowserRouter>
   );
 }
 
 export default App;
-
-
-
-
-
-/*
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
-import LoginPage from './pages/LoginPage.tsx'
-
-function App() {
-  return (
-    <>
-      <LoginPage />
-    </>
-  )
-}
-
-export default App
-*/
