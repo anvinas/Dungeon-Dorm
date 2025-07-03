@@ -23,7 +23,7 @@ jobs:
           sshpass -p "${SSH_KEY}" ssh -o StrictHostKeyChecking=no "${SSH_USERNAME}@${SSH_HOST}" <<'EOF'
             cd /var/www
 
-            if [ ! -d "Dungeon-Dorm/.git" ]; then
+          if [ ! -d "Dungeon-Dorm/.git" ]; then
               rm -rf Dungeon-Dorm
               git clone https://github.com/anvinas/Dungeon-Dorm.git
             fi
@@ -35,10 +35,8 @@ jobs:
             npm install
             npm run build
 
-            # Deploy to nginx folder
-            sudo rm -rf /var/www/html/*
-            sudo cp -r /var/www/Dungeon-Dorm/frontend/dist/* /var/www/html/
+            # No need to move files if Nginx serves from here:
+            # /var/www/Dungeon-Dorm/frontend/dist
 
-            # Restart nginx
             sudo systemctl restart nginx
           EOF

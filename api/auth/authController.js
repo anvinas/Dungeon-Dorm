@@ -9,8 +9,9 @@ exports.registerUser = async (req, res) => {
     const { gamerTag, email, password} = req.body;
     try 
     {
+        if(gamerTag == null || gamerTag == undefined)  return res.status(400).json({error : "More data required"});
+        
         const existingUser = await User.findOne({$or: [{email}, {gamerTag}]});
-
         if(existingUser) return res.status(400).json({error : "Email or gamerTag already in use"});
 
         const salt = await bcrypt.genSalt(10);
