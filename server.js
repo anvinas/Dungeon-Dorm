@@ -25,6 +25,9 @@ mongoose.connection.once('open', () => {
 // Routes
 app.use('/api/auth', require('./api/auth/authRoutes'));
 
+// NEW: Barkeeper routes - path from server.js to api/barkeeper/barkeeperRoutes.js
+app.use('/api/barkeeper', require ('./api/barkeeper/barkeeperRoutes'));
+
 // Server
 const PORT = process.env.PORT || 5000;
 const server = app.listen(PORT, () => console.log(`🚀 Server listening on port ${PORT}`));
