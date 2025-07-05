@@ -23,6 +23,8 @@ mongoose.connection.once('open', () => {
 
 // Routes
 app.use('/api/auth', require('./api/auth/authRoutes'));
+app.use('/api/barkeeper', require('./api/barkeeper/barkeeperRoutes'));
+
 
 const PORT = process.env.PORT || 5000;
 const server = app.listen(PORT, () => console.log(`Connected to port ${PORT}`)); 
