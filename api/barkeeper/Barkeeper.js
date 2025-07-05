@@ -8,21 +8,18 @@ const BarKeeperSchema = new mongoose.Schema({
         {
             itemId: { type: mongoose.Schema.Types.ObjectId, ref: 'InventoryItem', required: true },
             price: { type: Number, required: true },
-            // If you want limited stock per item per barkeeper:
-            // currentStock: { type: Number, default: 1 },
-            // maxStock: { type: Number, default: 1 }
         }
     ],
     canFight: { type: Boolean, default: false },
     fightOutcome: { type: String },
-    buyMultiplier: { type: Number, default: 0.5 }, // Multiplier for when player sells to barkeeper (e.g., 0.5 for 50% of baseValue)
+    buyMultiplier: { type: Number, default: 0.5 },
     dialogues: {
         welcome: { type: String },
         buyOption: { type: String },
         buySuccess: { type: String },
         buyFailInsufficientFunds: { type: String },
         sellOption: { type: String },
-        sellSuccess: { type: String },
+        sellSuccess: { type : String },
         sellFailNoItems: { type: String },
         fightChallenge: { type: String },
         kickedOut: { type: String }
@@ -32,6 +29,10 @@ const BarKeeperSchema = new mongoose.Schema({
         description: { type: String }
     },
     environmentTags: [{ type: String }],
-}, { timestamps: true });
+}, {
+    timestamps: true,
+    // *** ADD THIS LINE ***
+    collection: 'BarKeeper' // Explicitly set the collection name to match MongoDB Compass
+});
 
 module.exports = mongoose.model('BarKeeper', BarKeeperSchema);
