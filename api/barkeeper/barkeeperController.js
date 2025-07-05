@@ -1,7 +1,7 @@
 // api/barkeeper/barkeeperController.js
 
 // Import models:
-const BarKeeper = require('./Barkeeper'); // Local to this folder
+const BarKeeper = require('./BarKeeper'); // Local to this folder
 const InventoryItem = require('./InventoryItem'); // Local to this folder
 // IMPORTANT: User model is in api/auth/authModel.js and exported as 'UserProfile'
 const UserProfile = require('../auth/authModel'); // <--- Correct path and variable name for UserProfile
