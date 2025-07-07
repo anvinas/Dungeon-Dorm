@@ -1,3 +1,4 @@
+// api/barkeeper/BarKeeper.js
 const mongoose = require('mongoose');
 
 const BarKeeperSchema = new mongoose.Schema({
@@ -6,19 +7,19 @@ const BarKeeperSchema = new mongoose.Schema({
     shopInventory: [
         {
             itemId: { type: mongoose.Schema.Types.ObjectId, ref: 'InventoryItem', required: true },
-            price: { type: Number, required: true }
+            price: { type: Number, required: true },
         }
     ],
     canFight: { type: Boolean, default: false },
     fightOutcome: { type: String },
-    buyMultiplier: { type: Number, default: 1.0 }, // Multiplier for when player sells to barkeeper
+    buyMultiplier: { type: Number, default: 0.5 },
     dialogues: {
         welcome: { type: String },
         buyOption: { type: String },
         buySuccess: { type: String },
         buyFailInsufficientFunds: { type: String },
         sellOption: { type: String },
-        sellSuccess: { type: String },
+        sellSuccess: { type : String },
         sellFailNoItems: { type: String },
         fightChallenge: { type: String },
         kickedOut: { type: String }
@@ -28,7 +29,10 @@ const BarKeeperSchema = new mongoose.Schema({
         description: { type: String }
     },
     environmentTags: [{ type: String }],
-    // Add any other fields you might want for the barkeeper
-}, { timestamps: true });
+}, {
+    timestamps: true,
+    // *** ADD THIS LINE ***
+    collection: 'BarKeeper' // Explicitly set the collection name to match MongoDB Compass
+});
 
 module.exports = mongoose.model('BarKeeper', BarKeeperSchema);
