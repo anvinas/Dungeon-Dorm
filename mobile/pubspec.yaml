@@ -1,0 +1,28 @@
+name: dungeon_and_dorms
+description: A new Flutter project.
+
+publish_to: 'none' # Remove this line if you plan to publish
+
+version: 1.0.0+1
+
+environment:
+  sdk: ">=3.0.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  mobile: ^1.2.1
+  shared_preferences: ^2.5.3
+
+  # Add any additional packages here
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/pixel_bg2.png
+    - assets/wood_texture2.png
