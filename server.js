@@ -5,7 +5,8 @@ const mongoose = require('mongoose');
 const app = express();
 
 app.use(cors({
-  origin: 'https://dungeons-dorms.online',
+  // origin: 'https://dungeons-dorms.online',
+  origin: 'http://localhost:5173', // or 5173 if you're using Vite
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
