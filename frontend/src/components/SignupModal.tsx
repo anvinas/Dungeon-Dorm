@@ -1,5 +1,5 @@
 // import styles from "./styles/loginModal.module.css"
-import {useState,useEffect} from "react"
+import {useState} from "react"
 import GetServerPath from "../lib/GetServerPath.js"
 import {storeJWT} from "../lib/JWT.js"
 import axios from "axios"
