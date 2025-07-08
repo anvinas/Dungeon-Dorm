@@ -12,6 +12,7 @@ dependencies:
   flutter:
     sdk: flutter
   mobile: ^1.2.1
+  shared_preferences: ^2.5.3
 
   # Add any additional packages here
 

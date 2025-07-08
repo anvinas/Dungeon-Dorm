@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'modal_overlay.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
+
 
 class LoginModal extends StatefulWidget {
   final VoidCallback onClose;
@@ -14,20 +18,40 @@ class _LoginModalState extends State<LoginModal> {
   final _passwordController = TextEditingController();
   String error = '';
 
-  void handleLogin() {
-    final gamerTag = _gamerTagController.text;
-    final password = _passwordController.text;
+  Future<void> handleLogin() async {
+  final gamerTag = _gamerTagController.text.trim();
+  final password = _passwordController.text.trim();
 
-    setState(() => error = '');
+  setState(() => error = '');
 
-    if (gamerTag.isEmpty || password.isEmpty) {
-      setState(() => error = "Please fill out all fields");
-      return;
-    }
-
-    // Simulate login success
-    Navigator.pushReplacementNamed(context, '/play');
+  if (gamerTag.isEmpty || password.isEmpty) {
+    setState(() => error = "Please fill out all fields");
+    return;
   }
+
+  final url = Uri.parse('https://dungeons-dorms.online/api/auth/login');
+  try {
+    final response = await http.post(
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'gamerTag': gamerTag, 'password': password}),
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('jwt_token', data['token']);
+
+      Navigator.pushReplacementNamed(context, '/play');
+    } else {
+      final data = jsonDecode(response.body);
+      setState(() => error = data['error'] ?? 'Login failed');
+    }
+  } catch (e) {
+    setState(() => error = 'Server error. Please try again later.');
+  }
+}
+
 
   @override
   Widget build(BuildContext context) {

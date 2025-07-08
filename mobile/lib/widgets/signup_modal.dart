@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
 import 'modal_overlay.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
+
+
 
 class SignupModal extends StatefulWidget {
   final VoidCallback onClose;
@@ -15,21 +20,45 @@ class _SignupModalState extends State<SignupModal> {
   final _passwordController = TextEditingController();
   String error = '';
 
-  void handleSignup() {
-    final gamerTag = _gamerTagController.text;
-    final email = _emailController.text;
-    final password = _passwordController.text;
+  Future<void> handleSignup() async {
+  final gamerTag = _gamerTagController.text.trim();
+  final email = _emailController.text.trim();
+  final password = _passwordController.text.trim();
 
-    setState(() => error = '');
+  setState(() => error = '');
 
-    if (gamerTag.isEmpty || email.isEmpty || password.isEmpty) {
-      setState(() => error = "Please fill out all fields");
-      return;
-    }
-
-    // Simulate signup success
-    Navigator.pushReplacementNamed(context, '/play');
+  if (gamerTag.isEmpty || email.isEmpty || password.isEmpty) {
+    setState(() => error = "Please fill out all fields");
+    return;
   }
+
+  final url = Uri.parse('https://dungeons-dorms.online/api/auth/register');
+  try {
+    final response = await http.post(
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'gamerTag': gamerTag,
+        'email': email,
+        'password': password,
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('jwt_token', data['token']);
+
+      Navigator.pushReplacementNamed(context, '/play');
+    } else {
+      final data = jsonDecode(response.body);
+      setState(() => error = data['error'] ?? 'Signup failed');
+    }
+  } catch (e) {
+    setState(() => error = 'Server error. Please try again later.');
+  }
+}
+
 
   @override
   Widget build(BuildContext context) {
