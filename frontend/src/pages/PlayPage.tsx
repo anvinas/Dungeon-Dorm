@@ -3,6 +3,7 @@ import Map, { Marker } from 'react-map-gl/maplibre';
 import 'maplibre-gl/dist/maplibre-gl.css';
 
 import InventorySystem from "../components/InventorySystem.tsx"
+import GameFooter from "../components/GameFooter.tsx"
 
 function App() {
   const [userLocation, setUserLocation] = React.useState<{
@@ -13,7 +14,9 @@ function App() {
   const [viewState, setViewState] = React.useState({
     longitude: -81.4, // default somewhere near Orlando
     latitude: 28.5,
-    zoom: 14,
+    zoom: 17,
+    pitch:50,
+    bearing:-30
   });
 
   React.useEffect(() => {
@@ -40,17 +43,25 @@ function App() {
         onMove={(evt) => setViewState(evt.viewState)}
         mapStyle="https://api.maptiler.com/maps/streets-v2/style.json?key=6tt8Z9sB8XXEvl0jd1gY"
         style={{ width: '100%', height: '100%' }}
+        
       >
         {userLocation && (
-          <Marker
-            longitude={userLocation.longitude}
-            latitude={userLocation.latitude}
-            color="red"
-          />
+            
+            <Marker longitude={userLocation.longitude} latitude={userLocation.latitude}>
+            <img
+              src="/assets/character.png"
+              alt="Character"
+              style={{
+                height: `${viewState.zoom * 6}px`, // You can tweak multiplier (e.g. 6) to suit your style
+                transform: 'translate(25%, -40%)',
+                transition: 'height 0.2s ease', // smooth resizing
+              }}
+            />
+          </Marker>
         )}
       </Map>
-      <div className="absolute top-[50%] left-[50%] translate-[-50%] w-[50%] h-[80%]">
-        <InventorySystem />
+      <div className="absolute bottom-0 left-0 w-full">
+        <GameFooter />
       </div>
     </div>
   );

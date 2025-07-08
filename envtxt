@@ -1,5 +1,5 @@
 # MongoDB
-MONGO_URI=TEST
+MONGO_URI=mongodb+srv://tu340511:COP4331@largeproject.7s2b9hz.mongodb.net/
 
 # JWT
 JWT_SECRET=TEST
