@@ -171,34 +171,91 @@ function rollAttack(attacker, defender)
     }
 }
 
-exports.rollFight = async (req, res) => 
-{
-  try 
+exports.startEncounter = async (req, res) => {
+  const userId = req.user.userId;
+
+  const enemy = await Enemy.findOne({ type : 'Goblin'}); // Placeholder, needs to pull right enemy
+
+  const encounter = await Encounter.create({
+    userId,
+    enemyId: enemy._id,
+    enemyType: 'Common', //Placeholder
+    userHP: user.stats.maxHP,
+    enemyHP: enemy.stats.HP,
+    currentTurn: 'User'
+  });
+
+  res.json({
+    message: 'Encounter started!',
+    userStats: user.stats,
+    enemyStats: enemy.stats,
+    currentTurn: 'User'
+  });
+
+};
+
+exports.userTurn = async(req, res) => {
+  const userId = req.user.userId;
+
+  const encounter = await Encounter.findOne({userId, isActive: true});
+
+  if (!encounter || encounter.currentTurn !== 'User')
+    return res.status(400).json({error: 'Not the user turn'});
+
+  const user = await loadEntity(encounter.userID, 'User');
+  const enemy = await loadEntityy(encounter.enemyId, encounter.enemyType);
+
+  const userAttack = rollAttack(user, enemy); //Also need to split path for different user options.
+  encounter.enemyHP = Math.max(0, encounter.enemyHP - userAttack.damage);
+
+  if (encounter.enemyHP <= 0) 
   {
-    const {attackerId, defenderI}
+    encounter.isActive = false;
+    encounter.currentTurn = null;
+    await encounter.save();
+    return res.json({
+      message : 'Enemy defeated!',
+      userAttack, 
+      enemyAttack: null,
+      userHP: encounter.userHP,
+      enemyHP: 0,
+      currentTurn: null
+    });
   }
 
+  encounter.currentTurn = 'Enemy';
+
+  const enemyAttack = rollAttack (enemy, user);
+  encounter.userHP = Math.max(0, encounter.userHP - enemyAttack.damage);
+
+  if (encounter.userHP <= 0)
+    {
+    encounter.isActive = false;
+    encounter.currentTurn = null;
+    await encounter.save();
+    return res.json(
+      {
+      message: 'User was defeated',
+      userAttack,
+      enemyAttack,
+      userHP: 0,
+      enemyHP: encounter.enemyHP,
+      currentTurn: null
+      }
+      );
+    }
+
+  encounter.currentTurn = 'User';
+  await encounter.save();
+
+  res.json({
+    message: 'Turn complete',
+    userAttack,
+    enemyAttack,
+    userHP: encounter.userHP,
+    enemyHP: encounter.enemyHP,
+    currentturn: 'User'
+  });
+
 }
-
-exports.rollTalk = async (req, res) =>
-{
-
-
-}
-
-exports.rollItem = async (req, res) =>
-{
-
-
-}
-
-exports.rollRun = async (req, res) =>
-{
-
-
-
-}
-
-
-
 module.exports = {applyStatGrowth,};

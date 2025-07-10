@@ -7,7 +7,9 @@ const encounterSchema = new mongoose.Schema({
     userHP: Number,
     enemyHP: Number,
     isActive: {type : Boolean, default: true},
-    currentTurn: {type: String, enum: ['User', 'Enemy'], default: 'User'}
+    currentTurn: {type: String, enum: ['User', 'Enemy'], default: 'User'},
+    expiresAt: { type: Date, default: () => new Date(Date.now() + 1000 * 60 * 10), index: { expires: 0 } }, // expires 10 mins after creation
     }, {timestamps: true}
 );
 
+module.exports = mongoose.model('Encounter', encounterSchema);
