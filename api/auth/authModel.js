@@ -1,25 +1,36 @@
-// api/auth/authModel.js
+// api/auth/authModel.js (CORRECTED AND COMPLETE VERSION)
 const mongoose = require('mongoose');
 
 const userSchema = new mongoose.Schema({
-    gamerTag: { type: String, required: true, unique: true }, // Added required/unique
-    email: { type: String, unique: true, required: true },     // Added required
-    passwordHash: { type: String, required: true },            // Added required
+    gamerTag: { type: String, required: true, unique: true },
+    email: { type: String, unique: true, required: true },
+    passwordHash: { type: String, required: true },
     level: { type: Number, default: 1 },
-    Bosses: { type: mongoose.Schema.Types.ObjectId, ref: 'Boss' }, // Reference to a 'Boss' model (ensure it exists or create later)
+    // Bosses is an ARRAY of ObjectIds to track multiple defeated bosses
+    Bosses: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Boss' }],
     Currency: { type: Number, default: 0 },
-    // *** CRITICAL UPDATE for inventory with quantities ***
+    // Inventory with quantity tracking (CRITICAL for shop)
     CurrentLoot: [{
-        itemId: { type: mongoose.Schema.Types.ObjectId, ref: 'InventoryItem' }, // Reference to InventoryItem model
+        itemId: { type: mongoose.Schema.Types.ObjectId, ref: 'InventoryItem' },
         quantity: { type: Number, default: 1 }
     }],
-    // ****************************************************
-    Character: { type: mongoose.Schema.Types.ObjectId, ref: 'Character' }, // Reference to a 'Character' model (ensure it exists or create later)
+    // Character now references 'CharacterClass' (as per our previous work)
+    Character: { type: mongoose.Schema.Types.ObjectId, ref: 'CharacterClass', default: null },
+    // Character stats (for progression)
+    currentStats: {
+        strength: { type: Number, default: 0 },
+        dexterity: { type: Number, default: 0 },
+        intelligence: { type: Number, default: 0 },
+        charisma: { type: Number, default: 0 },
+        defense: { type: Number, default: 0 },
+    },
+    maxHP: { type: Number, default: 100 }, // User's current maxHP
+    currentHP: { type: Number, default: 100 }, // User's current HP
+     currentActiveBoss: { type: mongoose.Schema.Types.ObjectId, ref: 'Boss', default: null },
     isEmailVerified: { type: Boolean, default: false }
 }, {
-    collection: 'UserProfile', // Forces the collection name to 'UserProfile' in MongoDB
-    timestamps: true // Adds createdAt and updatedAt fields automatically
+    collection: 'UserProfile', // Forces the collection name to 'UserProfile'
+    timestamps: true
 });
 
-// IMPORTANT: Export the model as 'UserProfile'
 module.exports = mongoose.model('UserProfile', userSchema);

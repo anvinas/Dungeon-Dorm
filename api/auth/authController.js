@@ -24,7 +24,8 @@ exports.registerUser = async (req, res) => {
                 email,
                 passwordHash,
                 level: 1,
-                Bosses: null, // Ensure this matches your Boss schema if populated
+                Bosses: [], 
+                currentActiveBoss: null,
                 Currency: 0,
                 CurrentLoot: [], // Initialize as empty array for new users
                 Character: null, // Ensure this matches your Character schema if populated
