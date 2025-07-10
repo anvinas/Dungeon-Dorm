@@ -165,16 +165,39 @@ function rollAttack(attacker, defender)
         hit,
         crit: isCrit,
         d20,
-        d10,
         damage,
         primaryStat: primaryStatName,
         message: isCrit ? `Critical hit! ${attacker.name} dealt ${damage}!!!` : hit ? `${attacker.name} hit for ${damage}` : `${attacker.name}'s attack missed completely!` 
     }
 }
 
+exports.rollFight = async (req, res) => 
+{
+  try 
+  {
+    const {attackerId, defenderI}
+  }
+
+}
+
+exports.rollTalk = async (req, res) =>
+{
+
+
+}
+
+exports.rollItem = async (req, res) =>
+{
+
+
+}
+
+exports.rollRun = async (req, res) =>
+{
 
 
 
+}
 
 
 

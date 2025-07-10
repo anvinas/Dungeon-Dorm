@@ -1,0 +1,13 @@
+const mongoose = require ('mongoose');
+
+const encounterSchema = new mongoose.Schema({
+    userId: {type: mongoose.Schema.Types.ObjectId, ref : 'User', required: true},
+    enemyId: {type: mongoose.Schema.Types.ObjectId, required: true},
+    enemyType: { type: String, enum: ['CommonEnemy', 'Boss'], required: true},
+    userHP: Number,
+    enemyHP: Number,
+    isActive: {type : Boolean, default: true},
+    currentTurn: {type: String, enum: ['User', 'Enemy'], default: 'User'}
+    }, {timestamps: true}
+);
+
