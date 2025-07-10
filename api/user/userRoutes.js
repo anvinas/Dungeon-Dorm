@@ -8,6 +8,14 @@ const verifyToken = require('../global/verifyToken.js'); // verifyToken is two l
 // @desc Allows a user to select their character class (can only be done once)
 router.post('/select-character', verifyToken, userController.selectCharacter);
 
+// @route POST /api/user/set-current-boss
+// @desc Sets the ID of the boss the user is currently on/facing
+router.post('/set-current-boss', verifyToken, userController.setCurrentBoss);
+
+// @route POST /api/user/defeat-boss
+// @desc Updates user profile after defeating a boss and progresses to next
+router.post('/defeat-boss', verifyToken, userController.defeatBoss);
+
 // This is all for now, as per your request. No other user-related routes.
 
 module.exports = router;
