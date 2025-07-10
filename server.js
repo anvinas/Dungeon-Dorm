@@ -11,9 +11,15 @@ mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log("MongoDB connected"))
   .catch(err => console.error("Could not connect to MongoDB", err));
 
+require('./api/auth/authModel');
+require('./api/barkeeper/BarKeeper');
+require('./api/barkeeper/InventoryItem');
+require('./models/CharacterClass'); 
+  
 // Routes
 app.use('/api/auth', require('./api/auth/authRoutes'));
 app.use('/api/barkeeper', require('./api/barkeeper/barkeeperRoutes'));
+app.use('/api/user', require('./api/user/userRoutes'));
 
 const PORT = process.env.PORT || 5000;
 const server = app.listen(PORT, () => console.log(`Connected to port ${PORT}`)); 
