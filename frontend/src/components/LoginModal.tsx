@@ -64,6 +64,11 @@ function LoginModal({onClickClose,isOpen} : LoginModalProps) {
       // Succes
       if(response.status == 200){
         storeJWT(response.data.token)
+        
+        console.log(response.data)
+        
+
+        
         navigate("/character");
       }else{
         // Failure
