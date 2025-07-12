@@ -1,11 +1,11 @@
 const classGrowthRules = {
   Barbarian: (stats, level) => {
     const updatedStats = { 
-      Strength: stats.Strength + 1,                        // +1 every level
+      Strength: stats.Strength + 1,                           // +1 every level
       Dexterity: stats.Dexterity + (level % 3 === 0 ? 1 : 0), // +1 every 3rd level
-      Intelligence: stats.Intelligence,                   // No increase
+      Intelligence: stats.Intelligence,                       // No increase
       Charisma: stats.Charisma + (level % 3 === 0 ? 1 : 0),   // +1 every 3rd level
-      Defense: stats.Defense + 1,                          // +1 every level
+      Defense: stats.Defense + 1,                             // +1 every level
     };
 
     const maxHP =
@@ -45,11 +45,11 @@ const classGrowthRules = {
 
   Bard: (stats, level) => {
     const updatedStats = { 
-      Strength: stats.Strength + (level % 3 === 0 ? 1 : 0),    // +1 every 3rd level
-      Dexterity: stats.Dexterity + (level % 2 === 0 ? 1 : 0),  // +1 every 2nd level
+      Strength: stats.Strength + (level % 3 === 0 ? 1 : 0),         // +1 every 3rd level
+      Dexterity: stats.Dexterity + (level % 2 === 0 ? 1 : 0),       // +1 every 2nd level
       Intelligence: stats.Intelligence + (level % 2 === 0 ? 1 : 0), // +1 every 2nd level
-      Charisma: stats.Charisma + 1,                            // +1 every level
-      Defense: stats.Defense + (level % 3 === 0 ? 1 : 0),      // +1 every 3rd level
+      Charisma: stats.Charisma + 1,                                 // +1 every level
+      Defense: stats.Defense + (level % 3 === 0 ? 1 : 0),           // +1 every 3rd level
     };
 
     const maxHP =
@@ -98,8 +98,6 @@ function applyStatGrowth(className, currentStats, level) //Class name, current s
 
     return growthFunction(currentStats, level);
 }
-
-
 
 function rollD20() 
 {
@@ -167,7 +165,7 @@ function rollAttack(attacker, defender)
         d20,
         damage,
         primaryStat: primaryStatName,
-        message: isCrit ? `Critical hit! ${attacker.name} dealt ${damage}!!!` : hit ? `${attacker.name} hit for ${damage}` : `${attacker.name}'s attack missed completely!` 
+        message: isCrit ? `Critical hit! ${attacker.name} hit ${defender.name} for ${damage}!!!` : hit ? `${attacker.name} hit ${defender.name} for ${damage}` : `${attacker.name}'s attack missed completely!` 
     }
 }
 
@@ -194,68 +192,144 @@ exports.startEncounter = async (req, res) => {
 
 };
 
-exports.userTurn = async(req, res) => {
-  const userId = req.user.userId;
-
-  const encounter = await Encounter.findOne({userId, isActive: true});
-
-  if (!encounter || encounter.currentTurn !== 'User')
-    return res.status(400).json({error: 'Not the user turn'});
-
-  const user = await loadEntity(encounter.userID, 'User');
-  const enemy = await loadEntityy(encounter.enemyId, encounter.enemyType);
-
+async function userAttackLogic(encounter, user, enemy) 
+{
   const userAttack = rollAttack(user, enemy); //Also need to split path for different user options.
   encounter.enemyHP = Math.max(0, encounter.enemyHP - userAttack.damage);
+  let result;
 
   if (encounter.enemyHP <= 0) 
   {
     encounter.isActive = false;
     encounter.currentTurn = null;
     await encounter.save();
-    return res.json({
+
+    const rewards = await handleBossDefeat(userId, encounter.enemyId);
+
+    result = {
       message : 'Enemy defeated!',
       userAttack, 
-      enemyAttack: null,
-      userHP: encounter.userHP,
-      enemyHP: 0,
-      currentTurn: null
-    });
+      postTurnUserHP: encounter.userHP,
+      postTurnEnemyHP: 0,
+      currentTurn: null,
+      rewards
+    };
+  }
+  else if (encounter.enemyHP > 0) 
+  {
+    await encounter.save();
+    result = {
+      message: 'User attack complete',
+      userAttack,
+      postTurnUserHP: encounter.userHP,
+      postTurnEnemyHP: encounter.enemyHP,
+      currentTurn: 'Enemy',
+    };
   }
 
-  encounter.currentTurn = 'Enemy';
+  return result;
+}
 
+async function enemyAttackLogic(encounter, user, enemy)
+{
   const enemyAttack = rollAttack (enemy, user);
   encounter.userHP = Math.max(0, encounter.userHP - enemyAttack.damage);
+  let result; 
 
   if (encounter.userHP <= 0)
     {
     encounter.isActive = false;
     encounter.currentTurn = null;
     await encounter.save();
-    return res.json(
+    result = 
       {
       message: 'User was defeated',
-      userAttack,
       enemyAttack,
-      userHP: 0,
-      enemyHP: encounter.enemyHP,
-      currentTurn: null
+      postTurnUserHP: 0,
+      postTurnEnemyHP: encounter.enemyHP,
+      currentTurn: null,
+      rewards: null
       }
-      );
     }
+  else if (encounter.userHP > 0)
+  {
+    await encounter.save();
+    result = {
+      message: 'Enemy attack complete',
+      enemyAttack,
+      postTurnUserHP: encounter.userHP,
+      postTurnEnemyHP: encounter.enemyHP,
+      currentTurn: 'User'
+    };
+  }
+
+  return result;
+}
+
+exports.userTurnAndEnemyResponse = async(req, res) => {
+  const userId = req.user.userId;
+  let userResult;
+  let enemyResult;
+  const encounter = await Encounter.findOne({userId, isActive: true});
+
+  if (!encounter || encounter.currentTurn !== 'User')
+    return res.status(400).json({error: 'Not the user turn or no active encounter'});
+
+  const user = await loadEntity(encounter.userID, 'User');
+  const enemy = await loadEntity(encounter.enemyId, encounter.enemyType);
+
+  if (action === 'attack') 
+  {
+    userResult = await userAttackLogic(encounter, user, enemy);
+
+    if (userResult.message.includes('defeated'))
+    {
+      return res.json(userResult);
+    }
+  }
+  else if (action === 'item')
+  {
+    // Handle item usage logic here
+    // For now, just return a placeholder response
+    return res.status(400).json({error: 'Item usage not implemented yet'});
+  }
+  else if (action === 'defend')
+  {
+    // Handle defend logic here
+    // For now, just return a placeholder response
+    return res.status(400).json({error: 'Defend action not implemented yet'});
+  }
+  else if (action === 'flee')
+  {
+    // Handle flee logic here
+    // For now, just return a placeholder response
+    return res.status(400).json({error: 'Flee action not implemented yet'});
+  }
+
+
+  // After user turn, switch to enemy turn
+  encounter.currentTurn = 'Enemy';
+
+  enemyResult = await enemyAttackLogic(encounter, user, enemy);
+  if (!enemyResult) 
+  {
+    return res.status(500).json({error: 'Error processing enemy attack'});
+  }
+  else if ( enemyResult.message.includes('defeated')) 
+  {
+    //Handle enemy defeat logic here
+    return res.json(userResult, enemyResult);
+  }
+
 
   encounter.currentTurn = 'User';
   await encounter.save();
 
   res.json({
     message: 'Turn complete',
-    userAttack,
-    enemyAttack,
-    userHP: encounter.userHP,
-    enemyHP: encounter.enemyHP,
-    currentturn: 'User'
+    userResult,
+    enemyResult,
   });
 
 }
-module.exports = {applyStatGrowth,};
+module.exports = {applyStatGrowth, startEncounter, userTurn};
