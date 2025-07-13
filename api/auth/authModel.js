@@ -29,7 +29,10 @@ const userSchema = new mongoose.Schema({
      currentActiveBoss: { type: mongoose.Schema.Types.ObjectId, ref: 'Boss', default: null },
     isEmailVerified: { type: Boolean, default: false },
     emailVerificationToken: { type: String },
-    emailVerificationExpires: { type: Date }
+    emailVerificationExpires: { type: Date },
+    activityState: { type: String, default: 'offline' }, // e.g., 'online', 'idle', 'offline', 'in_combat'
+    currentXP: { type: Number, default: 0 },
+    toLevelUpXP: { type: Number, default: 1000 } // XP needed to reach the next level
 }, {
     collection: 'UserProfile', // Forces the collection name to 'UserProfile'
     timestamps: true

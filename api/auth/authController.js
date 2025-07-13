@@ -87,7 +87,10 @@ exports.registerUser = async (req, res) => {
                 gamerTag, email, passwordHash, level: 1, Bosses: [], Currency: 0, CurrentLoot: [],
                 Character: null, currentStats: { strength: 0, dexterity: 0, intelligence: 0, charisma: 0, defense: 0 },
                 currentActiveBoss: null, isEmailVerified: false,
-                emailVerificationToken, emailVerificationExpires
+                emailVerificationToken, emailVerificationExpires,
+                activityState: 'offline', 
+                currentXP: 0,
+                toLevelUpXP: 1000          
             }
         )
 
