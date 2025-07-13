@@ -49,7 +49,7 @@ class _SignupModalState extends State<SignupModal> {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('jwt_token', data['token']);
 
-      Navigator.pushReplacementNamed(context, '/play');
+      Navigator.pushReplacementNamed(context, '/select');
     } else {
       final data = jsonDecode(response.body);
       setState(() => error = data['error'] ?? 'Signup failed');

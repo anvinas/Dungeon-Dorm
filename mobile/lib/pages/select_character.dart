@@ -34,7 +34,7 @@ class CharacterSelectPage extends StatefulWidget {
   State<CharacterSelectPage> createState() => _CharacterSelectPageState();
 }
 
-class _CharacterSelectPageState extends State<CharacterSelectPage> with SingleTickerProviderStateMixin {
+class _CharacterSelectPageState extends State<CharacterSelectPage> with TickerProviderStateMixin {
   final List<Map<String, dynamic>> allPossibleCharacterInfo = [
     {'animDelay': 500},
     {'animDelay': 243},
@@ -539,11 +539,6 @@ class _ScrollCharacterModelState extends State<ScrollCharacterModel> with Single
       },
     );
   }
-}
-
-// Main function to run the app
-void main() {
-  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {

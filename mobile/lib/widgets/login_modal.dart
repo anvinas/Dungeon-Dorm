@@ -42,7 +42,7 @@ class _LoginModalState extends State<LoginModal> {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('jwt_token', data['token']);
 
-      Navigator.pushReplacementNamed(context, '/play');
+      Navigator.pushReplacementNamed(context, '/select');
     } else {
       final data = jsonDecode(response.body);
       setState(() => error = data['error'] ?? 'Login failed');
