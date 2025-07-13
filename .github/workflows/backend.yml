@@ -32,8 +32,8 @@ jobs:
             git pull origin main
 
             cd backend
-            npm install
+            npm ci
 
-            # Restart PM2 process or start if not running
             pm2 restart server || pm2 start server.js --name server
           EOF
+          
