@@ -174,7 +174,16 @@ exports.findUserProfile = async (req, res) =>
         }
 
         // Fetch the user profile by ID, excluding sensitive fields
-        const userProfile = await User.findById(userId).select('-passwordHash -isEmailVerified -__v');
+        // UPDATED: Populate 'Character' AND then populate 'weapon' within 'Character'
+        const userProfile = await User.findById(userId)
+            .populate({ // Use object syntax for nested population
+                path: 'Character', // The first field to populate on UserProfile
+                populate: {
+                    path: 'weapon' // The field to populate within the CharacterClass document
+                }
+            })
+            .select('-passwordHash -isEmailVerified -__v');
+
         if (!userProfile) {
             return res.status(404).json({error: "User profile not found."});
         }
