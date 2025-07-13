@@ -142,14 +142,21 @@ const ScrollCharacterModel = ({isSelected,onClick,index, animDelay}: ScrollChara
         console.log(index);
         if(index === 0) //Warlock/Mage
         {
-            setCurSelectedChar((oldData) => ({...oldData, userId: "685d632886585be7727d064c"}));
-            console.log('685d632886585be7727d064c');
-            console.log(curSelectedChar.userId + " Hi");
+            //setCurSelectedChar((oldData) => ({...oldData, userId: "685d632886585be7727d064c"}));
+            //console.log('685d632886585be7727d064c');
+            //console.log(curSelectedChar.userId + " Hi");
+
+            const payload = { characterClassId: '685d632886585be7727d064c' };
+            //console.log(payload.characterClassId);
+            
             try{
                 const token = fetchJWT();
-                let response = await axios.post(`${GetServerPath()}/api/user/selected-character`,{curSelectedChar}, 
+                console.log("JWT Token:", token);
+                //let response = await axios.post(`${GetServerPath()}/api/user/select-character`,{curSelectedChar}, 
+                let response = await axios.post(`${GetServerPath()}/api/user/select-character`,payload, 
                 { headers: {
-                    Authorization: 'Bearer ${token}'
+                    Authorization: `Bearer ${token}`,
+                    'Content-Type': 'application/json',
                 },
                 });
                 
