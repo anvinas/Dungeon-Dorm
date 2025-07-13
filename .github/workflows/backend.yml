@@ -11,16 +11,19 @@ jobs:
   deploy_backend:
     runs-on: ubuntu-latest
     steps:
-      - name: Install sshpass
-        run: sudo apt-get update && sudo apt-get install -y sshpass
+      - name: Setup SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
 
       - name: Deploy Express Backend to Server
         env:
           SSH_HOST: ${{ secrets.SSH_HOST }}
-          SSH_KEY: ${{ secrets.SSH_KEY }}
           SSH_USERNAME: ${{ secrets.SSH_USERNAME }}
         run: |
-          sshpass -p "${SSH_KEY}" ssh -o StrictHostKeyChecking=no "${SSH_USERNAME}@${SSH_HOST}" <<'EOF'
+          ssh "${SSH_USERNAME}@${SSH_HOST}" <<'EOF'
             cd /var/www
 
             if [ ! -d "Dungeon-Dorm/.git" ]; then
@@ -32,8 +35,7 @@ jobs:
             git pull origin main
 
             cd backend
-            npm install
+            npm ci
 
-            # Restart PM2 process or start if not running
             pm2 restart server || pm2 start server.js --name server
           EOF
