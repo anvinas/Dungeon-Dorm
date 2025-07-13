@@ -91,3 +91,25 @@
     filter: brightness(0.3); /* Back to normal */
   }
 }
+
+
+.svg-container {
+  position: fixed; /* Or absolute, depending on desired behavior */
+  top: 0;
+  right: 0;
+  /* Add any additional styling, like width, height, z-index, etc. */
+}
+
+
+
+.image-wrapper .hover-image {
+  display: none;
+}
+
+.image-wrapper:hover .default-image {
+  display: none;
+}
+
+.image-wrapper:hover .hover-image {
+  display: block;
+}
