@@ -10,7 +10,7 @@ import {fetchJWT, storeJWT} from "../lib/JWT.ts"
 function CharacterSelectPage(){
     const navigate = useNavigate();
 
-    const [allPossibleCharacterInfo] = useState([
+    const [allPossibleCharacterInfo,setAllPossibleCharacterInfo] = useState([
         {animDelay:500},
         {animDelay:243},
         {animDelay:784},
@@ -71,7 +71,7 @@ type ScrollCharacterModelProps = {
     animDelay: number;
 };
 
-const ScrollCharacterModel = ({isSelected,onClick,index}: ScrollCharacterModelProps)=>{
+const ScrollCharacterModel = ({isSelected,onClick,index, animDelay}: ScrollCharacterModelProps)=>{
 
   const [isHovered, setIsHovered] = useState(false);
     const [isClicked, setIsClicked] = useState(false);
@@ -127,7 +127,7 @@ const ScrollCharacterModel = ({isSelected,onClick,index}: ScrollCharacterModelPr
         : defaultImage;
 
     
-    const[setError] = useState("");
+    const[error, setError] = useState("");
 
     type selectedCharacter = {
         userId:string;
