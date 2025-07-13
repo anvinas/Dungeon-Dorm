@@ -1,3 +1,4 @@
+import 'package:dungeon_and_dorms/pages/select_character.dart';
 import 'package:flutter/material.dart';
 import 'pages/login_page.dart';
 
@@ -18,9 +19,8 @@ class MyApp extends StatelessWidget {
       ),
       initialRoute: '/',
       routes: {
-        '/play': (context) => const Scaffold(
-              body: Center(child: Text('Play Page')),
-            ),
+        // Change this line to navigate to CharacterSelectPage
+        '/select': (context) => const CharacterSelectPage(),
       },
     );
   }
