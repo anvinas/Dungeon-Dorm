@@ -99,6 +99,28 @@ function applyStatGrowth(className, currentStats, level) //Class name, current s
     return growthFunction(currentStats, level);
 }
 
+exports.levelupUser = async (req, res) => {
+    const userId = req.user.userId;
+    const user = await loadEntity(userId, 'User');
+
+    if (!user) {
+        return res.status(404).json({ error: 'User not found' });
+    }
+
+    user.level = user.level + 1;
+
+    const newStats = applyStatGrowth(user.class, user.stats, user.level);
+    user.stats = newStats;
+
+    await user.save();
+    
+    res.json({
+        message: `User leveled up to level ${user.level}!`,
+        newStats: user.stats,
+        level: user.level
+    })
+}
+
 function rollD20() 
 {
     return Math.floor(Math.random() * 20) + 1;
@@ -163,10 +185,143 @@ function rollAttack(attacker, defender)
         hit,
         crit: isCrit,
         d20,
+        totalRollWithModifiers: attackerStat,
+        totalRollNeeded: defenderStat,
         damage,
         primaryStat: primaryStatName,
         message: isCrit ? `Critical hit! ${attacker.name} hit ${defender.name} for ${damage}!!!` : hit ? `${attacker.name} hit ${defender.name} for ${damage}` : `${attacker.name}'s attack missed completely!` 
     }
+}
+
+function rollTalk(attacker, defender)
+{
+  const defenderStat = defender.stats.Charisma;
+  let isCrit = 0;
+  let friendshipContribution;
+  const d20 = rollD20;
+
+  if (d20 === 20)
+  {
+    isCrit = 1;
+  }
+
+  let success = ((d20 + attacker.stats.Charisma) > defender.stats.Charisma)
+
+  //Charisma stat + roll > defender charisma
+  
+  if (isCrit || success)
+  {
+    friendshipContribution = 20;
+    if (isCrit)
+      friendshipContribution = friendshipContribution * 2;
+  }
+  else friendshipContribution = 0;
+
+  return {
+    success: success,
+    friendshipContribution : friendshipContribution,
+    crit: isCrit,
+    d20: d20,
+    totalRollWithModifiers: d20 + attacker.stats.Charisma,
+    totalRollNeeded: defender.stats.Charisma,
+    message : isCrit ? `${attacker.name} critically charmed ${defender.name} for ${friendshipContribution}!!` : success ? `${attacker.name} charmed ${defender.name} for ${friendshipContribution}!` : `${attacker.name}'s attempt to charm ${defedner.name} did NOT work!!!!`
+  }
+}
+
+function rollItemUse(user, item)
+{
+  const hasItem = user.CurrentLoot && user.CurrentLoot.some(i => i.name === item.name);
+
+  if(!hasItem)
+  {
+    return {success: false, message: "Item not in user's inventory"};
+  }
+  
+  if (!item.name.toLowerCase().includes("potion"))
+  {
+    return {success: false, message: "item is not a potion!"};
+  }
+
+  //Crit means double value of potion
+  const d20 = rollD20;
+  let consumed;
+  let isCrit;
+  let itemValue = item.healthAmount || 0;
+  let hpGain = 0;
+
+  if (d20 == 0)
+  {
+    consumed = 0;
+    isCrit = 0;
+    hpGain = itemValue;
+
+    return {
+      success: consumed === 1,
+      crit: isCrit,
+      consumed,
+      d20: d20,
+      hpGain: hpGain,
+      message : `${user.name} fumbled getting the potion from their bag! Bad luck!`
+    }
+  }
+  else if (d20 === 20)
+  {
+    consumed = 1;
+    isCrit = 1;
+    hpGain = itemValue * 2;
+
+    return {
+      success: consumed === 1,
+      crit: isCrit,
+      consumed,
+      d20: d20,
+      hpGain: hpGain,
+      message: `${user.name} rolled a nat 20 and healed for double! Total restored: ${hpGain}`
+    }
+  }
+  else if (d20 > 0 && d20 < 20)
+  {
+    consumed = 1;
+    isCrit = 0;
+    hpGain = itemValue;
+
+    return {
+      success: consumed === 1,
+      crit: isCrit,
+      consumed,
+      hpGain: hpGain,
+      d20: d20,
+      message : `${user.name} healed for ${itemValue}`
+    }
+  }
+}
+
+function rollFlee(user, enemy)
+{
+  const d20 = rollD20();
+  
+  if (enemy.level === 10)
+  {
+    rollNeeded = 20;
+  }
+  else rollNeeded = 10 + (enemy.level - user.level);
+
+  if (d20 >= rollNeeded){
+    return{
+      success: true,
+      d20: d20,
+      rollNeeded: rollNeeded,
+      message: `${user.name} managed to escape!`
+    }
+  }
+  else {
+    return{
+      success: false,
+      d20: d20,
+      totalRollNeeded: rollNeeded,
+      message: `${user.name} could not find an escape!`
+    }
+  }
 }
 
 exports.startEncounter = async (req, res) => {
@@ -230,6 +385,113 @@ async function userAttackLogic(encounter, user, enemy)
   return result;
 }
 
+async function userTalkLogic(encounter, user, enemy)
+{
+  const userTalk = rollTalk(user, enemy);
+  encounter.friendship = Math.min(100, encounter.friendship + userTalk.friendshipContribution);
+
+  if (encounter.friendship >= 100)
+  {
+    encounter.isActive = false;
+    encounter.currentTurn = null;
+    await encounter.save();
+
+    return {
+      message: 'Enemy charmed successfully!',
+      userTalk,
+      postTurnUserHP: encounter.userHP,
+      postTurnEnemyHP: encounter.enemyHP,
+      postTurnFriendship: encounter.friendship,
+      currentTurn: null,
+      rewards: await handleBossDefeat(userId, encounter.enemyId)
+    };
+  }
+  
+  else if (encounter.friendship < 100 && encounter.friendship >= 0)
+  {
+    await encounter.save();
+    return {
+      message: 'User attempted to charm enemy',
+      userTalk,
+      postTurnUserHP: encounter.userHP,
+      postTurnEnemyHP: encounter.enemyHP,
+      postTurnFriendship: encounter.friendship,
+      currentTurn: 'Enemy'
+    };
+  }
+}
+
+async function userItemLogic(encounter, user, item)
+{
+  const itemResult = rollItemUse(user, item);
+
+  if (!itemResult.success)
+  {
+    return {
+      message: itemResult.message,
+      success: false,
+      itemToBeRemoved: null,
+      d20: itemResult.d20,
+      crit: itemResult.crit,
+      consumed: itemResult.consumed,
+      hpGain: itemResult.hpGain
+    };
+  }
+
+  if (itemResult.consumed) 
+  {
+    user.CurrentLoot = user.CurrentLoot.filter(i => i.name !== item.name);
+    await user.save();
+  }
+
+  encounter.userHP = Math.min(encounter.userHP + itemResult.hpGain, user.stats.maxHP);
+  await encounter.save();
+
+  return {
+    message: itemResult.message,
+    success: true,
+    itemToBeRemoved: item.name,
+    d20: itemResult.d20,
+    crit: itemResult.crit,
+    consumed: itemResult.consumed,
+    hpGain: itemResult.hpGain,
+    postTurnUserHP: encounter.userHP,
+    postTurnEnemyHP: encounter.enemyHP,
+    currentTurn: 'Enemy'
+  };
+}
+
+async function userFleeLogic(encounter, user, enemy)
+{
+  const fleeResult = rollFlee(user, enemy);
+
+  if (fleeResult.success) 
+  {
+    encounter.isActive = false;
+    encounter.currentTurn = null;
+    await encounter.save();
+
+    return {
+      message: fleeResult.message,
+      success: true,
+      d20: fleeResult.d20,
+      rollNeeded: fleeResult.rollNeeded,
+      currentTurn: null
+    };
+  } 
+  else 
+  {
+    await encounter.save();
+    return {
+      message: fleeResult.message,
+      success: false,
+      d20: fleeResult.d20,
+      totalRollNeeded: fleeResult.totalRollNeeded,
+      currentTurn: 'Enemy'
+    };
+  }
+}
+
 async function enemyAttackLogic(encounter, user, enemy)
 {
   const enemyAttack = rollAttack (enemy, user);
@@ -253,7 +515,7 @@ async function enemyAttackLogic(encounter, user, enemy)
     }
   else if (encounter.userHP > 0)
   {
-    await encounter.save();
+    await encounter.save(); 
     result = {
       message: 'Enemy attack complete',
       enemyAttack,
@@ -268,6 +530,7 @@ async function enemyAttackLogic(encounter, user, enemy)
 
 exports.userTurnAndEnemyResponse = async(req, res) => {
   const userId = req.user.userId;
+  const {action, item} = req.body;
   let userResult;
   let enemyResult;
   const encounter = await Encounter.findOne({userId, isActive: true});
@@ -289,21 +552,24 @@ exports.userTurnAndEnemyResponse = async(req, res) => {
   }
   else if (action === 'item')
   {
-    // Handle item usage logic here
-    // For now, just return a placeholder response
-    return res.status(400).json({error: 'Item usage not implemented yet'});
+    userResult = await userItemLogic(encounter, user, item);
   }
-  else if (action === 'defend')
+  else if (action === 'talk')
   {
-    // Handle defend logic here
-    // For now, just return a placeholder response
-    return res.status(400).json({error: 'Defend action not implemented yet'});
+    userResult = await userTalkLogic(encounter, user, enemy);
+
+    if (userResult.message.includes('charmed successfully'))
+    {
+      return res.json(userResult);
+    }
   }
   else if (action === 'flee')
   {
-    // Handle flee logic here
-    // For now, just return a placeholder response
-    return res.status(400).json({error: 'Flee action not implemented yet'});
+    userResult = await userFleeLogic(encounter, user, enemy);
+    if (userResult.success)
+    {
+      return res.json(userResult);
+    }
   }
 
 

@@ -65,6 +65,9 @@ async function handleBossDefeat(userId, bossId) {
     }
 
     user.defeatedBosses.push(boss._id);
+
+    const nextBoss = await setNextBossForUser(user);
+    user.currentBoss = nextBoss ? nextBoss._id : null;
     
     await user.save();
     return rewards;
