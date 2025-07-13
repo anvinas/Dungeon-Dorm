@@ -218,3 +218,103 @@ exports.verifyEmail = async (req, res) => {
         res.status(500).json({ error: 'Server error during email verification.' });
     }
 };
+
+exports.forgotPassword = async (req, res) => {
+    const { email } = req.body; // User provides their email
+
+    if (!email) {
+        return res.status(400).json({ error: 'Email is required to reset password.' });
+    }
+
+    try {
+        const user = await User.findOne({ email });
+
+        if (!user) {
+            // It's a security best practice to send a generic success message
+            // even if the email doesn't exist, to prevent enumeration attacks.
+            console.warn(`Forgot password attempt for non-existent email: ${email}`);
+            return res.status(200).json({ message: 'If a user with that email exists, a password reset email has been sent.' });
+        }
+
+        // Generate a password reset token (hex string)
+        const resetPasswordToken = crypto.randomBytes(32).toString('hex');
+        const resetPasswordExpires = new Date(Date.now() + 3600000); // Token valid for 1 hour
+
+        user.resetPasswordToken = resetPasswordToken;
+        user.resetPasswordExpires = resetPasswordExpires;
+        await user.save();
+
+        // Construct the reset link (frontend will handle the token)
+        const resetLink = `http://dungeon-dorm.online/reset-password?token=${resetPasswordToken}`;
+
+        const mailOptions = {
+            from: process.env.EMAIL_USER,
+            to: user.email,
+            subject: 'Dungeon Dorm Password Reset Request',
+            html: `
+                <h1>Password Reset for Dungeon Dorm</h1>
+                <p>You are receiving this because you (or someone else) have requested the reset of the password for your account.</p>
+                <p>Please click on the following link, or paste this into your browser to complete the process:</p>
+                <p><a href="${resetLink}">Reset My Password</a></p>
+                <p>This link will expire in 1 hour.</p>
+                <p>If you did not request this, please ignore this email and your password will remain unchanged.</p>
+            `
+        };
+
+        try {
+            const info = await transporter.sendMail(mailOptions);
+            console.log(`\n--- Password reset email sent to ${user.email} ---`);
+            console.log(`Message ID: ${info.messageId}`);
+            if (process.env.EMAIL_SEND_MODE === 'ETHEREAL' && nodemailer.getTestMessageUrl(info)) {
+                console.log(`Preview URL: ${nodemailer.getTestMessageUrl(info)}`); // View email in Ethereal
+            }
+            console.log(`Reset Token (for Postman): ${resetPasswordToken}`); // Log for Postman testing
+            console.log(`----------------------------------------------\n`);
+        } catch (mailError) {
+            console.error('Error sending password reset email:', mailError);
+            return res.status(500).json({ error: 'Error sending password reset email.' });
+        }
+
+        res.status(200).json({ message: 'If a user with that email exists, a password reset email has been sent.' });
+
+    } catch (err) {
+        console.error('Error in forgotPassword:', err);
+        res.status(500).json({ error: 'Server error during password reset request.' });
+    }
+};
+
+exports.resetPassword = async (req, res) => {
+    const { token, newPassword } = req.body;
+
+    if (!token || !newPassword) {
+        return res.status(400).json({ error: 'Token and new password are required.' });
+    }
+
+    try {
+        // Find user by the reset token and ensure it's not expired
+        const user = await User.findOne({
+            resetPasswordToken: token,
+            resetPasswordExpires: { $gt: Date.now() } // Token must not be expired
+        });
+
+        if (!user) {
+            return res.status(400).json({ error: 'Invalid or expired password reset token.' });
+        }
+
+        // Hash the new password
+        const salt = await bcrypt.genSalt(10);
+        user.passwordHash = await bcrypt.hash(newPassword, salt);
+
+        // Clear the reset token fields
+        user.resetPasswordToken = undefined;
+        user.resetPasswordExpires = undefined;
+
+        await user.save();
+
+        res.json({ message: 'Password has been successfully reset.' });
+
+    } catch (err) {
+        console.error('Error resetting password:', err);
+        res.status(500).json({ error: 'Server error during password reset.' });
+    }
+};

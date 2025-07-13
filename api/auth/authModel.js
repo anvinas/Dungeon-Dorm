@@ -32,7 +32,9 @@ const userSchema = new mongoose.Schema({
     emailVerificationExpires: { type: Date },
     activityState: { type: String, default: 'offline' }, // e.g., 'online', 'idle', 'offline', 'in_combat'
     currentXP: { type: Number, default: 0 },
-    toLevelUpXP: { type: Number, default: 1000 } // XP needed to reach the next level
+    toLevelUpXP: { type: Number, default: 1000 }, // XP needed to reach the next level
+    resetPasswordToken: { type: String },
+    resetPasswordExpires: { type: Date }
 }, {
     collection: 'UserProfile', // Forces the collection name to 'UserProfile'
     timestamps: true
