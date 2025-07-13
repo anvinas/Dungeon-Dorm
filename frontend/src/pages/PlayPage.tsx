@@ -1,63 +1,82 @@
-import styles from "./loginPage.module.css"
-import LoginModal from "../components/LoginModal.tsx"
-import SignupModal from "../components/SignupModal.tsx"
+import * as React from 'react';
+import Map, { Marker } from 'react-map-gl/maplibre';
+import 'maplibre-gl/dist/maplibre-gl.css';
 
-import { useState ,useEffect} from "react"
-function PlayPage() {
+import InventorySystem from "../components/InventorySystem.tsx"
+import GameFooter from "../components/GameFooter.tsx"
 
-  useEffect(()=>{
-    //Check if already logged in -> HANDLE LATER
-    try{
+function App() {
+  const [userLocation, setUserLocation] = React.useState<{
+    longitude: number;
+    latitude: number;
+  } | null>(null);
 
-    }catch{}
-  },[])
+  const [viewState, setViewState] = React.useState({
+    longitude: -81.4, // default somewhere near Orlando
+    latitude: 28.5,
+    zoom: 17,
+    pitch:50,
+    bearing:-30
+  });
 
-  const [loginModalOpen,setLoginModalOpen] = useState(false)
-  const [signupModalOpen,setSignupModalOpen] = useState(false)
+  React.useEffect(() => {
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { longitude, latitude } = position.coords;
+        setUserLocation({ longitude, latitude });
+        setViewState((prev) => ({
+          ...prev,
+          longitude,
+          latitude,
+        }));
+      },
+      (error) => {
+        console.error('Error getting location:', error);
+      }
+    );
+  }, []);
 
   return (
-    <div className="relative w-screen h-screen overflow-hidden">
-        <LoginModal isOpen={loginModalOpen} onClickClose={()=>setLoginModalOpen(false)}/>
-        <SignupModal isOpen={signupModalOpen} onClickClose={()=>setSignupModalOpen(false)}/>
+    <div className='w-full h-full'>
 
-        {/* BG container */}
-        <div className="relative w-screen h-screen ">
-            <img src="/img/pixel_bg2.png" className={`w-screen max-w-screen h-screen ${styles.bgContainer}`}/>
+      {/* MAP ITEMS */}
+      <div style={{ width: '100%', height: '100vh' }}>
+        <Map
+          {...viewState}
+          onMove={(evt) => setViewState(evt.viewState)}
+          mapStyle="https://api.maptiler.com/maps/streets-v2/style.json?key=6tt8Z9sB8XXEvl0jd1gY"
+          style={{ width: '100%', height: '100%' }}
+          
+        >
+          {userLocation && (
+              
+              <Marker longitude={userLocation.longitude} latitude={userLocation.latitude}>
+              <img
+                src="/assets/character.png"
+                alt="Character"
+                style={{
+                  height: `${viewState.zoom * 6}px`, // You can tweak multiplier (e.g. 6) to suit your style
+                  transform: 'translate(25%, -40%)',
+                  transition: 'height 0.2s ease', // smooth resizing
+                }}
+              />
+            </Marker>
+          )}
+        </Map>
+      </div>
 
-            {/* Banner */}
-            <div className={`absolute h-fit w-full h-fit translate-x-[50%] translate-y-[-50%]  top-[43%] right-[50%] z-3 ${styles.bannerContainer}`}>
-                <div className="relative w-full h-fit flex items-center justify-center">
-                   {/* Left Chain */}
-                    <img src="/img/chain.png" className={`h-100 absolute z-2  top-[100%] left-[40.5%] ${styles.chain}`}/>
-                    
-                    {/* Right Chain */}
-                    <img src="/img/chain.png" className={`h-100 absolute z-2 top-[0%] left-[59.75%] ${styles.chain}`} />
-                    
-                    {/* Wood container */}
-                    <div className="relative w-fit">
-                      <img src="/img/wood_texture2.png" className={`h-120 z-3 ${styles.banner}`}/>
+      {/* Footer */}
+      <div className="absolute bottom-0 left-0 w-full">
+          <GameFooter />
+      </div>
 
-                       {/* Buttons Container */}
-                        <div className="flex justify-around absolute z-4 translate-x-[-50%] translate-y-[-50%] bottom-[10%] left-[50%] w-full">
-                          <div className="p-3 pr-4 pl-4 rounded-md bg-[#6b8e23] text-[#ffffff] border-1 transition delay-150 duration-300 ease-in-out hover:-translate-y-1 hover:scale-110 hover:cursor-pointer "onClick={()=>setSignupModalOpen(true)} >Signup</div>
-                          <div className="p-3 pr-4 pl-4 rounded-md bg-indigo-500 text-[#ffffff] border-black border-1  transition delay-150 duration-300 ease-in-out hover:-translate-y-1 hover:scale-110 hover:cursor-pointer hover:bg-indigo-500" onClick={()=>setLoginModalOpen(true)}>Login</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-
-            {/* <img src="/gif/amber.gif" className="absolute top-[10%] right-[25%]"/> */}
-        </div>
-
-        {/* left chain */}
-        <div className="">
-        </div>
-
+      {/* ALL MODALS CONTAINER*/}
+      <div className='absolute w-[30%] h-[80%] left-[50%] top-[50%] translate-[-50%]'>
+          <InventorySystem />
+      </div>
     </div>
-
-   
-  )
+    
+  );
 }
 
-export default PlayPage
+export default App;

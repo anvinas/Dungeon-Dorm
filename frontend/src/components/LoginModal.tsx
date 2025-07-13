@@ -66,10 +66,24 @@ function LoginModal({onClickClose,isOpen} : LoginModalProps) {
         storeJWT(response.data.token)
         
         console.log(response.data)
-        
 
+        const profileResponse = await axios.get(`${GetServerPath()}/api/auth/profile`,{
+          headers:{
+            Authorization: `Bearer ${response.data.token}`
+          }
+        });
+
+        console.log(profileResponse.data.userProfile);
         
-        navigate("/character");
+        if(profileResponse.data.userProfile.Character == null)
+        {
+          navigate("/character");
+        }
+        else
+        {
+          navigate("/play");
+        }
+
       }else{
         // Failure
         console.log(response.data)
