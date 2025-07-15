@@ -1,7 +1,7 @@
 const User = require ('./authModel');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const InventoryItem = require('../BarKeeper/inventoryItem');
+const InventoryItem = require('../barkeeper/InventoryItem');
 
 // ✅ GET /inventory - Fetch all inventory items
 exports.findAll = async (req, res) => {

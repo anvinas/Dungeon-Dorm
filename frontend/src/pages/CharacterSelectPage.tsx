@@ -1,5 +1,5 @@
 import { useState ,useEffect} from "react"
-import { fetchJWT } from "../lib/JWT"
+import { fetchJWT,storeJWT } from "../lib/JWT"
 import axios from "axios"
 import GetServerPath from "../lib/GetServerPath"
 import styles from "./characterPage.module.css"
@@ -7,10 +7,10 @@ import styles from "./characterPage.module.css"
 function CharacterSelectPage(){
 
     const [allPossibleCharacterInfo,setAllPossibleCharacterInfo] = useState([
-        {animDelay:500,scrollFrame:1},
-        {animDelay:943,scrollFrame:1},
-        {animDelay:3584,scrollFrame:1},
-        {animDelay:1255,scrollFrame:1},
+        {id:"685d632886585be7727d064c",name:"mage",animDelay:500,scrollFrame:1},
+        {id:"685d632886585be7727d064c",name:"mage",animDelay:943,scrollFrame:1},
+        {id:"685d632886585be7727d064c",name:"mage",animDelay:3584,scrollFrame:1},
+        {id:"685d632886585be7727d064c",name:"mage",animDelay:1255,scrollFrame:1},
     ])
     const [selectedScrollIndex,setSelectedScrollIndex] = useState(-1)
 
@@ -53,9 +53,9 @@ function CharacterSelectPage(){
                                 {allPossibleCharacterInfo.map((charInfo,i)=>{
                                     return(
                                         <ScrollCharacterModel key={i} 
-                                            scrollFrame={charInfo.scrollFrame} 
                                             setScrollFrame={(frameNum)=>{setAllPossibleCharacterInfo((info)=>{const newInfo = [...info]; newInfo[i].scrollFrame = frameNum;return newInfo;})}} 
-                                            animDelay={charInfo.animDelay} isSelected={selectedScrollIndex == i} 
+                                            characterInfo={charInfo}
+                                            isSelected={selectedScrollIndex == i} 
                                             index={i} 
                                             onClick={()=>onClickScroll(i)}
                                         />
@@ -82,11 +82,10 @@ type ScrollCharacterModelProps = {
     onClick: () => void;
     setScrollFrame: (frameNum:number) =>void;
     index: number;
-    animDelay: number;
-    scrollFrame:number;
+    characterInfo: {id:string,name:string,animDelay:number,scrollFrame:number}
 };
 
-const ScrollCharacterModel = ({isSelected,onClick,index,scrollFrame,setScrollFrame, animDelay}: ScrollCharacterModelProps)=>{
+const ScrollCharacterModel = ({isSelected,onClick,index,setScrollFrame,characterInfo}: ScrollCharacterModelProps)=>{
 
     const [isHovered, setIsHovered] = useState(false);
     const[error, setError] = useState("");
@@ -96,22 +95,21 @@ const ScrollCharacterModel = ({isSelected,onClick,index,scrollFrame,setScrollFra
 
     
     const framePath = (scrollFrame: number) =>
-        `/assets/playableCharacter/mage/scroll/animation/frame_${scrollFrame}.png`; // adjust path & naming if needed
+        `/assets/playableCharacter/${characterInfo.name}/scroll/animation/frame_${scrollFrame}.png`; // adjust path & naming if needed
 
-    const defaultImage = '/assets/playableCharacter/mage/scroll/closed.png';
-    const hoverImage = '/assets/playableCharacter/mage/scroll/peek.png';
+    const defaultImage = `/assets/playableCharacter/${characterInfo.name}/scroll/closed.png`;
+    const hoverImage = `/assets/playableCharacter/${characterInfo.name}/scroll/peek.png`;
 
     useEffect(() => {
         if (!isSelected) return;
 
-        let currentFrame = scrollFrame;
+        let currentFrame = characterInfo.scrollFrame;
 
         const interval = setInterval(() => {
             currentFrame++;
             if (currentFrame >= totalFrames) {
                 clearInterval(interval);
             } else {
-                console.log(currentFrame)
                 setScrollFrame(currentFrame);
             }
         }, animationSpeed);
@@ -134,7 +132,7 @@ const ScrollCharacterModel = ({isSelected,onClick,index,scrollFrame,setScrollFra
     };
 
     const imageToShow = isSelected
-        ? framePath(scrollFrame)
+        ? framePath(characterInfo.scrollFrame)
         : isHovered
         ? hoverImage
         : defaultImage;
@@ -146,7 +144,9 @@ const ScrollCharacterModel = ({isSelected,onClick,index,scrollFrame,setScrollFra
         // console.log(curSelectedChar.userId + " Hi");
         try{
             const token = fetchJWT();
-            let response = await axios.post(`${GetServerPath()}/api/user/selected-character`,{curSelectedChar}, 
+            let response = await axios.post(`${GetServerPath()}/api/user/select-character`,{
+                characterClassId:characterInfo.id,
+            }, 
             { headers: {
                 Authorization: `Bearer ${token}`
             },
@@ -184,7 +184,7 @@ const ScrollCharacterModel = ({isSelected,onClick,index,scrollFrame,setScrollFra
                 onMouseEnter={handleMouseEnter}
                 onMouseLeave={handleMouseLeave}
                 className={`${isSelected ? "w-[48]" : "w-[60%]"} z-3 ${styles.bannerContainer}`}
-                style={{ cursor: 'pointer' ,animationDelay:`${animDelay}ms`}}
+                style={{ cursor: 'pointer' ,animationDelay:`${characterInfo.animDelay}ms`}}
             />
             {isSelected && (
                 <div onClick={handleCharacterSelect} className="bg-green-500 px-8 py-3 text-black rounded-md font-semibold hover:cursor-pointer hover:bg-green-600">
