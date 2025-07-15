@@ -1,125 +1,52 @@
-/*
-import React, { useEffect, useState } from 'react';
-import { useLocation, useNavigate , useSearchParams} from 'react-router-dom'; // For React Router v6+
-
-const VerifyEmail = () => {
-  const [message, setMessage] = useState('Verifying your email...');
-  const location = useLocation();
-  const navigate = useNavigate(); // To redirect after verification
-
-  useEffect(() => {
-    //const queryParams = new URLSearchParams(location.search);
-   // const token = queryParams.get('token');
-  const [searchParams] = useSearchParams();
-  const token = searchParams.get("token");
-
-
-    if (token) {
-      // Send the token to your backend
-      fetch('http://localhost:5000/api/auth/verify-email', { // Adjust port if different
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ token }),
-      })
-      .then(response => response.json())
-      .then(data => {
-        if (data.message) {
-          setMessage(data.message); // "Email successfully verified!"
-          // Optional: Redirect to login or dashboard after a delay
-          setTimeout(() => {
-            navigate('/login'); // Or wherever appropriate
-          }, 3000);
-        } else if (data.error) {
-          setMessage(`Verification failed: ${data.error}`);
-        }
-      })
-      .catch(error => {
-        console.error('Error during email verification:', error);
-        setMessage('An error occurred during verification. Please try again later.');
-      });
-    } else {
-      setMessage('No verification token found in the URL.');
-    }
-  }, [location, navigate]); // Added navigate to dependency array for useEffect
-
-  return (
-    <div>
-      <h2>Email Verification</h2>
-      <p>{message}</p>
-      {message.includes("success") && <p>You will be redirected shortly.</p>}
-    </div>
-  );
-};
-*/
-
-
-
-
-
-
-
-
-
 // import styles from "./styles/loginModal.module.css"
-import {useEffect, useState} from "react"
+import {useState} from "react"
 import GetServerPath from "../lib/GetServerPath.ts"
+import {storeJWT} from "../lib/JWT.ts"
 import axios from "axios"
-import { useSearchParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 
 function VerifyEmail() {
 
-  const [message, setMessage] = useState("Verifying...");
-  const [searchParams] = useSearchParams();
-  const token = searchParams.get("token");
-  
-  useEffect(() => {
-    
+  const navigate = useNavigate();
+
   const confirmEmail= async ()=>
-    {
-      try
-      {
-        if (token) {
-          confirmEmail();
-        } else {
-          setMessage("❌ No verification token found.");
-        }
+  {
 
-        const response = await axios.post(`${GetServerPath()}/api/auth/verify-email`,
-        {token}, );
-
-        if (response.data.message)
-        {
-          setMessage("✅ Email verified successfully! You may now log in.")
-        } else {
-            setMessage("❌ Something went wrong. Please try again.");
-        }
-
-      }
-      catch (err)
-      {
-        setMessage("❌ Invalid or expired token.");
-      }
-    };
-
-     /*if (token) {
-      confirmEmail();
-    } else {
-      setMessage("❌ No verification token found.");
-    }
-      */
-  }, [token]);
-  
-  
+  }
   return (
-      <div>
-      <h1>Email Verification</h1>
-      <p>{message}</p>
-    </div>
-  );
-}
+    <div className="z-4 absolute bg-[#000000db] flex justify-center items-center w-screen h-screen overflow-hidden ">
+      <div className="bg-white rounded-lg shadow-md min-w-[30%]">
+          {/* Header */}
+          <div className="flex justify-between bg-blue-400 rounded-t-lg  p-5">
+            <div className="font-semibold text-2xl text-white">Signup</div>
+            <div className="font-semibold text-2xl text-white hover:cursor-pointer hover:text-red-300" onClick={()=>onClickClose()}>X</div>
+          </div>
+          <div className="p-10 flex flex-col gap-3">
+              
+              {/* First Name */}
+              <div className="flex flex-col gap-1">
+                <div className="font-bold">gamerTag</div>
+               
+                
+              </div>
+             
 
+              {/* Error Msg */}
+              <div className="text-red-500">{error==null ? "":error}</div>
+          </div>
+
+          {/* Footer */}
+          <div className="flex justify-between border-t-1 border-gray-200 p-5"> 
+              <div></div>
+              <div className="flex gap-3">
+                  <div className="p-5 pt-3 pb-3 rounded-md bg-green-400 hover:bg-green-500 hover:cursor-pointer" onClick={()=>confirmEmail()}>Login</div>
+              </div>
+          </div>
+      </div>
+    </div>
+ 
+  )
+}
 
 export default VerifyEmail

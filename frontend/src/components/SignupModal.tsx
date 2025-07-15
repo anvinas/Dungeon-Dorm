@@ -72,9 +72,7 @@ function SignupModal({onClickClose,isOpen}:SignupModalProps) {
       // Succes
       if(response.status == 200){
         storeJWT(response.data.token)
-        console.log(response.data)
-        
-        navigate("/verify");
+        //navigate("/play");
       }else{
         // Failure
         console.log(response.data)
@@ -125,11 +123,10 @@ function SignupModal({onClickClose,isOpen}:SignupModalProps) {
           </div>
 
           {/* Footer */}
-          <div className="flex justify-center border-t-1 border-gray-200 p-5"> 
+          <div className="flex justify-between border-t-1 border-gray-200 p-5"> 
               <div></div>
-
               <div className="flex gap-3">
-                  <div className="w-60 p-5 pt-3 pb-3 text-center rounded-md bg-indigo-400 hover:bg-green-500 hover:cursor-pointer" onClick={()=>handleSignup()}>Create Account</div>
+                  <div className="p-5 pt-3 pb-3 rounded-md bg-green-400 hover:bg-green-500 hover:cursor-pointer" onClick={()=>handleSignup()}>Login</div>
               </div>
           </div>
       </div>
