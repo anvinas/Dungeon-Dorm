@@ -124,6 +124,14 @@ function LoginModal({onClickClose,isOpen} : LoginModalProps) {
                 {inputErrorDisplay.password &&<div className="text-red-500 text-sm">Please Input a valid password</div>}           
               </div>
 
+               <div className="flex items-center justify-between">
+                <label htmlFor="password" className="block text-sm/6 font-medium text-gray-900"></label>
+                <div className="text-sm">
+                  <a href="#" className="font-semibold text-indigo-600 hover:text-indigo-500">Forgot password?</a>
+                </div>
+              </div>
+
+
               {/* Error Msg */}
               <div className="text-red-500">{error==null ? "":error}</div>
           </div>
