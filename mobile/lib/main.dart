@@ -20,6 +20,7 @@ class MyApp extends StatelessWidget {
       routes: {
         '/': (context) => const LoginPage(),
         '/select': (context) => const CharacterSelectPage(),
+        '/play': (context) => const CharacterSelectPage(),
       },
     );
   }
