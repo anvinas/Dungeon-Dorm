@@ -1,4 +1,7 @@
 import { useState ,useEffect} from "react"
+import { fetchJWT } from "../lib/JWT"
+import axios from "axios"
+import GetServerPath from "../lib/GetServerPath"
 import styles from "./characterPage.module.css"
 
 function CharacterSelectPage(){
@@ -11,6 +14,14 @@ function CharacterSelectPage(){
     ])
     const [selectedScrollIndex,setSelectedScrollIndex] = useState(-1)
 
+
+    useEffect(()=>{
+        fetchCharacterID()
+    },[])
+    
+    const fetchCharacterID = ()=>{
+        
+    }
 
     const onClickScroll = (index:number)=>{
         setSelectedScrollIndex(index);
@@ -162,6 +173,8 @@ const ScrollCharacterModel = ({isSelected,onClick,index,scrollFrame,setScrollFra
     }
     
     
+
+
 
     return (
         <div onClick={handleClick} className="flex flex-col gap-2 justify-center items-center h-fit">
