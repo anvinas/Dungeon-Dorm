@@ -1,11 +1,10 @@
 const userProfile = require('../auth/authModel');
-const Boss =  require('../global/Boss');   
-
+const Boss =  require('../global/Boss');  
 
 async function setNextBossForUser(user) 
 {
     const allBosses = await Boss.find({}).sort({level : 1});
-    const defeatedBosses = user.defeatedBosses.map(id => id.toString());
+    const defeatedBosses = user.Bosses.map(id => id.toString());
     const nextBoss = allBosses.find (b => !defeatedBosses.includes(b._id.toString()));
 
     user.currentBoss = nextBoss ? nextBoss._id : null;

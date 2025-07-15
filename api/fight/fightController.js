@@ -1,3 +1,24 @@
+const User = require('../auth/authModel');
+const Boss = require('../global/Boss');
+const CommonEnemy = require('../global/CommonEnemy');
+const { handleBossDefeat } = require('./combatResolution');
+const Encounter = require('./Encounter');
+
+async function loadEntity(id, type) {
+  if (!id || !type) throw new Error('Missing id or type for loadEntity');
+
+  switch (type) {
+    case 'User':
+      return await User.findById(id);
+    case 'Boss':
+      return await Boss.findById(id);
+    case 'CommonEnemy':
+      return await CommonEnemy.findById(id);
+    default:
+      throw new Error(`Unknown entity type: ${type}`);
+  }
+}
+
 const classGrowthRules = {
   Barbarian: (stats, level) => {
     const updatedStats = { 
@@ -198,7 +219,7 @@ function rollTalk(attacker, defender)
   const defenderStat = defender.stats.Charisma;
   let isCrit = 0;
   let friendshipContribution;
-  const d20 = rollD20;
+  const d20 = rollD20();
 
   if (d20 === 20)
   {
@@ -237,13 +258,13 @@ function rollItemUse(user, item)
     return {success: false, message: "Item not in user's inventory"};
   }
   
-  if (!item.name.toLowerCase().includes("potion"))
+  if (!item.description || !item.healthAmount)
   {
     return {success: false, message: "item is not a potion!"};
   }
 
   //Crit means double value of potion
-  const d20 = rollD20;
+  const d20 = rollD20();
   let consumed;
   let isCrit;
   let itemValue = item.healthAmount || 0;
@@ -326,13 +347,28 @@ function rollFlee(user, enemy)
 
 exports.startEncounter = async (req, res) => {
   const userId = req.user.userId;
+  const { enemyType, enemyId } = req.body; // Pass enemyType and enemyId from frontend
 
-  const enemy = await Enemy.findOne({ type : 'Goblin'}); // Placeholder, needs to pull right enemy
+  // Load user
+  const user = await loadEntity(userId, 'User');
+  if (!user) return res.status(404).json({ error: 'User not found' });
 
+  // Load enemy based on type
+  let enemy;
+  if (enemyType === 'Boss') {
+    enemy = await loadEntity(enemyId, 'Boss');
+  } else if (enemyType === 'CommonEnemy') {
+    enemy = await loadEntity(enemyId, 'CommonEnemy');
+  } else {
+    return res.status(400).json({ error: 'Invalid enemy type' });
+  }
+  if (!enemy) return res.status(404).json({ error: 'Enemy not found' });
+
+  // Create encounter
   const encounter = await Encounter.create({
     userId,
     enemyId: enemy._id,
-    enemyType: 'Common', //Placeholder
+    enemyType,
     userHP: user.stats.maxHP,
     enemyHP: enemy.stats.HP,
     currentTurn: 'User'
@@ -344,7 +380,6 @@ exports.startEncounter = async (req, res) => {
     enemyStats: enemy.stats,
     currentTurn: 'User'
   });
-
 };
 
 async function userAttackLogic(encounter, user, enemy) 
@@ -572,6 +607,7 @@ exports.userTurnAndEnemyResponse = async(req, res) => {
     }
   }
 
+  
 
   // After user turn, switch to enemy turn
   encounter.currentTurn = 'Enemy';
@@ -587,7 +623,7 @@ exports.userTurnAndEnemyResponse = async(req, res) => {
     return res.json(userResult, enemyResult);
   }
 
-
+  encounter.expiresAt = new Date(Date.now() + 1000 * 60 * 10); // 10 minutes from now
   encounter.currentTurn = 'User';
   await encounter.save();
 
@@ -598,4 +634,9 @@ exports.userTurnAndEnemyResponse = async(req, res) => {
   });
 
 }
-module.exports = {applyStatGrowth, startEncounter, userTurn};
+
+module.exports = {
+  levelupUser,
+  startEncounter,
+  userTurnAndEnemyResponse
+};
