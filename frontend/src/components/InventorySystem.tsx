@@ -15,7 +15,7 @@ interface InventoryItem {
   updatedAt?: string;
 }
 
-function InventorySystem(){
+function InventorySystem({onClose}){
     
   const fetchItems = async () => {
     try {
@@ -84,9 +84,9 @@ function InventorySystem(){
 
 
   return (
-    <div className="flex flex-col relative w-full h-full shadow-lg rounded-sm bg-[#f8bd7e] text-white border-10 border-[#b56c34] p-4">
+    <div className="flex flex-col relative w-full h-full shadow-lg rounded-sm bg-[#f8bd7e] text-white border-10 border-[#b56c34] p-4 z-4">
       <div className="absolute top-[-3%] left-[50%] translate-[-50%] bg-[#95a0ba] px-10 py-2 border-2 border-[#afb5c4] rounded-lg">
-        <div className={`text-[#535f6c] font-bold text-4xl ${styles.font}`}>Inventory</div>
+        <div onClick={()=>onClose()} className={`text-[#535f6c] font-bold text-3xl ${styles.font}`}>Inventory</div>
       </div>
 
       {/* Collections */}
@@ -117,10 +117,10 @@ const InventoryCollectionConsumables = ({itemsList}:InventoryCollectionProps)=>{
       <div className="flex gap-4 mt-2">
         {itemsList.map((itemData,i)=>{
           return(
-            <div key={i} className="w-[15%] aspect-square bg-[#fabe82] border-3 border-[#cd9159] rounded-sm">
+            <div key={i} className="w-[3.5vw] h-[3.5vw] aspect-square bg-[#fabe82] border-3 border-[#cd9159] rounded-sm">
               {itemData?.name != "Mini Health Potion" ?
                 <div className="text-sm text-black">{itemData ? itemData.name : ""}</div> :
-                <img className="w-[100%] aspect-square" src="/assets/inventoryItem/health_mini.png"/>
+                <img className="w-[3.5vw] h-[3.5vw] aspect-square" src="/assets/inventoryItem/health_mini.png"/>
               }
             </div>
           )
@@ -143,7 +143,7 @@ const InventoryCollectionItems = ({itemsList}:InventoryCollectionProps)=>{
       <div className="flex gap-4 mt-2 flex-wrap">
         {itemsList.map((itemData,i)=>{
           return(
-            <div key={i} className="w-[15%] aspect-square bg-[#fabe82] border-3 border-[#cd9159] rounded-sm">
+            <div key={i} className="w-[3.5vw] h-[3.5vw] aspect-square bg-[#fabe82] border-3 border-[#cd9159] rounded-sm">
                 <div className="text-sm text-black">{itemData ? itemData.name : ""}</div>
             </div>
           )
