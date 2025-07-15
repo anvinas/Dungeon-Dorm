@@ -1,4 +1,3 @@
-// api/barkeeper/InventoryItem.js
 const mongoose = require('mongoose');
 
 const InventoryItemSchema = new mongoose.Schema({
@@ -8,8 +7,8 @@ const InventoryItemSchema = new mongoose.Schema({
     description: { type: String },
 }, {
     timestamps: true,
-    // *** ADD THIS LINE IF YOUR COLLECTION IS NAMED 'InventoryItems' (Capital I) ***
-    collection: 'InventoryItem' // Explicitly set to match your actual MongoDB collection name
+    collection: 'InventoryItem' // Use your actual collection name
 });
 
-module.exports = mongoose.model('InventoryItem', InventoryItemSchema);
+// prevent OverwriteModelError during hot reloads or repeated imports
+module.exports = mongoose.models.InventoryItem || mongoose.model('InventoryItem', InventoryItemSchema);

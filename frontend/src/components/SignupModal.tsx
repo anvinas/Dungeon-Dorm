@@ -1,5 +1,5 @@
 // import styles from "./styles/loginModal.module.css"
-import {useState,useEffect} from "react"
+import {useState} from "react"
 import GetServerPath from "../lib/GetServerPath.js"
 import {storeJWT} from "../lib/JWT.js"
 import axios from "axios"
@@ -72,7 +72,7 @@ function SignupModal({onClickClose,isOpen}:SignupModalProps) {
       // Succes
       if(response.status == 200){
         storeJWT(response.data.token)
-        navigate("/play");
+        //navigate("/play");
       }else{
         // Failure
         console.log(response.data)

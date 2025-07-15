@@ -23,6 +23,7 @@ jobs:
           sshpass -p "${SSH_KEY}" ssh -o StrictHostKeyChecking=no "${SSH_USERNAME}@${SSH_HOST}" <<'EOF'
             cd /var/www
 
+            # If repo doesn't exist, clone it fresh
             if [ ! -d "Dungeon-Dorm/.git" ]; then
               rm -rf Dungeon-Dorm
               git clone https://github.com/anvinas/Dungeon-Dorm.git
@@ -31,9 +32,11 @@ jobs:
             cd Dungeon-Dorm
             git pull origin main
 
-            cd backend
-            npm ci
+            # Install deps for the API
+            cd api
+            npm install
 
+            # Go back to root and restart server
+            cd ..
             pm2 restart server || pm2 start server.js --name server
           EOF
-          
