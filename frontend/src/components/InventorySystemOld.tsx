@@ -25,6 +25,7 @@ function InventorySystem(){
         }
       });
       setItems(res.data);
+      storeJWT(res.data.token)
       console.log(res.data)
     } catch (err:any) {
       console.error("Error fetching inventory:", err);
@@ -140,7 +141,7 @@ function InventorySystem(){
             <div key={item._id} className=" p-2 bg-[#571f30] rounded-lg  mb-2 hover:bg-[#7d233e] hover:cursor-pointer">
               <div className="font-semibold ">{item.name}</div>
               <div className="text-sm text-gray-300">{item.description}</div>
-              {item.healthAmount > 0 && (
+              {item.healthAmount !== undefined && item.healthAmount > 0 && (
                 <div className="text-green-400 text-sm">+{item.healthAmount} HP</div>
               )}
             </div>
