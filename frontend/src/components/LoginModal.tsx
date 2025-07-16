@@ -75,13 +75,18 @@ function LoginModal({onClickClose,isOpen} : LoginModalProps) {
 
         console.log(profileResponse.data.userProfile);
         
-        if(profileResponse.data.userProfile.Character == null)
+        if(profileResponse.data.userProfile.Character == null && profileResponse.data.userProfile.isEmailVerified == true)
         {
           navigate("/character");
         }
-        else
+        else if(profileResponse.data.userProfile.Character != null && profileResponse.data.userProfile.isEmailVerified == true)
         {
           navigate("/play");
+        }
+        else
+        {
+          console.log("MUST VERIFY");
+          setError("You must validate your email before login")
         }
 
       }else{

@@ -6,6 +6,7 @@ import LoginPage from './pages/LoginPage';
 import PlayPage from './pages/PlayPage';
 import CharacterSelectPage from './pages/CharacterSelectPage';
 import VerifyEmail from './pages/VerifyEmail';
+import IntroPage from './pages/IntroPage';
 
 function App() {
   return (
@@ -15,6 +16,7 @@ function App() {
         <Route path="/play" element={<PlayPage/>} />
         <Route path="/character" element={<CharacterSelectPage/>} />
         <Route path="/verify" element={<VerifyEmail/>}/>
+        <Route path='/intro' element={<IntroPage/>} />
       </Routes>
       </Router>
   );
