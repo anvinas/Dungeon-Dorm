@@ -152,7 +152,15 @@ exports.loginUser = async (req, res) =>
         if (!passwordMatch) return res.status(400).json({ error: "Incorrect user/password combination"});
 
         const token = jwt.sign({ userId: user._id}, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN || '1h'});
-        res.json({token, user: {gamerTag: user.gamerTag, level: user.level}})
+              // MODIFICATION HERE: Add isEmailVerified to the user object in the response
+        res.json({
+            token,
+            user: {
+                gamerTag: user.gamerTag,
+                level: user.level,
+                isEmailVerified: user.isEmailVerified // <--- ADD THIS LINE
+            }
+        })
     }
     catch (err)
     {
@@ -182,7 +190,7 @@ exports.findUserProfile = async (req, res) =>
                     path: 'weapon' // The field to populate within the CharacterClass document
                 }
             })
-            .select('-passwordHash -isEmailVerified -__v');
+            .select('-passwordHash -__v');
 
         if (!userProfile) {
             return res.status(404).json({error: "User profile not found."});
