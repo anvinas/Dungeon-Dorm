@@ -1,6 +1,8 @@
 import * as React from 'react';
 import Map, { Marker } from 'react-map-gl/maplibre';
 import { Source, Layer } from 'react-map-gl/maplibre';
+import type { LayerProps } from 'react-map-gl/maplibre';
+import type { FeatureCollection, Feature, Point } from 'geojson';
 
 import 'maplibre-gl/dist/maplibre-gl.css';
 
@@ -30,6 +32,7 @@ function App() {
     navigator.geolocation.getCurrentPosition(
       (position) => {
         // const { longitude, latitude } = position.coords;
+        console.log("Actula Pos",position)
         const { longitude, latitude } = { longitude: -81.2005, latitude: 28.6016 };
         setUserLocation({ longitude, latitude });
         setViewState((prev) => ({ ...prev, longitude, latitude }));
@@ -67,7 +70,8 @@ function App() {
   const radiusPixels = React.useMemo(() => {
     return metersToPixelsAtLatitude(radiusMeters, viewState.latitude, viewState.zoom) * pulse;
   }, [viewState.latitude, viewState.zoom, pulse]);
-  const hotzoneLayer = React.useMemo(() => ({
+  
+  const hotzoneLayer: LayerProps = React.useMemo(() => ({
     id: 'hotzones',
     type: 'circle',
     source: 'hotzones',
@@ -115,7 +119,7 @@ function App() {
           {/* QUEST ICONS */}
           {QUESTZONE.map((questData,i)=>{
             return(
-              <Marker key={`quest_i`} longitude={questData.longitude} latitude={questData.latitude}>
+              <Marker key={`quest_${i}`} longitude={questData.longitude} latitude={questData.latitude}>
                 <QuestIcon zoom={viewState.zoom} questData={questData}/>
               </Marker>
             )
@@ -162,15 +166,13 @@ const QUESTZONE = [
   {longitude: -81.2000 ,latitude: 28.5970},
 ]
 
-const hotzoneGeoJSON = {
-  type: 'FeatureCollection',
-  features: HOTZONES.map((zone) => ({
-    type: 'Feature',
-    properties: {
-      difficulty: zone.difficulty,
-    },
+const hotzoneGeoJSON: FeatureCollection<Point> = {
+  type: "FeatureCollection",
+  features: HOTZONES.map((zone): Feature<Point> => ({
+    type: "Feature",
+    properties: { difficulty: zone.difficulty },
     geometry: {
-      type: 'Point',
+      type: "Point",
       coordinates: [zone.longitude, zone.latitude],
     },
   })),

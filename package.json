@@ -19,6 +19,7 @@
     "mongoose": "^8.16.1"
   },
   "devDependencies": {
+    "@types/geojson": "^7946.0.16",
     "nodemon": "^3.1.10"
   }
 }
