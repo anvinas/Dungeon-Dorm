@@ -11,6 +11,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_map: ^8.1.1
+  geolocator: ^14.0.2
   mobile: ^1.2.1
   shared_preferences: ^2.5.3
 

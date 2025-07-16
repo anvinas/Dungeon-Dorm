@@ -1,78 +1,141 @@
 import 'package:flutter/material.dart';
-import 'modal_overlay.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:shared_preferences/shared_preferences.dart';
-
+import '../utils/get_path.dart';
+import '../utils/jwt_storage.dart';
+import '../pages/play_page.dart';
+import '../pages/select_character.dart';
 
 class LoginModal extends StatefulWidget {
+  final bool isOpen;
   final VoidCallback onClose;
-  const LoginModal({super.key, required this.onClose});
+
+  const LoginModal({Key? key, required this.isOpen, required this.onClose}) : super(key: key);
 
   @override
-  State<LoginModal> createState() => _LoginModalState();
+  _LoginModalState createState() => _LoginModalState();
 }
 
 class _LoginModalState extends State<LoginModal> {
-  final _gamerTagController = TextEditingController();
-  final _passwordController = TextEditingController();
-  String error = '';
+  final TextEditingController gamerTagController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+
+  String error = "";
 
   Future<void> handleLogin() async {
-  final gamerTag = _gamerTagController.text.trim();
-  final password = _passwordController.text.trim();
+    final String gamerTag = gamerTagController.text.trim();
+    final String password = passwordController.text.trim();
 
-  setState(() => error = '');
-
-  if (gamerTag.isEmpty || password.isEmpty) {
-    setState(() => error = "Please fill out all fields");
-    return;
-  }
-
-  final url = Uri.parse('https://dungeons-dorms.online/api/auth/login');
-  try {
-    final response = await http.post(
-      url,
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'gamerTag': gamerTag, 'password': password}),
-    );
-
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('jwt_token', data['token']);
-
-      Navigator.pushReplacementNamed(context, '/select');
-    } else {
-      final data = jsonDecode(response.body);
-      setState(() => error = data['error'] ?? 'Login failed');
+    if (gamerTag.isEmpty || password.isEmpty) {
+      setState(() => error = "Please fill in all fields.");
+      return;
     }
-  } catch (e) {
-    setState(() => error = 'Server error. Please try again later.');
-  }
-}
 
+    try {
+      final response = await http.post(
+        Uri.parse('${getPath()}/api/auth/login'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({"gamerTag": gamerTag, "password": password}),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        await storeJWT(data['token']);
+
+        // Fetch user profile to check character status
+        final profileResponse = await http.get(
+          Uri.parse('${getPath()}/api/auth/profile'),
+          headers: {
+            'Authorization': 'Bearer ${data['token']}',
+            'Content-Type': 'application/json'
+          },
+        );
+
+        if (profileResponse.statusCode == 200) {
+          final profileData = jsonDecode(profileResponse.body);
+
+          if (profileData['userProfile']['Character'] == null) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (_) => CharacterSelectPage()),
+            );
+          } else {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (_) => const MapPage()),
+            );
+          }
+        } else {
+          setState(() => error = "Failed to fetch user profile.");
+        }
+      } else {
+        final data = jsonDecode(response.body);
+        setState(() => error = data['error'] ?? "Login failed.");
+      }
+    } catch (e) {
+      setState(() => error = "Server error. Please try again later.");
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    return ModalOverlay(
-      title: "Login",
-      onClose: widget.onClose,
-      children: [
-        TextField(
-          controller: _gamerTagController,
-          decoration: const InputDecoration(labelText: "Gamertag"),
+    if (!widget.isOpen) return const SizedBox.shrink();
+
+    return Scaffold(
+      backgroundColor: Colors.black.withOpacity(0.85),
+      body: Center(
+        child: Container(
+          width: MediaQuery.of(context).size.width * 0.8,
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text("Login", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+                  GestureDetector(
+                    onTap: widget.onClose,
+                    child: const Icon(Icons.close, color: Colors.red),
+                  )
+                ],
+              ),
+              const SizedBox(height: 20),
+              TextField(
+                controller: gamerTagController,
+                decoration: const InputDecoration(
+                  labelText: 'GamerTag',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 10),
+              TextField(
+                controller: passwordController,
+                obscureText: true,
+                decoration: const InputDecoration(
+                  labelText: 'Password',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: handleLogin,
+                child: const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  child: Text("Login", style: TextStyle(fontSize: 18)),
+                ),
+              ),
+              const SizedBox(height: 10),
+              if (error.isNotEmpty)
+                Text(error, style: const TextStyle(color: Colors.red)),
+            ],
+          ),
         ),
-        TextField(
-          controller: _passwordController,
-          obscureText: true,
-          decoration: const InputDecoration(labelText: "Password"),
-        ),
-        if (error.isNotEmpty)
-          Text(error, style: const TextStyle(color: Colors.red)),
-        const SizedBox(height: 16),
-        ElevatedButton(onPressed: handleLogin, child: const Text("Login")),
-      ],
+      ),
     );
   }
 }

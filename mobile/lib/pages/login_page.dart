@@ -70,7 +70,7 @@ class _LoginPageState extends State<LoginPage> {
 
           // Modals
           if (loginModalOpen)
-            LoginModal(onClose: () => setState(() => loginModalOpen = false)),
+            LoginModal(onClose: () => setState(() => loginModalOpen = false), isOpen: true,),
           if (signupModalOpen)
             SignupModal(onClose: () => setState(() => signupModalOpen = false)),
         ],
