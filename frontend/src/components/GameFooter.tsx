@@ -1,9 +1,8 @@
 // import styles from "./styles/loginModal.module.css"
-import {useEffect, useState} from "react"
 import Avatar from "./Avatar"
 
 
-function GameFooter({OnClickInventory}){
+function GameFooter({OnClickInventory}:{OnClickInventory:any}){
     
   return (
     <div className="flex items-end relative w-full justify-between h-full shadow-lg p-15 text-white">
