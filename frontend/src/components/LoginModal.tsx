@@ -64,7 +64,13 @@ function LoginModal({onClickClose,isOpen} : LoginModalProps) {
       // Succes
       if(response.status == 200){
         storeJWT(response.data.token)
-        navigate("/play");
+        console.log(response.data)
+        // Already selected character
+        if(response.data.user.character){
+          navigate("/play");
+        }else{  
+          navigate("/character");
+        }
       }else{
         // Failure
         console.log(response.data)

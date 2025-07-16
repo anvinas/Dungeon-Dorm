@@ -22,7 +22,6 @@ const addItemToUserInventory = (user, itemId, quantity) => {
 exports.selectCharacter = async (req, res) => {
     const { characterClassId } = req.body;
     const userId = req.user.userId;
-
     if (!characterClassId) {
         return res.status(400).json({ error: 'Character Class ID is required.' });
     }

@@ -1,27 +1,36 @@
 import { useState ,useEffect} from "react"
 import { fetchJWT,storeJWT } from "../lib/JWT"
+import { useNavigate } from 'react-router-dom';
+
 import axios from "axios"
 import GetServerPath from "../lib/GetServerPath"
 import styles from "./characterPage.module.css"
 
+type SuccessSelectionData = {
+    message:string;
+    UserProfile: object;
+}
+
 function CharacterSelectPage(){
+    const navigate = useNavigate();
 
     const [allPossibleCharacterInfo,setAllPossibleCharacterInfo] = useState([
         {id:"685d632886585be7727d064c",name:"mage",animDelay:500,scrollFrame:1},
-        {id:"685d632886585be7727d064c",name:"mage",animDelay:943,scrollFrame:1},
-        {id:"685d632886585be7727d064c",name:"mage",animDelay:3584,scrollFrame:1},
-        {id:"685d632886585be7727d064c",name:"mage",animDelay:1255,scrollFrame:1},
+        {id:"686552bddd55124b4da9b83e",name:"mage",animDelay:943,scrollFrame:1},
+        {id:"686552bddd55124b4da9b83e",name:"mage",animDelay:3584,scrollFrame:1},
+        {id:"686552bddd55124b4da9b83e",name:"mage",animDelay:1255,scrollFrame:1},
     ])
     const [selectedScrollIndex,setSelectedScrollIndex] = useState(-1)
-
+    const [error,setError] = useState("")
+    const [successSelectionData,setSuccessSelectionData] = useState<SuccessSelectionData | null>(null)
 
     useEffect(()=>{
-        fetchCharacterID()
-    },[])
+        // fetchCharacterID()
+        if(error.includes("already")){
+            navigate("/play")
+        }
+    },[error])
     
-    const fetchCharacterID = ()=>{
-        
-    }
 
     const onClickScroll = (index:number)=>{
         setSelectedScrollIndex(index);
@@ -40,32 +49,49 @@ function CharacterSelectPage(){
             <div className="relative w-screen h-screen ">
                 <img src="/img/pixel_bg2.png" className={`w-screen max-w-screen h-screen ${styles.bgContainer}`}/>
 
-                {/* Banner */}
-                <div className={`absolute h-fit w-full h-fit translate-x-[50%] translate-y-[-50%]  top-[50%] right-[50%] z-3 `}>
-                    <div className="relative w-full h-fit items-center justify-center">
-                        <div className="flex items-center justify-center">
-                            <div className="text-center text-white font-bold text-6xl p-4 mb-10 rounded-lg inline-block">Choose Your Character</div>
-                        </div>
+                {!successSelectionData && 
+                    <div className={`absolute h-fit w-full h-fit translate-x-[50%] translate-y-[-50%]  top-[50%] right-[50%] z-3 `}>
+                        {/* Character select */}
+                        <div className="relative w-full h-fit items-center justify-center">
+                            <div className="flex items-center justify-center">
+                                <div className="text-center text-white font-bold text-6xl p-4 mb-10 rounded-lg inline-block">Choose Your Character</div>
+                            </div>
 
-                        {/* Scroll container */}
-                        <div className="px-10">
-                            <div className="relative w-fit flex gap-2 items-center justify-between">
-                                {allPossibleCharacterInfo.map((charInfo,i)=>{
-                                    return(
-                                        <ScrollCharacterModel key={i} 
-                                            setScrollFrame={(frameNum)=>{setAllPossibleCharacterInfo((info)=>{const newInfo = [...info]; newInfo[i].scrollFrame = frameNum;return newInfo;})}} 
-                                            characterInfo={charInfo}
-                                            isSelected={selectedScrollIndex == i} 
-                                            index={i} 
-                                            onClick={()=>onClickScroll(i)}
-                                        />
-                                    )
-                                })}
+                            {/* Scroll container */}
+                            <div className="px-10">
+                                <div className="relative w-fit flex gap-2 items-center justify-between">
+                                    {allPossibleCharacterInfo.map((charInfo,i)=>{
+                                        return(
+                                            <ScrollCharacterModel key={i} 
+                                                setScrollFrame={(frameNum)=>{setAllPossibleCharacterInfo((info)=>{const newInfo = [...info]; newInfo[i].scrollFrame = frameNum;return newInfo;})}} 
+                                                characterInfo={charInfo}
+                                                isSelected={selectedScrollIndex == i} 
+                                                index={i} 
+                                                onClick={()=>onClickScroll(i)}
+                                                setPageError={(error)=>setError(error)}
+                                                setSuccessSelectionData = {(data)=>setSuccessSelectionData(data)}
+                                            />
+                                        )
+                                    })}
+                                </div>
+                            </div>
+
+                            <div className="flex justify-center">
+                                <div className="text-center text-red-500 bg-gray-100 rounded-md px-2 w-fit">{error}</div>
                             </div>
                         </div>
-                        
                     </div>
-                </div>
+                }
+                
+                {/* START GAME */}
+                {successSelectionData &&
+                    <div className={`absolute flex flex-col h-fit w-fit opacity-[0.99] translate-x-[50%] translate-y-[-50%]  top-[50%] right-[50%] z-3 bg-white p-10 rounded gap-5`}>
+                        <div className="text-center font-semibold">{successSelectionData?.message}</div>
+                        <div className="flex justify-center">
+                            <div className="text-center font-bold bg-green-400 w-fit px-5 py-4 rounded hover:bg-green-500 hover:cursor-pointer" onClick={()=>navigate("/play")}>BEGIN YOUR JOURNEY</div>
+                        </div>
+                    </div>
+                }
 
             </div>
         
@@ -81,14 +107,15 @@ type ScrollCharacterModelProps = {
     isSelected: boolean;
     onClick: () => void;
     setScrollFrame: (frameNum:number) =>void;
+    setSuccessSelectionData: (data:any) =>void;
     index: number;
-    characterInfo: {id:string,name:string,animDelay:number,scrollFrame:number}
+    characterInfo: {id:string,name:string,animDelay:number,scrollFrame:number};
+    setPageError:(error:string) => void;
 };
 
-const ScrollCharacterModel = ({isSelected,onClick,index,setScrollFrame,characterInfo}: ScrollCharacterModelProps)=>{
+const ScrollCharacterModel = ({isSelected,index,characterInfo,onClick,setScrollFrame,setPageError,setSuccessSelectionData}: ScrollCharacterModelProps)=>{
 
     const [isHovered, setIsHovered] = useState(false);
-    const[error, setError] = useState("");
 
     const totalFrames = 6; // How many frames you have in your folder
     const animationSpeed = 100; // milliseconds per frame
@@ -142,6 +169,7 @@ const ScrollCharacterModel = ({isSelected,onClick,index,setScrollFrame,character
         // setCurSelectedChar((oldData) => ({...oldData, userId: "685d632886585be7727d064c"}));
         // console.log('685d632886585be7727d064c');
         // console.log(curSelectedChar.userId + " Hi");
+        setPageError("")
         try{
             const token = fetchJWT();
             let response = await axios.post(`${GetServerPath()}/api/user/select-character`,{
@@ -155,26 +183,23 @@ const ScrollCharacterModel = ({isSelected,onClick,index,setScrollFrame,character
             // Succes
             if(response.status == 200){
                 storeJWT(response.data.token)
-                
+                setSuccessSelectionData(response.data)
                 console.log(response.data)
             
             }else{
                 // Failure
                 console.log(response.data)
-                setError(response.data.error)
+                setPageError(response.data.error)
             }
 
         }catch(e:any){
             console.log(e)
-            setError("Server Error | contact admin")
-            setError(e.response.data.error)
+            setPageError("Server Error | contact admin")
+            setPageError(e.response.data.error)
         }
     
     }
     
-    
-
-
 
     return (
         <div onClick={handleClick} className="flex flex-col gap-2 justify-center items-center h-fit">
