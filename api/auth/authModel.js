@@ -26,7 +26,7 @@ const userSchema = new mongoose.Schema({
     },
     maxHP: { type: Number, default: 100 }, // User's current maxHP
     currentHP: { type: Number, default: 100 }, // User's current HP
-     currentActiveBoss: { type: mongoose.Schema.Types.ObjectId, ref: 'Boss', default: null },
+    currentActiveBoss: { type: mongoose.Schema.Types.ObjectId, ref: 'Boss', default: null },
     isEmailVerified: { type: Boolean, default: false }
 }, {
     collection: 'UserProfile', // Forces the collection name to 'UserProfile'
