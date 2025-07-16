@@ -15,10 +15,10 @@ function CharacterSelectPage(){
     const navigate = useNavigate();
 
     const [allPossibleCharacterInfo,setAllPossibleCharacterInfo] = useState([
-        {id:"685d632886585be7727d064c",name:"mage",animDelay:500,scrollFrame:1},
-        {id:"686552bddd55124b4da9b83e",name:"mage",animDelay:943,scrollFrame:1},
-        {id:"686552bddd55124b4da9b83e",name:"mage",animDelay:3584,scrollFrame:1},
-        {id:"686552bddd55124b4da9b83e",name:"mage",animDelay:1255,scrollFrame:1},
+        {id:"685d632886585be7727d064c",name:"warlock",animDelay:500,scrollFrame:1},
+        {id:"686552bddd55124b4da9b83e",name:"warlock",animDelay:943,scrollFrame:1},
+        {id:"686552bddd55124b4da9b83e",name:"warlock",animDelay:3584,scrollFrame:1},
+        {id:"686552bddd55124b4da9b83e",name:"warlock",animDelay:1255,scrollFrame:1},
     ])
     const [selectedScrollIndex,setSelectedScrollIndex] = useState(-1)
     const [error,setError] = useState("")
@@ -59,7 +59,7 @@ function CharacterSelectPage(){
 
                             {/* Scroll container */}
                             <div className="px-10">
-                                <div className="relative w-fit flex gap-2 items-center justify-between">
+                                <div className="relative w-fit flex gap-2 items-center justify-between min-h-150">
                                     {allPossibleCharacterInfo.map((charInfo,i)=>{
                                         return(
                                             <ScrollCharacterModel key={i} 
