@@ -1,4 +1,14 @@
-const QuestIcon = ({zoom})=>{
+import React from 'react';
+interface QuestIconProps {
+  zoom: number;
+  questData: {
+    longitude: number;
+    latitude: number;
+  };
+}
+
+const QuestIcon :React.FC<QuestIconProps>= ({ zoom, questData })=>{
+    console.log(questData)
     if(zoom<15) return (<div></div>)
     return(
         <div className={`w-20 h-20 border-black border-1 bg-orange-600 opacity-[0.7] translate-y-[-50%] rounded-[50%] relative z-4`}>   
