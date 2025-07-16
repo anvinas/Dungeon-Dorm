@@ -78,7 +78,7 @@ exports.registerUser = async (req, res) => {
         const salt = await bcrypt.genSalt(10);
         const passwordHash = await bcrypt.hash(password, salt);
 
-        const emailVerificationToken = Math.floor(100000 + Math.random() * 900000).toString();
+        const emailVerificationToken = Math.floor(100000 + Math.random() * 900000);
         const emailVerificationExpires = new Date(Date.now() + 3600000); // Token valid for 1 hour
 
         const newUser = new User
@@ -97,7 +97,7 @@ exports.registerUser = async (req, res) => {
         await newUser.save();
     //"http://localhost:5000"
         //http://dungeon-dorm.online
-        const verificationLink = `http://dungeon-dorm.online/verify?token=${emailVerificationToken}`; // Your frontend link
+        const verificationLink = `http://localhost:5173/verify?token=${emailVerificationToken}`; // Your frontend link
 
         const mailOptions = {
             from: process.env.EMAIL_USER,          // This will be your Ethereal user ID
@@ -120,6 +120,8 @@ exports.registerUser = async (req, res) => {
             console.log(`Preview URL: ${nodemailer.getTestMessageUrl(info)}`); // <<< CRITICAL: This is where you view the email!
             console.log(`Verification Code (for Postman): ${emailVerificationToken}`); // Still log for convenience
             console.log(`----------------------------------------------\n`);
+
+
         } catch (mailError) {
             console.error('Error sending verification email via Ethereal:', mailError);
         }
@@ -200,21 +202,21 @@ exports.findUserProfile = async (req, res) =>
 
 exports.verifyEmail = async (req, res) => {
     const { token } = req.body;
-
+    console.log(token)
     if (!token) {
         return res.status(400).json({ error: 'Verification token is required.' });
     }
-
+    
     try {
         const user = await User.findOne({
             emailVerificationToken: token,
-            emailVerificationExpires: { $gt: Date.now() }
+            //emailVerificationExpires: { $gt: Date.now() } UNCOMMENT LATER
         });
-
+        console.log(user)
         if (!user) {
             return res.status(400).json({ error: 'Invalid or expired verification token.' });
         }
-
+        console.log("waz up")
         user.isEmailVerified = true;
         user.emailVerificationToken = undefined;
         user.emailVerificationExpires = undefined;

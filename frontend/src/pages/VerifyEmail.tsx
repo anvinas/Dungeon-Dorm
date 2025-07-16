@@ -75,24 +75,35 @@ function VerifyEmail() {
   const [searchParams] = useSearchParams();
   const token = searchParams.get("token");
   
-  useEffect(() => {
-    
-  const confirmEmail= async ()=>
+  console.log(token);
+
+     /*if (token) {
+      confirmEmail();
+    } else {
+      setMessage("❌ No verification token found.");
+    }
+      */
+  useEffect(()=>{
+    if(token && token?.length>0)
+    {
+      confirmEmail(token);
+    }
+  },[])
+  
+  const confirmEmail= async (token:string)=>
     {
       try
       {
-        if (token) {
-          confirmEmail();
-        } else {
-          setMessage("❌ No verification token found.");
-        }
 
         const response = await axios.post(`${GetServerPath()}/api/auth/verify-email`,
         {token}, );
+        
+        console.log(response);
 
         if (response.data.message)
         {
           setMessage("✅ Email verified successfully! You may now log in.")
+          setTimeout(()=>{},1000)
         } else {
             setMessage("❌ Something went wrong. Please try again.");
         }
@@ -102,17 +113,9 @@ function VerifyEmail() {
       {
         setMessage("❌ Invalid or expired token.");
       }
-    };
-
-     /*if (token) {
-      confirmEmail();
-    } else {
-      setMessage("❌ No verification token found.");
     }
-      */
-  }, [token]);
-  
-  
+
+
   return (
       <div>
       <h1>Email Verification</h1>
