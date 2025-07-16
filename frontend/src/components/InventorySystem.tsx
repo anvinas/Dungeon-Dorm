@@ -15,7 +15,7 @@ interface InventoryItem {
   updatedAt?: string;
 }
 
-function InventorySystem({onClose}){
+function InventorySystem({onClose}:{onClose:()=>void;}){
     
   const fetchItems = async () => {
     try {
@@ -26,7 +26,7 @@ function InventorySystem({onClose}){
         }
       });
       setItems(res.data);
-      console.log(res.data)
+      storeJWT(res.data.token)
     } catch (err:any) {
       console.error("Error fetching inventory:", err);
       // Optional: redirect to login if 401
@@ -42,34 +42,34 @@ function InventorySystem({onClose}){
  
   const navigate = useNavigate();
   const [items,setItems] = useState<InventoryItem[]>([])
-  const [showAddModal,setShowAddModal] = useState(false)
-  const [createError,setCreateError] = useState("")
-  const [newItemData,setNewItemData] = useState({
-    name:"",
-    healthAmount:0,
-    description:"",
-    showHealth:false
-  })
+  // const [showAddModal,setShowAddModal] = useState(false)
+  // const [createError,setCreateError] = useState("")
+  // const [newItemData,setNewItemData] = useState({
+  //   name:"",
+  //   healthAmount:0,
+  //   description:"",
+  //   showHealth:false
+  // })
 
-  const createItem = async () => {
-    try {
-      const token = fetchJWT(); // Assuming this retrieves token from localStorage
-      const res = await axios.post(`${GetServerPath()}/api/auth/inventory`, newItemData,{
-        headers: {
-          Authorization: `Bearer ${token}`
-        },
-      });
-      setShowAddModal(false)
-      setItems(prevItems => [...prevItems, res.data]); 
-    } catch (err:any) {
-      console.error("Error fetching inventory:", err);
-      setCreateError("Error creating item")
-      // Optional: redirect to login if 401
-      if (err.response?.status === 401 || err.response?.status === 403) {
-        navigate('/login');
-      }
-    }
-  };
+  // const createItem = async () => {
+  //   try {
+  //     const token = fetchJWT(); // Assuming this retrieves token from localStorage
+  //     const res = await axios.post(`${GetServerPath()}/api/auth/inventory`, newItemData,{
+  //       headers: {
+  //         Authorization: `Bearer ${token}`
+  //       },
+  //     });
+  //     setShowAddModal(false)
+  //     setItems(prevItems => [...prevItems, res.data]); 
+  //   } catch (err:any) {
+  //     console.error("Error fetching inventory:", err);
+  //     setCreateError("Error creating item")
+  //     // Optional: redirect to login if 401
+  //     if (err.response?.status === 401 || err.response?.status === 403) {
+  //       navigate('/login');
+  //     }
+  //   }
+  // };
 
   // Divide into categories
   const consumables = items.filter(item => item.healthAmount && item.healthAmount > 0);
