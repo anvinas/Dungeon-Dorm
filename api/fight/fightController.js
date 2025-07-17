@@ -658,5 +658,6 @@ module.exports = {
   levelupUser,
   startEncounter,
   userTurnAndEnemyResponse,
-  loadEntity
+  loadEntity,
+  getActiveEncounter
 };
