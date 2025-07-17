@@ -267,12 +267,3 @@ exports.fetchUserProfile = async (req, res) => {
         return res.status(500).json({ error: 'Server error fetching user profile.' });
     }
 };
-
-module.exports = { 
-    selectCharacter,
-    setCurrentBoss,
-    defeatBoss,
-    returnEnemies,
-    fetchEnemyById,
-    fetchUserProfile
-};
