@@ -16,8 +16,14 @@ type LoginModalProps = {
   isOpen: boolean;
 };
 
+type EmailData = {
+  email: string;
+};
+
 function LoginModal({onClickClose,isOpen} : LoginModalProps) {
   const navigate = useNavigate();
+
+  const [mode, setMode] = useState<"login" | "forgotPassword">("login");
 
   const [error,setError] = useState("")
   const [inputErrorDisplay,setInputErrorDisplay] = useState({
@@ -30,6 +36,9 @@ function LoginModal({onClickClose,isOpen} : LoginModalProps) {
     showPassword:false
   })
 
+  const [emailData,setEmailData] = useState<EmailData>({
+    email: ""
+  })
 
   const handleLogin = async()=>{
     let hasErrors= false;
@@ -102,6 +111,29 @@ function LoginModal({onClickClose,isOpen} : LoginModalProps) {
     }
   }
 
+  
+  const forgotPassword = async () => {
+     try{
+      let response = await axios.post(`${GetServerPath()}/api/auth/forgot-password`,{emailData})
+
+      if(response.status == 200){
+        console.log(response.statusText);
+      }
+      else{
+        console.log(response.data)
+        setError(response.data.error)
+      }
+
+    }
+    catch(e:any)
+    {
+     
+      //always does this until proper email
+    }
+  }
+
+
+
   if(!isOpen) return
 
   return (
@@ -110,10 +142,12 @@ function LoginModal({onClickClose,isOpen} : LoginModalProps) {
           {/* Header */}
           <div className="flex justify-between bg-blue-400 rounded-t-lg  p-5">
             <div className="font-semibold text-2xl text-white">Login</div>
-            <div className="font-semibold text-2xl text-white hover:cursor-pointer hover:text-red-300" onClick={()=>onClickClose()}>X</div>
+            <div className="font-semibold text-2xl text-white hover:cursor-pointer hover:text-red-300" onClick={()=>{onClickClose(), setMode("login")}}>X</div>
           </div>
           <div className="p-10 flex flex-col gap-3">
               
+              {mode == "login" && (
+                <>
               {/* Gamertag */}
               <div className="flex flex-col gap-1">
                 <div className="font-bold">Gamertag</div>
@@ -132,9 +166,38 @@ function LoginModal({onClickClose,isOpen} : LoginModalProps) {
                <div className="flex items-center justify-between">
                 <label htmlFor="password" className="block text-sm/6 font-medium text-gray-900"></label>
                 <div className="text-sm">
-                  <a href="#" className="font-semibold text-indigo-600 hover:text-indigo-500">Forgot password?</a>
+                  <a href="#" className="font-semibold text-indigo-600 hover:text-indigo-500" onClick={()=> {
+                    setMode("forgotPassword");
+                    forgotPassword();
+                  }}>Forgot password?</a>
                 </div>
               </div>
+              
+              </>
+              )}
+              {/*end of login mode*/}
+
+
+              {mode == "forgotPassword" && (
+                <>
+                   {/* Email Input */}
+              <div className="flex flex-col gap-1">
+                <div className="font-bold">Enter Email To Find Account</div>
+                <input onChange={(e)=>setEmailData((oldData)=>{oldData.email = e.target.value; return oldData})} placeholder="xxxx@gmail.com" className="border border-gray-400 rounded-sm h-10  pl-5" />
+              </div>
+
+               <div className="flex items-center justify-between">
+                  <label htmlFor="password" className="block text-sm/6 font-medium text-gray-900"></label>
+                 
+                  <div className="text-sm">
+                    <a href="#" className="font-semibold text-indigo-600 hover:text-indigo-500" onClick={()=> {
+                      setMode("login");
+                    }}>Back To Login</a>
+                  </div>
+
+              </div>
+                </>
+              )}
 
 
               {/* Error Msg */}
@@ -150,7 +213,7 @@ function LoginModal({onClickClose,isOpen} : LoginModalProps) {
           </div>
       </div>
     </div>
-    
+
   )
 }
 
