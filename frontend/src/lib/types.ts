@@ -1,3 +1,35 @@
+interface UserStats {
+  strength: number;
+  dexterity: number;
+  intelligence: number;
+  charisma: number;
+  defense: number;
+}
+
+interface LootItem {
+  itemId: string;
+  quantity: number;
+  _id: string;
+}
+
+export interface UserProfile_T {
+  _id: string;
+  email: string;
+  gamerTag: string;
+  level: number;
+  Currency: number;
+  maxHP: number;
+  currentHP: number;
+  currentStats: UserStats;
+  CurrentLoot: LootItem[];
+  Character: string;
+  Bosses: string[];
+  currentActiveBoss: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+
 export interface Encounter_T {
   message: string;
   user:{

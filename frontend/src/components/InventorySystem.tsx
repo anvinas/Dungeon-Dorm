@@ -4,31 +4,36 @@ import axios from "axios"
 import GetServerPath from "../lib/GetServerPath.ts"
 import { storeJWT, fetchJWT } from "../lib/JWT.ts"
 import { useNavigate } from 'react-router-dom';
+import {type UserProfile_T} from "../lib/types.ts"
+
 import styles from "./styles/InventorySystem.module.css"
 
 function InventorySystem({onClose}:{onClose:()=>void;}){
   const navigate = useNavigate();
+  const [userData,setUserData] = useState<UserProfile_T | null >(null)
 
-  const fetchItems = async () => {
+  const fetchUserData = async () => {
     try {
-      const token = fetchJWT(); // Assuming this retrieves token from localStorage
-      const res = await axios.get(`${GetServerPath()}/api/auth/inventory`, {
+      const token = fetchJWT(); 
+      const res = await axios.get(`${GetServerPath()}/api/auth/profile`, {
         headers: {
           Authorization: `Bearer ${token}`
         }
       });
       storeJWT(res.data.token)
+      setUserData(res.data)
+      console.log(res.data)
     } catch (err:any) {
-      console.error("Error fetching inventory:", err);
+      console.error("Error fetching userData:", err);
       // Optional: redirect to login if 401
       if (err.response?.status === 401 || err.response?.status === 403) {
-        // navigate('/');
+        navigate('/');
       }
     }
   };
 
   useEffect(()=>{
-    fetchItems()
+    fetchUserData()
   },[])
  
   return(
@@ -51,6 +56,10 @@ function InventorySystem({onClose}:{onClose:()=>void;}){
             <div className="white text-2xl font-bold text-white text-center">Character</div>
           </div>
 
+          {/* Middle Main */}
+          <div className="">
+
+          </div>
         </div>
 
         {/* Right Stats */}

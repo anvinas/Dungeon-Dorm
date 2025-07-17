@@ -253,8 +253,10 @@ const fetchEnemyById = async (req, res) => {
 }
 
 const fetchUserProfile = async (req, res) => {
+    console.log("here")
     const userId = req.user.userId;
-    
+        console.log(userId)
+
     try {
         const user = await UserProfile.findById(userId).select('-passwordHash -emailVerificationToken -emailVerificationExpires -resetPasswordToken -resetPasswordExpires -email -activityState -currentHP -createdAt -updatedAt');
         if (!user) {

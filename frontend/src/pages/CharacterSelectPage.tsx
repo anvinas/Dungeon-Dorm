@@ -209,7 +209,7 @@ const ScrollCharacterModel = ({isSelected,index,characterInfo,onClick,setScrollF
                 alt="Character Scroll"
                 onMouseEnter={handleMouseEnter}
                 onMouseLeave={handleMouseLeave}
-                className={`${isSelected ? "w-[48]" : "w-[60%]"} z-3 ${styles.bannerContainer}`}
+                className={`${isSelected ? "w-[90%]" : "w-[60%]"} z-3 ${styles.bannerContainer}`}
                 style={{ cursor: 'pointer' ,animationDelay:`${characterInfo.animDelay}ms`}}
             />
             {isSelected && (
