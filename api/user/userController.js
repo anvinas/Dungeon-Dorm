@@ -20,7 +20,7 @@ const addItemToUserInventory = (user, itemId, quantity) => {
 // @desc    Select a character class for the user
 // @route   POST /api/user/select-character
 // @access  Private (requires token)
-exports.selectCharacter = async (req, res) => {
+const selectCharacter = async (req, res) => {
     const { characterClassId } = req.body;
     const userId = req.user.userId;
 
@@ -94,7 +94,7 @@ exports.selectCharacter = async (req, res) => {
 // @desc    Sets the ID of the boss the user is currently on/facing
 // @route   POST /api/user/set-current-boss
 // @access  Private (requires token)
-exports.setCurrentBoss = async (req, res) => {
+const setCurrentBoss = async (req, res) => {
     const { bossId } = req.body;
     const userId = req.user.userId;
 
@@ -140,7 +140,7 @@ exports.setCurrentBoss = async (req, res) => {
 // @desc    Update user profile after defeating a boss and progress to next
 // @route   POST /api/user/defeat-boss
 // @access  Private (requires token)
-exports.defeatBoss = async (req, res) => {
+const defeatBoss = async (req, res) => {
     const { bossId } = req.body; // The ID of the boss that was JUST DEFEATED
     const userId = req.user.userId;
 
@@ -219,7 +219,7 @@ exports.defeatBoss = async (req, res) => {
     }
 };
 
-exports.returnEnemies = async (req, res) => {
+const returnEnemies = async (req, res) => {
     try {
         const Bosses = await Boss.find({}).sort({level : 1});
         const Enemies = await CommonEnemy.find({}).sort({level : 1});
@@ -231,7 +231,7 @@ exports.returnEnemies = async (req, res) => {
     }
 }
 
-exports.fetchEnemyById = async (req, res) => {
+const fetchEnemyById = async (req, res) => {
     const {id} = req.params;
     try {
         const boss = await Boss.findById(id);
@@ -252,7 +252,7 @@ exports.fetchEnemyById = async (req, res) => {
     }
 }
 
-exports.fetchUserProfile = async (req, res) => {
+const fetchUserProfile = async (req, res) => {
     const userId = req.user.userId;
     
     try {
