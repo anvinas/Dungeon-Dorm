@@ -205,6 +205,67 @@ paths:
         '404':
           description: No active encounter found
 
+  /user/fetch-user:
+    post:
+      summary: Fetch the authenticated user's profile
+      description: Returns the user's profile with sensitive fields excluded. Requires authentication.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: User profile returned successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    type: object
+                    properties:
+                      _id:
+                        type: string
+                      gamerTag:
+                        type: string
+                      level:
+                        type: integer
+                      Currency:
+                        type: integer
+                      CurrentLoot:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            itemId:
+                              type: string
+                            quantity:
+                              type: integer
+                      Character:
+                        type: string
+                      Bosses:
+                        type: array
+                        items:
+                          type: string
+                      currentActiveBoss:
+                        type: string
+        '404':
+          description: User profile not found or JSON header incorrect
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '500':
+          description: Server error fetching user profile
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+
 components:
   securitySchemes:
     bearerAuth:
