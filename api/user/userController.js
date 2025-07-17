@@ -3,6 +3,7 @@ const UserProfile = require('../auth/authModel'); // UserProfile model is in api
 const CharacterClass = require('../../models/CharacterClass'); // CharacterClass model is now in top-level models/
 const InventoryItem = require('../barkeeper/InventoryItem'); // InventoryItem model is in api/barkeeper/
 const Boss = require('../global/Boss');
+const CommonEnemy = require('../global/CommonEnemy');
 
 // Helper function to add items to user's inventory (re-usable)
 const addItemToUserInventory = (user, itemId, quantity) => {
@@ -19,7 +20,7 @@ const addItemToUserInventory = (user, itemId, quantity) => {
 // @desc    Select a character class for the user
 // @route   POST /api/user/select-character
 // @access  Private (requires token)
-exports.selectCharacter = async (req, res) => {
+const selectCharacter = async (req, res) => {
     const { characterClassId } = req.body;
     const userId = req.user.userId;
 
@@ -93,7 +94,7 @@ exports.selectCharacter = async (req, res) => {
 // @desc    Sets the ID of the boss the user is currently on/facing
 // @route   POST /api/user/set-current-boss
 // @access  Private (requires token)
-exports.setCurrentBoss = async (req, res) => {
+const setCurrentBoss = async (req, res) => {
     const { bossId } = req.body;
     const userId = req.user.userId;
 
@@ -139,7 +140,7 @@ exports.setCurrentBoss = async (req, res) => {
 // @desc    Update user profile after defeating a boss and progress to next
 // @route   POST /api/user/defeat-boss
 // @access  Private (requires token)
-exports.defeatBoss = async (req, res) => {
+const defeatBoss = async (req, res) => {
     const { bossId } = req.body; // The ID of the boss that was JUST DEFEATED
     const userId = req.user.userId;
 
@@ -216,4 +217,62 @@ exports.defeatBoss = async (req, res) => {
         console.error('Error defeating boss:', err);
         res.status(500).json({ error: 'Server error during boss defeat update.' });
     }
+};
+
+const returnEnemies = async (req, res) => {
+    try {
+        const Bosses = await Boss.find({}).sort({level : 1});
+        const Enemies = await CommonEnemy.find({}).sort({level : 1});
+        res.json(Bosses, Enemies);
+    }
+    catch (err) {
+        console.error('Error fetching Enemies from database:', err);
+        res.status(500).json({error: 'Server error fetching Enemies.'});
+    }
+}
+
+const fetchEnemyById = async (req, res) => {
+    const {id} = req.params;
+    try {
+        const boss = await Boss.findById(id);
+        const enemy = await CommonEnemy.findById(id);
+        if (boss) {
+            res.json(boss);
+        }
+        else if (enemy) {
+            res.json(enemy);
+        }
+        else {
+            res.status(404).json({error: 'Enemy not found.'});
+        }
+    }
+    catch (err) {
+        console.error('Error fetching Enemy via their ID:', err);
+        res.status(500).json({ error: 'Server error fetching Enemy by ID.' });
+    }
+}
+
+const fetchUserProfile = async (req, res) => {
+    const userId = req.user.userId;
+    
+    try {
+        const user = await UserProfile.findById(userId).select('-passwordHash -emailVerificationToken -emailVerificationExpires -resetPasswordToken -resetPasswordExpires -email -activityState -currentHP -createdAt -updatedAt');
+        if (!user) {
+            return res.status(404).json({ error: 'User profile not found/Json Header incorrect' });
+        }
+        return res.json({user})
+    }
+    catch (err) {
+        console.error('Error fetching user profile:', err);
+        return res.status(500).json({ error: 'Server error fetching user profile.' });
+    }
+};
+
+module.exports = { 
+    selectCharacter,
+    setCurrentBoss,
+    defeatBoss,
+    returnEnemies,
+    fetchEnemyById,
+    fetchUserProfile
 };

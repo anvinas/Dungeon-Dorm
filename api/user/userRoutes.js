@@ -16,6 +16,11 @@ router.post('/set-current-boss', verifyToken, userController.setCurrentBoss);
 // @desc Updates user profile after defeating a boss and progresses to next
 router.post('/defeat-boss', verifyToken, userController.defeatBoss);
 
+router.post('/enemies', userController.returnEnemies);
+router.post('/enemy/:id', userController.fetchEnemyById);
+router.post('/fetch-user', verifyToken, userController.fetchUserProfile);
+
+
 // This is all for now, as per your request. No other user-related routes.
 
 module.exports = router;

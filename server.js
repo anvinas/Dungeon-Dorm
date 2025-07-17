@@ -4,7 +4,23 @@ const cors = require('cors');
 const mongoose = require('mongoose');
 const app = express();
 
-app.use(cors());
+const allowedOrigins = [
+  'https://dungeons-dorms.online',
+  'http://localhost:3000',
+  'http://localhost:5000'
+];
+
+app.use(cors({
+  origin: function(origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true
+}));
+
 app.use(express.json());
 
 mongoose.connect(process.env.MONGO_URI)
@@ -15,7 +31,7 @@ require('./api/auth/authModel');
 require('./api/barkeeper/BarKeeper');
 require('./api/barkeeper/InventoryItem');
 require('./models/CharacterClass'); 
-  
+
 // Routes
 app.use('/api/auth', require('./api/auth/authRoutes'));
 app.use('/api/barkeeper', require('./api/barkeeper/barkeeperRoutes'));

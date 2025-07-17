@@ -33,7 +33,6 @@ jobs:
             git pull origin main
 
             # Install deps for the API
-            cd api
             npm install
 
             # Go back to root and restart server
