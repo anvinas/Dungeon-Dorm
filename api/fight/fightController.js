@@ -255,7 +255,7 @@ function rollTalk(attacker, defender)
     d20: d20,
     totalRollWithModifiers: d20 + attacker.stats.Charisma,
     totalRollNeeded: defender.stats.Charisma,
-    message : isCrit ? `${attacker.name} critically charmed ${defender.name} for ${friendshipContribution}!!` : success ? `${attacker.name} charmed ${defender.name} for ${friendshipContribution}!` : `${attacker.name}'s attempt to charm ${defedner.name} did NOT work!!!!`
+    message : isCrit ? `${attacker.name} critically charmed ${defender.name} for ${friendshipContribution}!!` : success ? `${attacker.name} charmed ${defender.name} for ${friendshipContribution}!` : `${attacker.name}'s attempt to charm ${defender.name} did NOT work!!!!`
   }
 }
 
