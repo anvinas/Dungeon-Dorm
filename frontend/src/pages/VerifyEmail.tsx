@@ -1,52 +1,176 @@
-// // import styles from "./styles/loginModal.module.css"
-// import {useState} from "react"
-// import GetServerPath from "../lib/GetServerPath.ts"
-// import {storeJWT} from "../lib/JWT.ts"
-// import axios from "axios"
-// import { useNavigate } from 'react-router-dom';
+// import styles from "./styles/loginModal.module.css"
+import {useEffect, useState, useRef} from "react"
+import GetServerPath from "../lib/GetServerPath.ts"
+import axios from "axios"
+import { useSearchParams } from 'react-router-dom';
+
+import styles from "./loginPage.module.css"
+import { useNavigate } from 'react-router-dom';
+
+function VerifyEmail() {
+  const navigate = useNavigate();
+
+  const [message, setMessage] = useState("A verification code and link was sent to your email. Please enter the code or click the link.");
+  const [searchParams] = useSearchParams();
+  const token = searchParams.get("token");
+  
+  console.log(token);
+
+  useEffect(()=>{
+    if(token && token?.length>0)
+    {
+      confirmEmail(token);
+    }
+  },[])
+  
+  const confirmEmail= async (token:string)=>
+    {      
+      try
+      {
+        console.log(token);
+        const response = await axios.post(`${GetServerPath()}/api/auth/verify-email`,
+        {token}, );
+        
+        console.log(response);
+
+        if (response.data.message)
+        {
+          setMessage("✅ Email verified successfully! You may now log in.")
+          setTimeout(()=>{navigate("/intro");},1000)
+        } else {
+            setMessage("❌ Something went wrong. Please try again.");
+        }
+
+      }
+      catch (err)
+      {
+        setMessage("❌ Invalid or expired token.");
+      }
+    }
+
+  const length = 6;
+  const [values, setValues] = useState(Array(length).fill(''));
+  const inputsRef = useRef<HTMLInputElement[]>([]);
+
+  const handleChange = (index: number, value: string) => {
+    if (/^\d$/.test(value)) {
+      const updated = [...values];
+      updated[index] = value;
+      setValues(updated);
+
+      // Move focus to next input
+      if (index < length - 1) {
+        inputsRef.current[index + 1]?.focus();
+      }
+    } else if (value === '') {
+      const updated = [...values];
+      updated[index] = '';
+      setValues(updated);
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, index: number) => {
+    if (e.key === 'Backspace' && values[index] === '') {
+      if (index > 0) {
+        inputsRef.current[index - 1]?.focus();
+      }
+    }
+  };
+
+  const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    const pasteData = e.clipboardData.getData('Text').replace(/\D/g, ''); // Strip non-digits
+    if (pasteData) {
+      const updated = [...values];
+      for (let i = 0; i < length; i++) {
+        updated[i] = pasteData[i] || '';
+        if (inputsRef.current[i]) {
+          inputsRef.current[i].value = updated[i];
+        }
+      }
+      setValues(updated);
+      // Focus last filled input
+      const nextIndex = Math.min(pasteData.length, length - 1);
+      inputsRef.current[nextIndex]?.focus();
+    }
+  };
+
+  const makeTokenString = (values:string[]) => {
+      const tokenString = values.join('');
+
+      if(tokenString!= null && tokenString.length == 6)
+      {
+        console.log("Here is entered token: " + tokenString);
+        confirmEmail(tokenString);
+      }
+      else
+      {
+         setMessage("❌ Entered code is Invalid.");
+      }
+      
+
+  }
 
 
-// function VerifyEmail() {
+  return (
+    <>
+        
+      <div className="relative w-screen h-screen overflow-hidden">
+        {/* BG container */}
+        <div className="absolute inset-0 z-0 ">
+            <img src="/img/pixel_bg2.png" className={`w-screen max-w-screen h-screen ${styles.bgContainer}`}/>
+        </div>
 
-//   const navigate = useNavigate();
+      <div className="relative z-10 flex flex-col items-center justify-center w-full h-full">
+      
 
-//   const confirmEmail= async ()=>
-//   {
+          <div className="bg-stone-800 bg-opacity-70 p-8 rounded-xl shadow-lg flex flex-col items-center gap-6">
 
-//   }
-//   return (
-//     <div className="z-4 absolute bg-[#000000db] flex justify-center items-center w-screen h-screen overflow-hidden ">
-//       <div className="bg-white rounded-lg shadow-md min-w-[30%]">
-//           {/* Header */}
-//           <div className="flex justify-between bg-blue-400 rounded-t-lg  p-5">
-//             <div className="font-semibold text-2xl text-white">Signup</div>
-//             <div className="font-semibold text-2xl text-white hover:cursor-pointer hover:text-red-300" onClick={()=>onClickClose()}>X</div>
-//           </div>
-//           <div className="p-10 flex flex-col gap-3">
-              
-//               {/* First Name */}
-//               <div className="flex flex-col gap-1">
-//                 <div className="font-bold">gamerTag</div>
-               
+
+        <div className="text-white text-xl">
+          <h1>Email Verification</h1>
+        </div>
+
                 
-//               </div>
-             
+        <div className="flex gap-x-3">
+          {values.map((val, i) => (
+            <input
+              key={i}
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              maxLength={1}
+              value={val}
+              onChange={(e) => handleChange(i, e.target.value)}
+              onKeyDown={(e) => handleKeyDown(e, i)}
+              onPaste={handlePaste}
+              ref={(el) => {inputsRef.current[i] = el!}}
+              className="bg-white text-black w-16 h-16 text-xl text-center border border-gray-300 rounded-md focus:scale-110 focus:border-blue-500 focus:ring-blue-500 focus:outline-none disabled:opacity-50 disabled:pointer-events-none"
+              placeholder="⚬"
+            />
+          ))}
+        </div>
+              
+        {/*Button*/}
+        <div>
+          <div className="p-3 pr-4 pl-4 rounded-md bg-[#6b8e23] text-[#ffffff] border-1 transition delay-150 duration-300 ease-in-out hover:-translate-y-1 hover:scale-110 hover:cursor-pointer "onClick={()=>makeTokenString(values)} >Confirm</div>
+        </div>
 
-//               {/* Error Msg */}
-//               <div className="text-red-500">{error==null ? "":error}</div>
-//           </div>
 
-//           {/* Footer */}
-//           <div className="flex justify-between border-t-1 border-gray-200 p-5"> 
-//               <div></div>
-//               <div className="flex gap-3">
-//                   <div className="p-5 pt-3 pb-3 rounded-md bg-green-400 hover:bg-green-500 hover:cursor-pointer" onClick={()=>confirmEmail()}>Login</div>
-//               </div>
-//           </div>
-//       </div>
-//     </div>
- 
-//   )
-// }
+        <div className="text-white text-xl">    
+          <p>{message}</p>
+        </div>
 
-// export default VerifyEmail
+
+      </div>
+
+      </div>
+
+
+    </div>
+
+    </>
+  );
+}
+
+export default VerifyEmail

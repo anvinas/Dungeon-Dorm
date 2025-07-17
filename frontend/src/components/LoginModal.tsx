@@ -16,8 +16,14 @@ type LoginModalProps = {
   isOpen: boolean;
 };
 
+type EmailData = {
+  email: string;
+};
+
 function LoginModal({onClickClose,isOpen} : LoginModalProps) {
   const navigate = useNavigate();
+
+  const [mode, setMode] = useState<"login" | "forgotPassword">("login");
 
   const [error,setError] = useState("")
   const [inputErrorDisplay,setInputErrorDisplay] = useState({
@@ -28,6 +34,10 @@ function LoginModal({onClickClose,isOpen} : LoginModalProps) {
     gamerTag:"",
     password:"",
     showPassword:false
+  })
+
+  const [emailData,setEmailData] = useState<EmailData>({
+    email: ""
   })
 
 
@@ -65,11 +75,25 @@ function LoginModal({onClickClose,isOpen} : LoginModalProps) {
       if(response.status == 200){
         storeJWT(response.data.token)
         console.log(response.data)
+
+        const profileResponse = await axios.get(`${GetServerPath()}/api/auth/profile`,{
+          headers:{
+            Authorization: `Bearer ${response.data.token}`
+          }
+        });
+
+        console.log(profileResponse.data.userProfile);
+
         // Already selected character
-        if(response.data.user.character){
+        if(response.data.user.character && profileResponse.data.userProfile.isEmailVerified == true){
           navigate("/play");
-        }else{  
+        }else if(!response.data.user.character && profileResponse.data.userProfile.isEmailVerified == true){  
           navigate("/character");
+        }
+        else
+        {
+          console.log("MUST VERIFY");
+          setError("You must validate your email before login")
         }
       }else{
         // Failure
@@ -84,18 +108,40 @@ function LoginModal({onClickClose,isOpen} : LoginModalProps) {
     }
   }
 
+  const forgotPassword = async () => {
+     try{
+      let response = await axios.post(`${GetServerPath()}/api/auth/forgot-password`,emailData)
+
+      if(response.status == 200){
+        console.log(response.statusText);
+      }
+      else{
+        console.log(response.data)
+        setError(response.data.error)
+      }
+
+    }
+    catch(e:any)
+    {
+     console.log(e);
+      //always does this until proper email
+    }
+  }
+
   if(!isOpen) return
 
-  return (
+ return (
     <div className="z-4 absolute bg-[#000000db] flex justify-center items-center w-screen h-screen overflow-hidden ">
       <div className="bg-white rounded-lg shadow-md min-w-[30%]">
           {/* Header */}
           <div className="flex justify-between bg-blue-400 rounded-t-lg  p-5">
             <div className="font-semibold text-2xl text-white">Login</div>
-            <div className="font-semibold text-2xl text-white hover:cursor-pointer hover:text-red-300" onClick={()=>onClickClose()}>X</div>
+            <div className="font-semibold text-2xl text-white hover:cursor-pointer hover:text-red-300" onClick={()=>{onClickClose(), setMode("login")}}>X</div>
           </div>
           <div className="p-10 flex flex-col gap-3">
               
+              {mode == "login" && (
+                <>
               {/* Gamertag */}
               <div className="flex flex-col gap-1">
                 <div className="font-bold">Gamertag</div>
@@ -111,6 +157,52 @@ function LoginModal({onClickClose,isOpen} : LoginModalProps) {
                 {inputErrorDisplay.password &&<div className="text-red-500 text-sm">Please Input a valid password</div>}           
               </div>
 
+               <div className="flex items-center justify-between">
+                <label htmlFor="password" className="block text-sm/6 font-medium text-gray-900"></label>
+                <div className="text-sm">
+                  <a href="#" className="font-semibold text-indigo-600 hover:text-indigo-500" onClick={()=> {
+                    setMode("forgotPassword");
+                    //forgotPassword();
+                  }}>Forgot password?</a>
+                </div>
+              </div>
+              
+              </>
+              )}
+              {/*end of login mode*/}
+
+
+              {mode == "forgotPassword" && (
+                <>
+                   {/* Email Input */}
+              <div className="flex flex-col gap-1">
+                <div className="font-bold">Enter Email To Find Account</div>
+                <input onChange={(e)=>setEmailData((oldData)=>{oldData.email = e.target.value; return oldData})} placeholder="xxxx@gmail.com" className="border border-gray-400 rounded-sm h-10  pl-5" />
+              </div>
+
+              {/* Submit Button */}
+            <div className="flex justify-end">
+              <div
+                className="mt-3 p-2 bg-blue-400 hover:bg-blue-500 rounded-md text-white cursor-pointer"
+                onClick={forgotPassword}
+              >
+                Send Reset Link
+              </div>
+            </div>
+
+               <div className="flex items-center justify-between">
+                  <label htmlFor="password" className="block text-sm/6 font-medium text-gray-900"></label>
+                 
+                  <div className="text-sm">
+                    <a href="#" className="font-semibold text-indigo-600 hover:text-indigo-500" onClick={()=> {
+                      setMode("login");
+                    }}>Back To Login</a>
+                  </div>
+
+              </div>
+                </>
+              )}
+
               {/* Error Msg */}
               <div className="text-red-500">{error==null ? "":error}</div>
           </div>
@@ -124,7 +216,7 @@ function LoginModal({onClickClose,isOpen} : LoginModalProps) {
           </div>
       </div>
     </div>
-    
+
   )
 }
 
