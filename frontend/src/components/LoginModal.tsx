@@ -8,7 +8,6 @@ import { useNavigate } from 'react-router-dom';
 type LoginData = {
   gamerTag: string;
   password: string; 
-  showPassword:boolean
 };
 
 type LoginModalProps = {
@@ -33,7 +32,6 @@ function LoginModal({onClickClose,isOpen} : LoginModalProps) {
   const [loginData,setLoginData] = useState<LoginData>({
     gamerTag:"",
     password:"",
-    showPassword:false
   })
 
   const [emailData,setEmailData] = useState<EmailData>({
