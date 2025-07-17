@@ -26,8 +26,22 @@ const userSchema = new mongoose.Schema({
     },
     maxHP: { type: Number, default: 100 }, // User's current maxHP
     currentHP: { type: Number, default: 100 }, // User's current HP
-    currentActiveBoss: { type: mongoose.Schema.Types.ObjectId, ref: 'Boss', default: null },
-    isEmailVerified: { type: Boolean, default: false }
+     currentActiveBoss: { type: mongoose.Schema.Types.ObjectId, ref: 'Boss', default: null },
+    isEmailVerified: { type: Boolean, default: false },
+    emailVerificationToken: { type: String },
+    emailVerificationExpires: 
+    {
+        type: Date,
+        default: () => new Date(Date.now() + 60 * 60 * 1000)
+    },
+    activityState: { type: String, default: 'offline' }, // e.g., 'online', 'idle', 'offline', 'in_combat'
+    currentXP: { type: Number, default: 0 },
+    toLevelUpXP: { type: Number, default: 1000 }, // XP needed to reach the next level
+    resetPasswordToken: { type: String },
+     resetPasswordExpires: {
+        type: Date,
+        default: () => new Date(Date.now() + 60 * 60 * 1000)
+    }
 }, {
     collection: 'UserProfile', // Forces the collection name to 'UserProfile'
     timestamps: true
