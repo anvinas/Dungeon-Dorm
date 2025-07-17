@@ -114,7 +114,7 @@ function LoginModal({onClickClose,isOpen} : LoginModalProps) {
   
   const forgotPassword = async () => {
      try{
-      let response = await axios.post(`${GetServerPath()}/api/auth/forgot-password`,{emailData})
+      let response = await axios.post(`${GetServerPath()}/api/auth/forgot-password`,emailData)
 
       if(response.status == 200){
         console.log(response.statusText);
@@ -127,7 +127,7 @@ function LoginModal({onClickClose,isOpen} : LoginModalProps) {
     }
     catch(e:any)
     {
-     
+     console.log(e);
       //always does this until proper email
     }
   }
@@ -168,7 +168,7 @@ function LoginModal({onClickClose,isOpen} : LoginModalProps) {
                 <div className="text-sm">
                   <a href="#" className="font-semibold text-indigo-600 hover:text-indigo-500" onClick={()=> {
                     setMode("forgotPassword");
-                    forgotPassword();
+                    //forgotPassword();
                   }}>Forgot password?</a>
                 </div>
               </div>
@@ -185,6 +185,17 @@ function LoginModal({onClickClose,isOpen} : LoginModalProps) {
                 <div className="font-bold">Enter Email To Find Account</div>
                 <input onChange={(e)=>setEmailData((oldData)=>{oldData.email = e.target.value; return oldData})} placeholder="xxxx@gmail.com" className="border border-gray-400 rounded-sm h-10  pl-5" />
               </div>
+
+              {/* Submit Button */}
+            <div className="flex justify-end">
+              <div
+                className="mt-3 p-2 bg-blue-400 hover:bg-blue-500 rounded-md text-white cursor-pointer"
+                onClick={forgotPassword}
+              >
+                Send Reset Link
+              </div>
+            </div>
+
 
                <div className="flex items-center justify-between">
                   <label htmlFor="password" className="block text-sm/6 font-medium text-gray-900"></label>

@@ -1,4 +1,4 @@
-// api/auth/authController.js (UPDATED for Dynamic Email Transporter) 
+// api/auth/authController.js (UPDATED for Dynamic Email Transporter)
 const User = require('./authModel');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
@@ -95,7 +95,7 @@ exports.registerUser = async (req, res) => {
         )
 
         await newUser.save();
-
+        //http://dungeon-dorm.online
         const verificationLink = `http://dungeon-dorm.online/verify?token=${emailVerificationToken}`; // Your frontend link
 
         const mailOptions = {

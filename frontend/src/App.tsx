@@ -7,6 +7,7 @@ import PlayPage from './pages/PlayPage';
 import CharacterSelectPage from './pages/CharacterSelectPage'; 
 import VerifyEmail from './pages/VerifyEmail';
 import IntroPage from './pages/IntroPage';
+import ResetPassword from './pages/ResetPassword';
 
 function App() {
   return (
@@ -17,6 +18,7 @@ function App() {
         <Route path="/character" element={<CharacterSelectPage/>} />
         <Route path="/verify" element={<VerifyEmail/>}/>
         <Route path='/intro' element={<IntroPage/>} />
+        <Route path='reset-password' element={<ResetPassword/>} />
       </Routes>
       </Router>
   );
