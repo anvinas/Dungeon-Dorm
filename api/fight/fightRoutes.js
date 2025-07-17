@@ -7,5 +7,6 @@ const verifyToken = require('../global/verifyToken.js');
 router.post('/startEncounter', verifyToken, startEncounter);
 router.post('/userTurn', verifyToken, userTurnAndEnemyResponse);
 router.post('/levelup', verifyToken, levelupUser);
+router.post('/getActiveEncounter', verifyToken, fightController.getActiveEncounter);
 
 module.exports = router;
