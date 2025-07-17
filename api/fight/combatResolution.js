@@ -1,5 +1,6 @@
 const userProfile = require('../auth/authModel');
 const Boss =  require('../global/Boss');  
+const {loadEntity} = require('./fightController');
 
 async function setNextBossForUser(user) 
 {
@@ -8,6 +9,7 @@ async function setNextBossForUser(user)
     const nextBoss = allBosses.find (b => !defeatedBosses.includes(b._id.toString()));
 
     user.currentBoss = nextBoss ? nextBoss._id : null;
+    await user.save();
     return nextBoss;
 }
 
@@ -22,21 +24,30 @@ function addItemToUser(user, itemId, quantity) {
     }
 }
 
-async function handleBossDefeat(userId, bossId) {
-    const user = await userProfile.findById(userId);
-    const boss = await Boss.findById(bossId);
+async function handleEnemyDefeat(userId, enemyId, enemyType) {
+    const user = await loadEntity(userId, 'User');
+    const enemy = await loadEntity(enemyId, enemyType);
+    let levelupTrigger = false;
 
-    if (!user || !boss) 
+    if (!user || !enemy) 
     {
         throw new Error('User or Boss not found');
     }
 
-    user.Currency = user.Currency + (boss.reward.gold || 0);
+    user.Currency = user.Currency + (enemy.reward.gold || 0);
+    user.currentXP = user.currentXP + (enemy.reward.xp || 0);
+
+    if (user.CurrentXP >= user.toLevelUpXP)
+    {
+        levelupTrigger = true;
+    }
 
     let rewards = 
     {
-        gold: boss.reward.gold || 0,
-        items: []
+        gold: enemy.reward.gold || 0,
+        items: [],
+        xp: enemy.reward.xp || 0,
+        readyToLevelUp: levelupTrigger
     };
 
     if (user.defeatedBosses.includes(boss._id.toString())) 
@@ -45,8 +56,7 @@ async function handleBossDefeat(userId, bossId) {
         return {rewards};
     }
 
-
-    for (const reward of boss.reward.items || [])
+    for (const reward of enemy.reward.items || [])
     {
         if (reward.itemId)
         {
@@ -55,7 +65,9 @@ async function handleBossDefeat(userId, bossId) {
             rewards.items.push({
                 itemId: reward.itemId._id,
                 quantity: reward.quantity,
-                name: reward.itemId.name
+                itemType: reward.itemId.itemType,
+                itemDescription: reward.itemId.description,
+                itemName: reward.itemId.name
             });
         } catch (error) {
             console.error(`Error adding item to user: ${error.message}`);
