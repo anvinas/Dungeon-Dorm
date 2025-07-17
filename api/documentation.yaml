@@ -120,48 +120,6 @@ paths:
         '400':
           description: Character already selected or missing data
 
-  /user/set-current-boss:
-    post:
-      summary: Set the current boss for the user (protected), for testing, not in production
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                bossId:
-                  type: string
-              required: [bossId]
-      responses:
-        '200':
-          description: Current boss set
-        '400':
-          description: Boss ID missing or not found
-
-  /user/defeat-boss:
-    post:
-      summary: Update user profile after defeating a boss (protected), for testing, not in production
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                bossId:
-                  type: string
-              required: [bossId]
-      responses:
-        '200':
-          description: Boss defeat processed
-        '400':
-          description: Boss already defeated or not found
-
   /user/enemies:
     post:
       summary: Return all enemies, including bosses and common enemies
@@ -238,7 +196,7 @@ paths:
 
   /fight/getActiveEncounter:
     post:
-      summary: Get the user's active encounter (protected)
+      summary: Get the user's active encounter (protected), should be used after login (ignore activityState, does not work as intended atm)
       security:
         - bearerAuth: []
       responses:
