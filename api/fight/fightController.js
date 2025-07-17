@@ -9,7 +9,7 @@ async function loadEntity(id, type) {
 
   switch (type) {
     case 'User':
-      return await UserProfile.findById(id);
+      return await UserProfile.findById(id).populate('CurrentLoot.itemId');
     case 'boss':
       return await Boss.findById(id);
     case 'common_enemy':
@@ -22,19 +22,19 @@ async function loadEntity(id, type) {
 const classGrowthRules = {
   Barbarian: (stats, level) => {
     const updatedStats = { 
-      Strength: stats.Strength + 1,                           // +1 every level
-      Dexterity: stats.Dexterity + (level % 3 === 0 ? 1 : 0), // +1 every 3rd level
-      Intelligence: stats.Intelligence,                       // No increase
-      Charisma: stats.Charisma + (level % 3 === 0 ? 1 : 0),   // +1 every 3rd level
-      Defense: stats.Defense + 1,                             // +1 every level
+      strength: stats.strength + 1,                           // +1 every level
+      dexterity: stats.dexterity + (level % 3 === 0 ? 1 : 0), // +1 every 3rd level
+      intelligence: stats.intelligence,                       // No increase
+      charisma: stats.charisma + (level % 3 === 0 ? 1 : 0),   // +1 every 3rd level
+      defense: stats.defense + 1,                             // +1 every level
     };
 
     const maxHP =
       100 +
-      12 * updatedStats.Defense +
-      7 * updatedStats.Strength +
-      6 * updatedStats.Dexterity +
-      8 * updatedStats.Intelligence;
+      12 * updatedStats.defense +
+      7 * updatedStats.strength +
+      6 * updatedStats.dexterity +
+      8 * updatedStats.intelligence;
 
     return {
       ...updatedStats,
@@ -44,19 +44,19 @@ const classGrowthRules = {
 
   Rogue: (stats, level) => {
     const updatedStats = { 
-      Strength: stats.Strength + (level % 3 === 0 ? 1 : 0),    // +1 every 3rd level
-      Dexterity: stats.Dexterity + 1,                          // +1 every level
-      Intelligence: stats.Intelligence,                        // No increase
-      Charisma: stats.Charisma + (level % 2 === 0 ? 1 : 0),    // +1 every 2nd level
-      Defense: stats.Defense + 1,                              // +1 every level
+      strength: stats.strength + (level % 3 === 0 ? 1 : 0),    // +1 every 3rd level
+      dexterity: stats.dexterity + 1,                          // +1 every level
+      intelligence: stats.intelligence,                        // No increase
+      charisma: stats.charisma + (level % 2 === 0 ? 1 : 0),    // +1 every 2nd level
+      defense: stats.defense + 1,                              // +1 every level
     };
 
     const maxHP =
       100 +
-      12 * updatedStats.Defense +
-      7 * updatedStats.Strength +
-      6 * updatedStats.Dexterity +
-      8 * updatedStats.Intelligence;
+      12 * updatedStats.defense +
+      7 * updatedStats.strength +
+      6 * updatedStats.dexterity +
+      8 * updatedStats.intelligence;
 
     return {
       ...updatedStats,
@@ -66,19 +66,19 @@ const classGrowthRules = {
 
   Bard: (stats, level) => {
     const updatedStats = { 
-      Strength: stats.Strength + (level % 3 === 0 ? 1 : 0),         // +1 every 3rd level
-      Dexterity: stats.Dexterity + (level % 2 === 0 ? 1 : 0),       // +1 every 2nd level
-      Intelligence: stats.Intelligence + (level % 2 === 0 ? 1 : 0), // +1 every 2nd level
-      Charisma: stats.Charisma + 1,                                 // +1 every level
-      Defense: stats.Defense + (level % 3 === 0 ? 1 : 0),           // +1 every 3rd level
+      strength: stats.strength + (level % 3 === 0 ? 1 : 0),         // +1 every 3rd level
+      dexterity: stats.dexterity + (level % 2 === 0 ? 1 : 0),       // +1 every 2nd level
+      intelligence: stats.intelligence + (level % 2 === 0 ? 1 : 0), // +1 every 2nd level
+      charisma: stats.charisma + 1,                                 // +1 every level
+      defense: stats.defense + (level % 3 === 0 ? 1 : 0),           // +1 every 3rd level
     };
 
     const maxHP =
       100 +
-      12 * updatedStats.Defense +
-      7 * updatedStats.Strength +
-      6 * updatedStats.Dexterity +
-      8 * updatedStats.Intelligence;
+      12 * updatedStats.defense +
+      7 * updatedStats.strength +
+      6 * updatedStats.dexterity +
+      8 * updatedStats.intelligence;
 
     return {
       ...updatedStats,
@@ -88,19 +88,19 @@ const classGrowthRules = {
 
   Warlock: (stats, level) => {
     const updatedStats = { 
-      Strength: stats.Strength,                                // No increase
-      Dexterity: stats.Dexterity + (level % 2 === 0 ? 1 : 0),  // +1 every 2nd level
-      Intelligence: stats.Intelligence + 1,                    // +1 every level
-      Charisma: stats.Charisma + (level % 4 === 0 ? 1 : 0),    // +1 every 4th level
-      Defense: stats.Defense + (level % 3 === 0 ? 1 : 0),      // +1 every 3rd level
+      strength: stats.strength,                                // No increase
+      dexterity: stats.dexterity + (level % 2 === 0 ? 1 : 0),  // +1 every 2nd level
+      intelligence: stats.intelligence + 1,                    // +1 every level
+      charisma: stats.charisma + (level % 4 === 0 ? 1 : 0),    // +1 every 4th level
+      defense: stats.defense + (level % 3 === 0 ? 1 : 0),      // +1 every 3rd level
     };
 
     const maxHP =
       100 +
-      12 * updatedStats.Defense +
-      7 * updatedStats.Strength +
-      6 * updatedStats.Dexterity +
-      8 * updatedStats.Intelligence;
+      12 * updatedStats.defense +
+      7 * updatedStats.strength +
+      6 * updatedStats.dexterity +
+      8 * updatedStats.intelligence;
 
     return {
       ...updatedStats,
@@ -122,30 +122,50 @@ function applyStatGrowth(className, currentStats, level) //Class name, current s
 
 exports.levelupUser = async (req, res) => {
     const userId = req.user.userId;
-    const user = await loadEntity(userId, 'User');
+    const user = await UserProfile.findById(userId).populate('Character');
 
     if (!user) {
         return res.status(404).json({ error: 'User not found' });
+    }
+    if (user.xp < user.toLevelUpXP) {
+        return res.status(400).json({ error: 'Not enough XP to level up' });
+    }
+    if (user.level >= 10){
+        return res.status(400).json({ error: 'Maximum level reached' });
     }
 
     user.xp = user.xp - user.toLevelUpXP;
     user.level = user.level + 1;
 
-    const newStats = applyStatGrowth(user.class, user.stats, user.level);
 
-    user.stats.Strength = newStats.Strength;
-    user.stats.Dexterity = newStats.Dexterity;
-    user.stats.Intelligence = newStats.Intelligence;
-    user.stats.Charisma = newStats.Charisma;
+    console.log(user.Character.class);
+    const newStats = applyStatGrowth(user.Character.class, user.stats, user.level);
+
+    user.stats.strength = newStats.strength;
+    user.stats.dexterity = newStats.dexterity;
+    user.stats.intelligence = newStats.intelligence;
+    user.stats.charisma = newStats.charisma;
     user.maxHP = newStats.maxHP;
     user.currentHP = newStats.maxHP; //currentHP exists in the databse, should be removed but fine for now
     user.toLevelUpXP = 1000 + (150 * user.level); //example formula, can be changed
 
     await user.save();
     
+    if (user.level === 10) {
+        return res.json({
+            message: `Congratulations! You have reached the maximum level, level ${user.level}!`,
+            newStats: user.stats,
+            newMaxHP: user.maxHP,
+            level: user.level,
+            newUserXP: 9999,
+            newToLevelUpXP: 9999,
+        })
+    }
+    
     res.json({
         message: `User leveled up to level ${user.level}!`,
         newStats: user.stats,
+        newMaxHP: user.maxHP,
         level: user.level,
         newUserXP: user.xp,
         newToLevelUpXP: user.toLevelUpXP,
@@ -165,11 +185,11 @@ function rollD10()
 function getPrimaryStat(stats)
 {
     let maxVal = -Infinity;
-    let primary = "Strength";
+    let primary = "strength";
 
     for (const stat in stats) 
     {
-        if (stat !== "Defense" && stats[stat] > maxVal) 
+        if (stat !== "defense" && stats[stat] > maxVal && stat !== "charisma") 
         {
             maxVal = stats[stat];
             primary = stat;
@@ -182,7 +202,7 @@ function getPrimaryStat(stats)
 function rollAttack(attacker, defender) 
 {
     const {name : primaryStatName, value: attackerStat} = getPrimaryStat(attacker.stats);
-    const defenderStat = defender.stats.Defense;
+    const defenderStat = defender.stats.defense;
 
     const d20 = rollD20();
     const d10 = rollD10();
@@ -226,7 +246,7 @@ function rollAttack(attacker, defender)
 
 function rollTalk(attacker, defender)
 {
-  const defenderStat = defender.stats.Charisma;
+  const defenderStat = defender.stats.charisma;
   let isCrit = 0;
   let friendshipContribution;
   const d20 = rollD20();
@@ -236,11 +256,11 @@ function rollTalk(attacker, defender)
     isCrit = 1;
   }
 
-  let success = ((d20 + attacker.stats.Charisma) > defenderStat)
+  let success = (((d20 + attacker.stats.charisma) > defenderStat) || isCrit); //If d20 + Charisma stat > defender charisma or crit)
 
   //Charisma stat + roll > defender charisma
   
-  if (isCrit || success)
+  if (success)
   {
     friendshipContribution = 20;
     if (isCrit)
@@ -253,34 +273,34 @@ function rollTalk(attacker, defender)
     friendshipContribution : friendshipContribution,
     crit: isCrit,
     d20: d20,
-    totalRollWithModifiers: d20 + attacker.stats.Charisma,
-    totalRollNeeded: defender.stats.Charisma,
+    totalRollWithModifiers: d20 + attacker.stats.charisma,
+    totalRollNeeded: defender.stats.charisma,
     message : isCrit ? `${attacker.name} critically charmed ${defender.name} for ${friendshipContribution}!!` : success ? `${attacker.name} charmed ${defender.name} for ${friendshipContribution}!` : `${attacker.name}'s attempt to charm ${defender.name} did NOT work!!!!`
   }
 }
 
 function rollItemUse(user, item)
 {
-  const hasItem = user.CurrentLoot && user.CurrentLoot.some(i => i.name === item.name);
+  const hasItem = user.CurrentLoot && user.CurrentLoot.some(i => i.itemId.name === item.itemId.name);
 
   if(!hasItem)
   {
     return {success: false, message: "Item not in user's inventory"};
   }
   
-  if (!item.description || !item.healthAmount)
+  if (!item.itemId.description || !item.itemId.healthAmount)
   {
-    return {success: false, message: "item is not a potion!"};
+    return {success: false, message: "item is not a healing item!"};
   }
 
   //Crit means double value of potion
   const d20 = rollD20();
   let consumed;
   let isCrit;
-  let itemValue = item.healthAmount || 0;
+  let itemValue = item.itemId.healthAmount || 0;
   let hpGain = 0;
 
-  if (d20 == 0)
+  if (d20 == 1)
   {
     consumed = 0;
     isCrit = 0;
@@ -289,10 +309,10 @@ function rollItemUse(user, item)
     return {
       success: consumed === 1,
       crit: isCrit,
-      consumed,
+      consumed: consumed,
       d20: d20,
       hpGain: hpGain,
-      message : `${user.name} fumbled getting the potion from their bag! Bad luck!`
+      message : `${user.gamerTag} fumbled getting the item from their bag! Bad luck! Still in user inventory`
     }
   }
   else if (d20 === 20)
@@ -307,10 +327,10 @@ function rollItemUse(user, item)
       consumed,
       d20: d20,
       hpGain: hpGain,
-      message: `${user.name} rolled a nat 20 and healed for double! Total restored: ${hpGain}`
+      message: `${user.gamerTag} rolled a nat 20 and healed for double! Total restored: ${hpGain}`
     }
   }
-  else if (d20 > 0 && d20 < 20)
+  else if (d20 > 1 && d20 < 20)
   {
     consumed = 1;
     isCrit = 0;
@@ -322,7 +342,7 @@ function rollItemUse(user, item)
       consumed,
       hpGain: hpGain,
       d20: d20,
-      message : `${user.name} healed for ${itemValue}`
+      message : `${user.gamerTag} healed for ${itemValue}`
     }
   }
 }
@@ -330,7 +350,7 @@ function rollItemUse(user, item)
 function rollFlee(user, enemy)
 {
   const d20 = rollD20();
-  
+  let rollNeeded;
   if (enemy.level === 10)
   {
     rollNeeded = 20;
@@ -342,15 +362,15 @@ function rollFlee(user, enemy)
       success: true,
       d20: d20,
       rollNeeded: rollNeeded,
-      message: `${user.name} managed to escape!`
+      message: `${user.gamerTag} managed to escape!`
     }
   }
   else {
     return{
       success: false,
       d20: d20,
-      totalRollNeeded: rollNeeded,
-      message: `${user.name} could not find an escape!`
+      RollNeeded: rollNeeded,
+      message: `${user.gamerTag} could not find an escape!`
     }
   }
 }
@@ -365,9 +385,9 @@ exports.startEncounter = async (req, res) => {
 
   // Load enemy based on type
   let enemy;
-  if (enemyType === 'Boss') {
+  if (enemyType === 'boss') {
     enemy = await loadEntity(enemyId, 'boss');
-  } else if (enemyType === 'CommonEnemy') {
+  } else if (enemyType === 'common_enemy') {
     enemy = await loadEntity(enemyId, 'common_enemy');
   } else {
     return res.status(400).json({ error: 'Invalid enemy type' });
@@ -379,16 +399,30 @@ exports.startEncounter = async (req, res) => {
     userId,
     enemyId: enemy._id,
     enemyType,
-    userHP: user.stats.maxHP,
-    enemyHP: enemy.stats.HP,
-    currentTurn: 'User'
+    userHP: user.maxHP,
+    enemyHP: enemy.maxHP,
+    currentTurn: 'User',
+    enemyFriendliness: 0, // Initial friendliness for charm attempts
   });
+
+  const enemyObject = enemy.toObject();
 
   res.json({
     message: 'Encounter started!',
-    userStats: user.stats,
-    enemyStats: enemy.stats,
-    currentTurn: 'User'
+    user: {
+      stats: user.stats,
+      maxHP: user.maxHP,
+      currentHP: user.currentHP,
+      level: user.level,
+    },
+    enemy: {
+      stats: enemyObject.stats,
+      relationshipGoal: enemyObject.relationshipGoal,
+      maxHP: enemyObject.maxHP,
+      currentHP: enemyObject.currentHP,
+      name: enemyObject.name,
+    },
+    currentTurn: 'User',
   });
 };
 
@@ -433,9 +467,9 @@ async function userAttackLogic(encounter, user, enemy)
 async function userTalkLogic(encounter, user, enemy)
 {
   const userTalk = rollTalk(user, enemy);
-  encounter.friendship = Math.min(100, encounter.friendship + userTalk.friendshipContribution);
+  encounter.enemyFriendliness = Math.min(encounter.enemyFriendliness + userTalk.friendshipContribution, enemy.relationshipGoal);
 
-  if (encounter.friendship >= 100)
+  if (encounter.enemyFriendliness >= enemy.relationshipGoal)
   {
     encounter.isActive = false;
     encounter.currentTurn = null;
@@ -446,13 +480,13 @@ async function userTalkLogic(encounter, user, enemy)
       userTalk,
       postTurnUserHP: encounter.userHP,
       postTurnEnemyHP: encounter.enemyHP,
-      postTurnFriendship: encounter.friendship,
+      postTurnFriendship: encounter.enemyFriendliness,
       currentTurn: null,
       rewards: await handleEnemyDefeat(userId, encounter.enemyId, encounter.enemyType)
     };
   }
   
-  else if (encounter.friendship < 100 && encounter.friendship >= 0)
+  else if (encounter.enemyFriendliness < enemy.relationshipGoal && encounter.enemyFriendliness >= 0)
   {
     await encounter.save();
     return {
@@ -460,7 +494,7 @@ async function userTalkLogic(encounter, user, enemy)
       userTalk,
       postTurnUserHP: encounter.userHP,
       postTurnEnemyHP: encounter.enemyHP,
-      postTurnFriendship: encounter.friendship,
+      postTurnFriendship: encounter.enemyFriendliness,
       currentTurn: 'Enemy'
     };
   }
@@ -470,7 +504,7 @@ async function userItemLogic(encounter, user, item)
 {
   const itemResult = rollItemUse(user, item);
 
-  if (!itemResult.success)
+  if (!itemResult.success && !itemResult.consumed)
   {
     return {
       message: itemResult.message,
@@ -485,17 +519,17 @@ async function userItemLogic(encounter, user, item)
 
   if (itemResult.consumed) 
   {
-    user.CurrentLoot = user.CurrentLoot.filter(i => i.name !== item.name);
+    user.CurrentLoot = user.CurrentLoot.filter(i => i.itemId.name !== item.itemId.name);
     await user.save();
   }
 
-  encounter.userHP = Math.min(encounter.userHP + itemResult.hpGain, user.stats.maxHP);
+  encounter.userHP = Math.min(encounter.userHP + itemResult.hpGain, user.maxHP);
   await encounter.save();
 
   return {
     message: itemResult.message,
     success: true,
-    itemToBeRemoved: item.name,
+    itemToBeRemoved: item.itemId.name,
     d20: itemResult.d20,
     crit: itemResult.crit,
     consumed: itemResult.consumed,
@@ -580,13 +614,19 @@ exports.userTurnAndEnemyResponse = async(req, res) => {
   const {action, item} = req.body;
   let userResult;
   let enemyResult;
+  let foundItem = null;
   const encounter = await Encounter.findOne({userId, isActive: true});
 
   if (!encounter || encounter.currentTurn !== 'User')
     return res.status(400).json({error: 'Not the user turn or no active encounter'});
 
-  const user = await loadEntity(encounter.userID, 'User');
+  const user = await loadEntity(encounter.userId, 'User');
   const enemy = await loadEntity(encounter.enemyId, encounter.enemyType);
+
+  if (item && item.name) 
+  {
+    foundItem = user.CurrentLoot.find(loot => loot.itemId.name === item.name);
+  }
 
   if (action === 'attack') 
   {
@@ -599,7 +639,7 @@ exports.userTurnAndEnemyResponse = async(req, res) => {
   }
   else if (action === 'item')
   {
-    userResult = await userItemLogic(encounter, user, item);
+    userResult = await userItemLogic(encounter, user, foundItem);
   }
   else if (action === 'talk')
   {
