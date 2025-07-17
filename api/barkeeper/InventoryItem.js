@@ -6,10 +6,18 @@ const InventoryItemSchema = new mongoose.Schema({
     baseValue: { type: Number, default: 10 },
     healthAmount: { type: Number },
     description: { type: String },
+    // >>> THIS MUST BE 'itemType' AND MATCH YOUR DATA <<<
+    itemType: { // <--- ENSURE THIS IS 'itemType'
+        type: String,
+        enum: ['Weapon', 'Potion', 'Key'], // Ensure these enum values match your data's capitalization exactly
+        required: true
+    },
+    damageModifier: { type: Number, default: 0 },
+    damage: { type: Number }, // As per your data
+    imageURL: { type: String, default: null } // As per your data
 }, {
     timestamps: true,
-    // *** ADD THIS LINE IF YOUR COLLECTION IS NAMED 'InventoryItems' (Capital I) ***
-    collection: 'InventoryItem' // Explicitly set to match your actual MongoDB collection name
+    collection: 'InventoryItem'
 });
 
 module.exports = mongoose.model('InventoryItem', InventoryItemSchema);

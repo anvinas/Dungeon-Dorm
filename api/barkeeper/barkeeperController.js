@@ -1,10 +1,10 @@
 // api/barkeeper/barkeeperController.js
 
 // Import models:
-const BarKeeper = require('./BarKeeper'); // Local to this folder
-const InventoryItem = require('./InventoryItem'); // Local to this folder
+const BarKeeper = require('./BarKeeper');
+const InventoryItem = require('./InventoryItem');
 // IMPORTANT: User model is in api/auth/authModel.js and exported as 'UserProfile'
-const UserProfile = require('../auth/authModel'); // <--- Correct path and variable name for UserProfile
+const UserProfile = require('../auth/authModel'); // Correct path and variable name for UserProfile
 
 // @desc    Get barkeeper's shop inventory
 // @route   GET /api/barkeeper/:id/shop
@@ -40,14 +40,30 @@ exports.purchaseItem = async (req, res) => {
     }
 
     try {
-        const barkeeper = await BarKeeper.findById(id).populate('shopInventory.itemId');
-        const user = await UserProfile.findById(userId); // <--- Use UserProfile here
+        // Fetch barkeeper, user, AND the details of the item being purchased.
+        // Populate 'Character' to update the equipped weapon directly.
+        const [barkeeper, user, itemDetails] = await Promise.all([
+            BarKeeper.findById(id).populate('shopInventory.itemId'),
+            UserProfile.findById(userId)
+                .populate('Character')
+                .populate({
+                    path: 'CurrentLoot.itemId', // IMPORTANT: Populate item details within user's inventory
+                    model: 'InventoryItem'
+                }),
+            InventoryItem.findById(itemId) // Fetch itemDetails for the item being bought
+        ]);
 
         if (!barkeeper) {
             return res.status(404).json({ error: 'Barkeeper not found' });
         }
         if (!user) {
             return res.status(404).json({ error: 'User not found' });
+        }
+        if (!itemDetails) { // Check if item details were found for the item being bought
+            return res.status(404).json({ error: 'Item not found in database.' });
+        }
+        if (!user.Character) { // Ensure user has a character assigned
+            return res.status(400).json({ error: 'User does not have a character assigned.' });
         }
 
         const itemInShop = barkeeper.shopInventory.find(item => item.itemId._id.toString() === itemId);
@@ -64,16 +80,35 @@ exports.purchaseItem = async (req, res) => {
 
         user.Currency -= totalPrice;
 
-        // Inventory logic: Find if item already exists in user's CurrentLoot
-        const existingUserItemIndex = user.CurrentLoot.findIndex(loot => loot.itemId.toString() === itemId);
+        // --- NEW LOGIC FOR WEAPONS (FIXED: using itemDetails.itemType) ---
+        if (itemDetails.itemType === 'Weapon') { // <<<--- FIX: Changed from .type to .itemType
+            // Filter out any existing item in CurrentLoot that is of 'Weapon' type.
+            user.CurrentLoot = user.CurrentLoot.filter(lootItem => {
+                // Ensure lootItem.itemId is populated and has itemType, then check if it's a Weapon
+                return lootItem.itemId && lootItem.itemId.itemType !== 'Weapon'; // <<<--- FIX: Changed from .type to .itemType
+            });
 
-        if (existingUserItemIndex > -1) {
-            // If item exists, update its quantity
-            user.CurrentLoot[existingUserItemIndex].quantity += quantity;
+            // Add the new weapon to CurrentLoot (assuming quantity 1 for equipped weapons)
+            user.CurrentLoot.push({ itemId: itemId, quantity: 1 });
+
+            // Equip the new weapon to the character
+            user.Character.weapon = itemId;
+
+            // Mark Character as modified (Mongoose sometimes needs this for nested objects)
+            user.markModified('Character');
         } else {
-            // If item is new, push a new object with itemId and quantity
-            user.CurrentLoot.push({ itemId: itemId, quantity: quantity });
+            // Original logic for non-weapon items: Find if item already exists in user's CurrentLoot
+            const existingUserItemIndex = user.CurrentLoot.findIndex(loot => loot.itemId._id.toString() === itemId);
+
+            if (existingUserItemIndex > -1) {
+                // If item exists, update its quantity
+                user.CurrentLoot[existingUserItemIndex].quantity += quantity;
+            } else {
+                // If item is new, push a new object with itemId and quantity
+                user.CurrentLoot.push({ itemId: itemId, quantity: quantity });
+            }
         }
+        // --- END NEW LOGIC FOR WEAPONS ---
 
         await user.save();
 
@@ -81,6 +116,7 @@ exports.purchaseItem = async (req, res) => {
             message: barkeeper.dialogues.buySuccess || 'Purchase successful!',
             userCurrency: user.Currency,
             userInventory: user.CurrentLoot,
+            userCharacterWeapon: user.Character.weapon, // Confirm new equipped weapon
             purchasedItem: {
                 itemId: itemInShop.itemId._id,
                 name: itemInShop.itemId.name,
@@ -108,10 +144,16 @@ exports.sellItem = async (req, res) => {
     }
 
     try {
+        // Populate 'Character' and 'CurrentLoot.itemId' for necessary checks
         const [barkeeper, user, itemDetails] = await Promise.all([
             BarKeeper.findById(id),
-            UserProfile.findById(userId), // <--- Use UserProfile here
-            InventoryItem.findById(itemId)
+            UserProfile.findById(userId)
+                .populate('Character')
+                .populate({
+                    path: 'CurrentLoot.itemId', // IMPORTANT: Populate item details within user's inventory
+                    model: 'InventoryItem'
+                }),
+            InventoryItem.findById(itemId) // Fetch itemDetails for the item being sold
         ]);
 
         if (!barkeeper) {
@@ -120,18 +162,32 @@ exports.sellItem = async (req, res) => {
         if (!user) {
             return res.status(404).json({ error: 'User not found' });
         }
-        if (!itemDetails) {
+        if (!itemDetails) { // Check if item details were found for the item being sold
             return res.status(404).json({ error: 'Item details not found.' });
         }
+        if (!user.Character) {
+            return res.status(400).json({ error: 'User does not have a character assigned.' });
+        }
 
-        // Inventory logic: Check if user has the item and enough quantity
-        const userItemIndex = user.CurrentLoot.findIndex(loot => loot.itemId.toString() === itemId);
+        // --- NEW LOGIC: Prevent selling Key Items (FIXED: using itemDetails.itemType) ---
+        console.log(`\n--- DEBUG: SELL KEY ITEM CHECK for itemId: ${itemId} ---`);
+        console.log(`[SELL] itemDetails.name: ${itemDetails.name}, itemDetails.itemType: '${itemDetails.itemType}'`);
+        console.log(`[SELL] Comparison: '${itemDetails.itemType}' === 'Key'`);
+        console.log(`[SELL] Result: ${itemDetails.itemType === 'Key'}`);
+
+        if (itemDetails.itemType === 'Key') { // <<<--- FIX: Changed from .type to .itemType
+            console.log("DEBUG: [SELL] Key item detected. Sending 403 Forbidden. This should terminate the function.");
+            return res.status(403).json({ error: 'Key items cannot be sold.' });
+        }
+        // --- END NEW LOGIC ---
+
+        const userItemIndex = user.CurrentLoot.findIndex(loot => loot.itemId._id.toString() === itemId); // Use _id because it's populated
 
         if (userItemIndex === -1 || user.CurrentLoot[userItemIndex].quantity < quantity) {
             return res.status(400).json({ error: barkeeper.dialogues.sellFailNoItems || 'You do not have enough of this item to sell.' });
         }
 
-        const itemBaseValue = itemDetails.baseValue || 1; // Ensure 'baseValue' is set in your InventoryItem model/data
+        const itemBaseValue = itemDetails.baseValue || 1;
         const sellPrice = (itemBaseValue * barkeeper.buyMultiplier) * quantity;
 
         // Deduct item quantity from user's inventory
@@ -139,6 +195,14 @@ exports.sellItem = async (req, res) => {
         if (user.CurrentLoot[userItemIndex].quantity <= 0) {
             user.CurrentLoot.splice(userItemIndex, 1); // Remove item entry if quantity drops to 0 or less
         }
+
+        // --- NEW LOGIC FOR SELLING EQUIPPED WEAPON (FIXED: using itemDetails.itemType) ---
+        if (itemDetails.itemType === 'Weapon' && user.Character.weapon && user.Character.weapon.toString() === itemId) { // <<<--- FIX: Changed from .type to .itemType
+            console.warn(`Equipped weapon (ID: ${itemId}) was sold. Character's weapon needs to be updated.`);
+            // IMPORTANT: CharacterClass.weapon is `required: true`. It cannot be set to null.
+            // You MUST ensure user.Character.weapon is updated to a valid weapon ID (e.g., a default starter weapon).
+        }
+        // --- END NEW LOGIC ---
 
         user.Currency += sellPrice;
 
@@ -148,6 +212,7 @@ exports.sellItem = async (req, res) => {
             message: barkeeper.dialogues.sellSuccess || 'Item sold successfully!',
             userCurrency: user.Currency,
             userInventory: user.CurrentLoot,
+            userCharacterWeapon: user.Character.weapon, // Current equipped weapon after sale
             soldItem: {
                 itemId: itemDetails._id,
                 name: itemDetails.name,
@@ -171,16 +236,11 @@ exports.refreshShop = async (req, res) => {
 
     try {
         const barkeeper = await BarKeeper.findById(id);
-        const user = await UserProfile.findById(userId); // <--- Use UserProfile here
+        const user = await UserProfile.findById(userId);
 
         if (!barkeeper || !user) {
             return res.status(404).json({ error: 'Barkeeper or User not found' });
         }
-
-        // --- Your specific shop refresh logic goes here ---
-        // E.g., restocking items if you added 'currentStock' and 'maxStock' to your BarKeeper's shopInventory
-        // barkeeper.shopInventory.forEach(item => { item.currentStock = item.maxStock; });
-        // await barkeeper.save();
 
         res.json({ message: 'Shop refresh logic executed (placeholder).', barkeeperShop: barkeeper.shopInventory });
 

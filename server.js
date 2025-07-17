@@ -21,15 +21,6 @@ app.use('/api/auth', require('./api/auth/authRoutes'));
 app.use('/api/barkeeper', require('./api/barkeeper/barkeeperRoutes'));
 app.use('/api/user', require('./api/user/userRoutes'));
 
-const path = require('path');
-
-// Serve static files from the frontend
-app.use(express.static(path.join(__dirname, 'frontend', 'dist')));
-// Catch-all: Serve index.html for any unmatched route (frontend routing)
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'frontend', 'dist', 'index.html'));
-});
-
 const PORT = process.env.PORT || 5000;
 const server = app.listen(PORT, () => console.log(`Connected to port ${PORT}`)); 
 
