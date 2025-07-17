@@ -198,7 +198,7 @@ paths:
               properties:
                 enemyType:
                   type: string
-                  enum: [Boss, CommonEnemy]
+                  enum: [boss, common_enemy]
                 enemyId:
                   type: string
               required: [enemyType, enemyId]
