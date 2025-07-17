@@ -1,0 +1,255 @@
+openapi: 3.0.0
+info:
+  title: Dungeon Dorms API
+  version: 1.0.0
+  description: API documentation for authentication, user, and fight endpoints.
+
+servers:
+  - url: http://localhost:5000/api
+
+paths:
+  /auth/register:
+    post:
+      summary: Register a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                gamerTag:
+                  type: string
+                email:
+                  type: string
+                password:
+                  type: string
+              required: [gamerTag, email, password]
+      responses:
+        '200':
+          description: User registered successfully
+        '400':
+          description: Missing or duplicate data
+
+  /auth/login:
+    post:
+      summary: Login and receive a JWT token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                gamerTag:
+                  type: string
+                password:
+                  type: string
+              required: [gamerTag, password]
+      responses:
+        '200':
+          description: Login successful
+        '400':
+          description: Invalid credentials
+
+  /auth/find-user:
+    post:
+      summary: Find user profile (protected)
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: User profile returned
+        '400':
+          description: User ID not provided
+        '404':
+          description: User profile not found
+
+  /auth/profile:
+    get:
+      summary: Get authenticated user's profile (protected)
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: User profile returned
+        '404':
+          description: User profile not found
+
+  /auth/inventory:
+    get:
+      summary: Get user inventory (test)
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Inventory returned
+
+    post:
+      summary: Add item to inventory (test)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Item added
+
+  /user/select-character:
+    post:
+      summary: Select a character class for the user (one-time, protected)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                characterClassId:
+                  type: string
+              required: [characterClassId]
+      responses:
+        '200':
+          description: Character selected
+        '400':
+          description: Character already selected or missing data
+
+  /user/set-current-boss:
+    post:
+      summary: Set the current boss for the user (protected), for testing, not in production
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                bossId:
+                  type: string
+              required: [bossId]
+      responses:
+        '200':
+          description: Current boss set
+        '400':
+          description: Boss ID missing or not found
+
+  /user/defeat-boss:
+    post:
+      summary: Update user profile after defeating a boss (protected), for testing, not in production
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                bossId:
+                  type: string
+              required: [bossId]
+      responses:
+        '200':
+          description: Boss defeat processed
+        '400':
+          description: Boss already defeated or not found
+
+  /user/boss:
+    post:
+      summary: Return all enemies, including bosses and common enemies
+      responses:
+        '200':
+          description: List of all bosses, common enemies, their stats, and items returned
+
+  /user/boss:id:
+    post:
+      summary: Fetch boss or enemy by ID
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: Boss or enemy returned
+        '404':
+          description: Not found
+
+  /fight/startEncounter:
+    post:
+      summary: Start a new encounter (protected), should be used before any turns
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                enemyType:
+                  type: string
+                  enum: [Boss, CommonEnemy]
+                enemyId:
+                  type: string
+              required: [enemyType, enemyId]
+      responses:
+        '200':
+          description: Encounter started
+
+  /fight/userTurn:
+    post:
+      summary: User takes a turn in an encounter (protected)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                action:
+                  type: string
+                  enum: [attack, item, talk, flee]
+                item:
+                  type: object
+      responses:
+        '200':
+          description: Turn processed, showing user/enemy defeat. If no one is defeated, returns total turn info. Prompts frontend for user levelup
+
+  /fight/levelup:
+    post:
+      summary: Level up the user (protected), should be used if userTurn prompts to do so
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: User leveled up, returns new stats and attributes.
+
+  /fight/getActiveEncounter:
+    post:
+      summary: Get the user's active encounter (protected)
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Active encounter returned
+        '404':
+          description: No active encounter found
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: https
+      scheme: bearer
+      bearerFormat: JWT
