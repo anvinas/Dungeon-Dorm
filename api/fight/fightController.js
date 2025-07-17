@@ -1,7 +1,7 @@
 const User = require('../auth/authModel');
 const Boss = require('../global/Boss');
 const CommonEnemy = require('../global/CommonEnemy');
-const { handleBossDefeat } = require('./combatResolution');
+const { handleEnemyDefeat } = require('./combatResolution');
 const Encounter = require('./Encounter');
 
 async function loadEntity(id, type) {
@@ -9,10 +9,10 @@ async function loadEntity(id, type) {
 
   switch (type) {
     case 'User':
-      return await User.findById(id);
-    case 'Boss':
+      return await UserProfile.findById(id);
+    case 'boss':
       return await Boss.findById(id);
-    case 'CommonEnemy':
+    case 'common_enemy':
       return await CommonEnemy.findById(id);
     default:
       throw new Error(`Unknown entity type: ${type}`);
@@ -128,17 +128,27 @@ exports.levelupUser = async (req, res) => {
         return res.status(404).json({ error: 'User not found' });
     }
 
+    user.xp = user.xp - user.toLevelUpXP;
     user.level = user.level + 1;
 
     const newStats = applyStatGrowth(user.class, user.stats, user.level);
-    user.stats = newStats;
+
+    user.stats.Strength = newStats.Strength;
+    user.stats.Dexterity = newStats.Dexterity;
+    user.stats.Intelligence = newStats.Intelligence;
+    user.stats.Charisma = newStats.Charisma;
+    user.maxHP = newStats.maxHP;
+    user.currentHP = newStats.maxHP; //currentHP exists in the databse, should be removed but fine for now
+    user.toLevelUpXP = 1000 + (150 * user.level); //example formula, can be changed
 
     await user.save();
     
     res.json({
         message: `User leveled up to level ${user.level}!`,
         newStats: user.stats,
-        level: user.level
+        level: user.level,
+        newUserXP: user.xp,
+        newToLevelUpXP: user.toLevelUpXP,
     })
 }
 
@@ -226,7 +236,7 @@ function rollTalk(attacker, defender)
     isCrit = 1;
   }
 
-  let success = ((d20 + attacker.stats.Charisma) > defender.stats.Charisma)
+  let success = ((d20 + attacker.stats.Charisma) > defenderStat)
 
   //Charisma stat + roll > defender charisma
   
@@ -356,9 +366,9 @@ exports.startEncounter = async (req, res) => {
   // Load enemy based on type
   let enemy;
   if (enemyType === 'Boss') {
-    enemy = await loadEntity(enemyId, 'Boss');
+    enemy = await loadEntity(enemyId, 'boss');
   } else if (enemyType === 'CommonEnemy') {
-    enemy = await loadEntity(enemyId, 'CommonEnemy');
+    enemy = await loadEntity(enemyId, 'common_enemy');
   } else {
     return res.status(400).json({ error: 'Invalid enemy type' });
   }
@@ -394,7 +404,7 @@ async function userAttackLogic(encounter, user, enemy)
     encounter.currentTurn = null;
     await encounter.save();
 
-    const rewards = await handleBossDefeat(userId, encounter.enemyId);
+    const rewards = await handleEnemyDefeat(userId, encounter.enemyId, encounter.enemyType);
 
     result = {
       message : 'Enemy defeated!',
@@ -438,7 +448,7 @@ async function userTalkLogic(encounter, user, enemy)
       postTurnEnemyHP: encounter.enemyHP,
       postTurnFriendship: encounter.friendship,
       currentTurn: null,
-      rewards: await handleBossDefeat(userId, encounter.enemyId)
+      rewards: await handleEnemyDefeat(userId, encounter.enemyId, encounter.enemyType)
     };
   }
   
@@ -537,10 +547,12 @@ async function enemyAttackLogic(encounter, user, enemy)
     {
     encounter.isActive = false;
     encounter.currentTurn = null;
+    user.currency = Math.max(0, user.currency - 10); //Example penalty for defeat
+    await user.save();
     await encounter.save();
     result = 
       {
-      message: 'User was defeated',
+      message: `User was defeated, losing 10 gold`,
       enemyAttack,
       postTurnUserHP: 0,
       postTurnEnemyHP: encounter.enemyHP,
@@ -607,8 +619,6 @@ exports.userTurnAndEnemyResponse = async(req, res) => {
     }
   }
 
-  
-
   // After user turn, switch to enemy turn
   encounter.currentTurn = 'Enemy';
 
@@ -635,8 +645,18 @@ exports.userTurnAndEnemyResponse = async(req, res) => {
 
 }
 
+exports.getActiveEncounter =  async (req, res) => {
+  const userId = req.user.userId;
+  const encounter = await Encounter.findOne({userId, isActive: true});
+  if (!encounter) {
+    return res.status(404).json({ error: 'No active encounter found' });
+  }
+  res.json({inFight: true, encounter});
+}
+
 module.exports = {
   levelupUser,
   startEncounter,
-  userTurnAndEnemyResponse
+  userTurnAndEnemyResponse,
+  loadEntity
 };
