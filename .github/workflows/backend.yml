@@ -20,7 +20,7 @@ jobs:
           SSH_KEY: ${{ secrets.SSH_KEY }}
           SSH_USERNAME: ${{ secrets.SSH_USERNAME }}
         run: |
-          sshpass -p "${SSH_KEY}" ssh -o StrictHostKeyChecking=no "${SSH_USERNAME}@${SSH_HOST}" <<'EOF'
+           sshpass -p "${SSH_KEY}" ssh -o StrictHostKeyChecking=no "${SSH_USERNAME}@${SSH_HOST}" <<'EOF'
             cd /var/www
 
             # If repo doesn't exist, clone it fresh
@@ -30,12 +30,12 @@ jobs:
             fi
 
             cd Dungeon-Dorm
+            git reset --hard HEAD
             git pull origin main
 
             # Install deps for the API
             npm install
 
             # Go back to root and restart server
-            cd ..
             pm2 restart server || pm2 start server.js --name server
           EOF
