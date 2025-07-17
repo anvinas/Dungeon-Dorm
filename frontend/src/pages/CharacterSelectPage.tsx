@@ -1,59 +1,97 @@
 import { useState ,useEffect} from "react"
-import styles from "./characterPage.module.css"
+import { fetchJWT,storeJWT } from "../lib/JWT"
 import { useNavigate } from 'react-router-dom';
 
 import axios from "axios"
-import GetServerPath from "../lib/GetServerPath.ts"
-import {fetchJWT, storeJWT} from "../lib/JWT.ts"
+import GetServerPath from "../lib/GetServerPath"
+import styles from "./characterPage.module.css"
 
+type SuccessSelectionData = {
+    message:string;
+    UserProfile: object;
+}
 
 function CharacterSelectPage(){
     const navigate = useNavigate();
 
     const [allPossibleCharacterInfo,setAllPossibleCharacterInfo] = useState([
-        {animDelay:500},
-        {animDelay:243},
-        {animDelay:784},
-        {animDelay:1255},
+        {id:"685d632886585be7727d064c",name:"warlock",animDelay:500,scrollFrame:1},
+        {id:"686552bddd55124b4da9b83e",name:"warlock",animDelay:943,scrollFrame:1},
+        {id:"686552bddd55124b4da9b83e",name:"warlock",animDelay:3584,scrollFrame:1},
+        {id:"686552bddd55124b4da9b83e",name:"warlock",animDelay:1255,scrollFrame:1},
     ])
     const [selectedScrollIndex,setSelectedScrollIndex] = useState(-1)
+    const [error,setError] = useState("")
+    const [successSelectionData,setSuccessSelectionData] = useState<SuccessSelectionData | null>(null)
+
+    useEffect(()=>{
+        // fetchCharacterID()
+        if(error.includes("already")){
+            navigate("/play")
+        }
+    },[error])
+    
+
+    const onClickScroll = (index:number)=>{
+        setSelectedScrollIndex(index);
+
+        // Reset animations
+        let tempCharacterInfo = [...allPossibleCharacterInfo]
+        tempCharacterInfo.forEach((info)=>{
+            info.scrollFrame = 1;
+        })
+        setAllPossibleCharacterInfo(tempCharacterInfo)
+    }
 
     return (
         <div className="relative w-screen h-screen overflow-hidden">
             {/* BG container */}
             <div className="relative w-screen h-screen ">
-                
-            <div className="absolute top-10 right-20 z-4" onClick={() => navigate("/")}>
-                <svg className="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
-                <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 12H4m12 0-4 4m4-4-4-4m3-4h2a3 3 0 0 1 3 3v10a3 3 0 0 1-3 3h-2"/>
-                </svg>
-                </div>
-                
-
                 <img src="/img/pixel_bg2.png" className={`w-screen max-w-screen h-screen ${styles.bgContainer}`}/>
-                
 
+                {!successSelectionData && 
+                    <div className={`absolute h-fit w-full h-fit translate-x-[50%] translate-y-[-50%]  top-[50%] right-[50%] z-3 `}>
+                        {/* Character select */}
+                        <div className="relative w-full h-fit items-center justify-center">
+                            <div className="flex items-center justify-center">
+                                <div className="text-center text-white font-bold text-6xl p-4 mb-10 rounded-lg inline-block">Choose Your Character</div>
+                            </div>
 
-                {/* Banner */}
-                <div className={`absolute h-fit w-full h-fit translate-x-[50%] translate-y-[-50%]  top-[50%] right-[50%] z-3 `}>
-                    <div className="relative w-full h-fit items-center justify-center">
-                        <div className="flex items-center justify-center">
-                            <div className="text-center text-white font-bold text-6xl p-4 mb-10 rounded-lg inline-block">Choose Your Character</div>
-                        </div>
+                            {/* Scroll container */}
+                            <div className="px-10">
+                                <div className="relative w-fit flex gap-2 items-center justify-between min-h-150">
+                                    {allPossibleCharacterInfo.map((charInfo,i)=>{
+                                        return(
+                                            <ScrollCharacterModel key={i} 
+                                                setScrollFrame={(frameNum)=>{setAllPossibleCharacterInfo((info)=>{const newInfo = [...info]; newInfo[i].scrollFrame = frameNum;return newInfo;})}} 
+                                                characterInfo={charInfo}
+                                                isSelected={selectedScrollIndex == i} 
+                                                index={i} 
+                                                onClick={()=>onClickScroll(i)}
+                                                setPageError={(error)=>setError(error)}
+                                                setSuccessSelectionData = {(data)=>setSuccessSelectionData(data)}
+                                            />
+                                        )
+                                    })}
+                                </div>
+                            </div>
 
-                        {/* Scroll container */}
-                        <div className="px-10">
-                            <div className="relative w-fit flex gap-2 items-center justify-between">
-                                {allPossibleCharacterInfo.map((charInfo,i)=>{
-                                    return(
-                                        <ScrollCharacterModel key={i} animDelay={charInfo.animDelay} isSelected={selectedScrollIndex == i} index={i} onClick={()=>setSelectedScrollIndex(i)}/>
-                                    )
-                                })}
+                            <div className="flex justify-center">
+                                <div className="text-center text-red-500 bg-gray-100 rounded-md px-2 w-fit">{error}</div>
                             </div>
                         </div>
-                        
                     </div>
-                </div>
+                }
+                
+                {/* START GAME */}
+                {successSelectionData &&
+                    <div className={`absolute flex flex-col h-fit w-fit opacity-[0.99] translate-x-[50%] translate-y-[-50%]  top-[50%] right-[50%] z-3 bg-white p-10 rounded gap-5`}>
+                        <div className="text-center font-semibold">{successSelectionData?.message}</div>
+                        <div className="flex justify-center">
+                            <div className="text-center font-bold bg-green-400 w-fit px-5 py-4 rounded hover:bg-green-500 hover:cursor-pointer" onClick={()=>navigate("/play")}>BEGIN YOUR JOURNEY</div>
+                        </div>
+                    </div>
+                }
 
             </div>
         
@@ -64,50 +102,50 @@ function CharacterSelectPage(){
 
 export default CharacterSelectPage
 
+
 type ScrollCharacterModelProps = {
     isSelected: boolean;
     onClick: () => void;
+    setScrollFrame: (frameNum:number) =>void;
+    setSuccessSelectionData: (data:any) =>void;
     index: number;
-    animDelay: number;
+    characterInfo: {id:string,name:string,animDelay:number,scrollFrame:number};
+    setPageError:(error:string) => void;
 };
 
-const ScrollCharacterModel = ({isSelected,onClick,index, animDelay}: ScrollCharacterModelProps)=>{
-
-  const [isHovered, setIsHovered] = useState(false);
-    const [isClicked, setIsClicked] = useState(false);
-    const [frame, setFrame] = useState(0);
+const ScrollCharacterModel = ({isSelected,index,characterInfo,onClick,setScrollFrame,setPageError,setSuccessSelectionData}: ScrollCharacterModelProps)=>{
+    console.log("Character ",index)
+    const [isHovered, setIsHovered] = useState(false);
 
     const totalFrames = 6; // How many frames you have in your folder
     const animationSpeed = 100; // milliseconds per frame
 
     
-    const framePath = (frame: number) =>
-        `/assets/MageScrollAnimation/frame_${frame}.png`; // adjust path & naming if needed
+    const framePath = (scrollFrame: number) =>
+        `/assets/playableCharacter/${characterInfo.name}/scroll/animation/frame_${scrollFrame}.png`; // adjust path & naming if needed
 
-    const defaultImage = '/assets/Closed_Pixel_Scroll_2.png';
-    const hoverImage = '/assets/Mage_SliverOpen.png';
+    const defaultImage = `/assets/playableCharacter/${characterInfo.name}/scroll/closed.png`;
+    const hoverImage = `/assets/playableCharacter/${characterInfo.name}/scroll/peek.png`;
 
     useEffect(() => {
-        if (!isClicked) return;
+        if (!isSelected) return;
 
-        let currentFrame = 0;
+        let currentFrame = characterInfo.scrollFrame;
 
         const interval = setInterval(() => {
             currentFrame++;
             if (currentFrame >= totalFrames) {
                 clearInterval(interval);
-                //setIsClicked(false); // Animation done
-                //setFrame(0);
             } else {
-                setFrame(currentFrame);
+                setScrollFrame(currentFrame);
             }
         }, animationSpeed);
 
         return () => clearInterval(interval);
-    }, [isClicked]);
+    }, [isSelected]);
 
     const handleMouseEnter = () => {
-        if (!isClicked) setIsHovered(true);
+        if (!isSelected) setIsHovered(true);
     };
 
     const handleMouseLeave = () => {
@@ -115,72 +153,52 @@ const ScrollCharacterModel = ({isSelected,onClick,index, animDelay}: ScrollChara
     };
 
     const handleClick = () => {
-        setIsClicked(true);
-        setFrame(0); // Start from the first frame
+        if(isSelected) return
+        setScrollFrame(1); // Start from the first frame
         onClick();
     };
 
-    const imageToShow = isClicked
-        ? framePath(frame)
+    const imageToShow = isSelected
+        ? framePath(characterInfo.scrollFrame)
         : isHovered
         ? hoverImage
         : defaultImage;
 
     
-    const[error, setError] = useState("");
-
-    type selectedCharacter = {
-        userId:string;
-    };
-     
-     const[curSelectedChar, setCurSelectedChar] = useState<selectedCharacter>({
-        userId:""
-      })
-
-
-    const sendIndex = async () => {
-        console.log(index);
-        if(index === 0) //Warlock/Mage
-        {
-            //setCurSelectedChar((oldData) => ({...oldData, userId: "685d632886585be7727d064c"}));
-            //console.log('685d632886585be7727d064c');
-            //console.log(curSelectedChar.userId + " Hi");
-
-            const payload = { characterClassId: '685d632886585be7727d064c' };
-            //console.log(payload.characterClassId);
+    const handleCharacterSelect = async () => {
+        // setCurSelectedChar((oldData) => ({...oldData, userId: "685d632886585be7727d064c"}));
+        // console.log('685d632886585be7727d064c');
+        // console.log(curSelectedChar.userId + " Hi");
+        setPageError("")
+        try{
+            const token = fetchJWT();
+            let response = await axios.post(`${GetServerPath()}/api/user/select-character`,{
+                characterClassId:characterInfo.id,
+            }, 
+            { headers: {
+                Authorization: `Bearer ${token}`
+            },
+            });
             
-            try{
-                const token = fetchJWT();
-                console.log("JWT Token:", token);
-                //let response = await axios.post(`${GetServerPath()}/api/user/select-character`,{curSelectedChar}, 
-                let response = await axios.post(`${GetServerPath()}/api/user/select-character`,payload, 
-                { headers: {
-                    Authorization: `Bearer ${token}`,
-                    'Content-Type': 'application/json',
-                },
-                });
-                
-                // Succes
-                if(response.status == 200){
-                    storeJWT(response.data.token)
-                    
-                    console.log(response.data)
-                
-                }else{
-                    // Failure
-                    console.log(response.data)
-                    setError(response.data.error)
-                }
-
-            }catch(e:any){
-                console.log(e)
-                setError("Server Error | contact admin")
-                setError(e.response.data.error)
-                }
-        
+            // Succes
+            if(response.status == 200){
+                storeJWT(response.data.token)
+                setSuccessSelectionData(response.data)
+                console.log(response.data)
+            
+            }else{
+                // Failure
+                console.log(response.data)
+                setPageError(response.data.error)
             }
 
+        }catch(e:any){
+            console.log(e)
+            setPageError("Server Error | contact admin")
+            setPageError(e.response.data.error)
         }
+    
+    }
     
 
     return (
@@ -191,91 +209,24 @@ const ScrollCharacterModel = ({isSelected,onClick,index, animDelay}: ScrollChara
                 onMouseEnter={handleMouseEnter}
                 onMouseLeave={handleMouseLeave}
                 className={`${isSelected ? "w-[48]" : "w-[60%]"} z-3 ${styles.bannerContainer}`}
-                style={{ cursor: 'pointer' }}
+                style={{ cursor: 'pointer' ,animationDelay:`${characterInfo.animDelay}ms`}}
             />
             {isSelected && (
-                <div onClick={sendIndex}className="bg-green-500 px-8 py-3 text-black rounded-md font-semibold hover:cursor-pointer hover:bg-green-600">
+                <div onClick={handleCharacterSelect} className="bg-green-500 px-8 py-3 text-black rounded-md font-semibold hover:cursor-pointer hover:bg-green-600">
                     Select
                 </div>
             )}
         </div>
     );
-
-//const handleClick = () => {
-//    setImageSrc('/assets/Mage_Scroll_Sheet.png');
-//}
-
-
-/*
-const defaultImage = '/assets/Closed_Pixel_Scroll_2.png';
-    const hoverImage = '/assets/MageScrollAnimation/Mage_SliverOpen.png';
-    const clickImage = '/assets/MageScrollAnimaton/Mage_Scroll_Sheet.png';
-    
-    //const [isClicked, setIsClicked] = useState(false);
-    const [currentImage, setCurrentImage] = useState(defaultImage);
-
-    const MouseEnter = () => {
-        if(!onClick){
-            setCurrentImage(hoverImage);
-        }
-    };
-   
-    const MouseLeave = () => {
-        if(!onClick){
-            setCurrentImage(defaultImage);
-        }
-    };
-
-    const handleClick = () => {
-        //setIsClicked(!onClick);
-        setCurrentImage(onClick() ? defaultImage : clickImage);
-    };
-
-return(
-        <>
-            <img
-            src={currentImage}
-            alt="Interactive image"
-            onMouseEnter={MouseEnter}
-            onMouseLeave={MouseLeave}
-            onClick={handleClick}
-            style={{ cursor: 'pointer', transition: 'filter 0.3s ease-in-out' }} // Add some basic styling and transition
-    />
-            
-        </>
-    )
-
-
-*/
-
-/*
-<img onClick={onClick}
-            src={isHovered ? '/assets/MageScrollAnimation/Mage_SliverOpen.png' : '/assets/Closed_Pixel_Scroll_2.png'}
-            alt="Hoverable"
-            onMouseEnter={() => setIsHovered(true)}
-            onMouseLeave={() => setIsHovered(false)}
-            className="w-48" 
-
-            />
-*/
-
-/*
-return(
-        <>
-           
-            <div onClick={onClick} className="flex flex-col gap-2 justify-center items-center h-fit ">
-                
-                <img style={{animationDelay:"500ms"}}  src={isHovered ? '/assets/MageScrollAnimation/Mage_SliverOpen.png' : '/assets/Closed_Pixel_Scroll_2.png'}
-                    alt="Hoverable"
-                    onMouseEnter={() => setIsHovered(true)}
-                    onMouseLeave={() => setIsHovered(false)}
-                    className={`${isSelected?"w-[48]" : "w-[60%]"} z-3 ${styles.bannerContainer} cursor-pointer`}/>
-                {isSelected && <div className="bg-green-500 px-8 py-3 text-black rounded-md font-semibold hover:cursor-pointer hover:bg-green-600">Select</div>}
-            </div>
-        </>
-    )
-
-
-*/
-
 }
+
+
+
+// const ScrollCharacterModel = ({isSelected,onClick,index})=>{
+//     return(
+//         <div onClick={onClick} className="flex flex-col gap-2 justify-center items-center h-fit ">
+//             <img style={{animationDelay:"500ms"}} src="/assets/Pixel_Scroll_2.png" className={`${isSelected?"w-[80%]" : "w-[60%]"} z-3 ${styles.bannerContainer} cursor-pointer`}/>
+//             {isSelected && <div className="bg-green-500 px-8 py-3 text-black rounded-md font-semibold hover:cursor-pointer hover:bg-green-600">Select</div>}
+//         </div>
+//     )
+// }

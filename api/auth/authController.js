@@ -61,7 +61,7 @@ exports.loginUser = async (req, res) =>
         if (!passwordMatch) return res.status(400).json({ error: "Incorrect user/password combination"});
 
         const token = jwt.sign({ userId: user._id}, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN || '1h'});
-        res.json({token, user: {gamerTag: user.gamerTag, level: user.level}})
+        res.json({token, user: {gamerTag: user.gamerTag, level: user.level,character: user.Character}})
     }
     catch (err)
     {
