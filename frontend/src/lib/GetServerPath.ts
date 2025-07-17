@@ -1,5 +1,5 @@
 
 const getPath = ()=>{
-    return "http://dungeons-dorms.online"
+    return "http://localhost:5000/" 
 }
 export default getPath
