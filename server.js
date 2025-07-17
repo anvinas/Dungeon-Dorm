@@ -7,7 +7,8 @@ const app = express();
 const allowedOrigins = [
   'https://dungeons-dorms.online',
   'http://localhost:3000',
-  'http://localhost:5000'
+  'http://localhost:5000',
+  'http://localhost:5173' 
 ];
 
 app.use(cors({
