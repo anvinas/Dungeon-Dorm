@@ -30,7 +30,7 @@ mongoose.connect(process.env.MONGO_URI)
 require('./api/auth/authModel');
 require('./api/barkeeper/BarKeeper');
 require('./api/barkeeper/InventoryItem');
-require('./api/models/CharacterClass'); 
+require('./models/CharacterClass'); 
 
 // Routes
 app.use('/api/auth', require('./api/auth/authRoutes'));
