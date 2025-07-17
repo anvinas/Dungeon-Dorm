@@ -20,7 +20,7 @@ jobs:
           SSH_KEY: ${{ secrets.SSH_KEY }}
           SSH_USERNAME: ${{ secrets.SSH_USERNAME }}
         run: |
-           sshpass -p "${SSH_KEY}" ssh -o StrictHostKeyChecking=no "${SSH_USERNAME}@${SSH_HOST}" <<'EOF'
+          sshpass -p "${SSH_KEY}" ssh -o StrictHostKeyChecking=no "${SSH_USERNAME}@${SSH_HOST}" <<'EOF'
             cd /var/www
 
             # If repo doesn't exist, clone it fresh
@@ -36,6 +36,6 @@ jobs:
             # Install deps for the API
             npm install
 
-            # Go back to root and restart server
+            # Restart backend server with PM2
             pm2 restart server --update-env || pm2 start server.js --name server --update-env
           EOF
