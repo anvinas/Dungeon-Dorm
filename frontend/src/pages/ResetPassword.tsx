@@ -4,16 +4,16 @@ import GetServerPath from "../lib/GetServerPath.js"
 import {storeJWT} from "../lib/JWT.js"
 import axios from "axios"
 import { useNavigate } from 'react-router-dom';
-
+import { useSearchParams } from 'react-router-dom';
 
 type NewPassword = {
-  password: string; 
-  showPassword:boolean
+  token: string;
+  newPassword: string;
 };
 
 type RetypedPassword = {
-  password: string; 
-  showPassword:boolean
+  token: string;
+  newPassword: string;
 };
 
 function ResetPassword()
@@ -22,21 +22,32 @@ function ResetPassword()
   const [error,setError] = useState("")
   const navigate = useNavigate();
 
+  const [searchParams] = useSearchParams();
+  const token = searchParams.get("token");
+
        const [newData,setNewData] = useState<NewPassword>({
-          password:"",
-          showPassword:false
+          token: "",  
+          newPassword:""
         })
 
-         const [retypedData,setRetypedData] = useState<NewPassword>({
-          password:"",
-          showPassword:false
+         const [retypedData,setRetypedData] = useState<RetypedPassword>({
+          token: "",
+          newPassword:""
         })
 
         const [inputErrorDisplay,setInputErrorDisplay] = useState({
           password:false
         })
+    
 
          const handelReset = async ()=>{
+
+          if(!token || token?.length<=0 || token ==='')
+          {
+            setMessage("User Token Not Found");
+            return;
+          }
+
             let hasErrors= false;
             setError("")
             
@@ -46,12 +57,12 @@ function ResetPassword()
             }
 
             //Check input validation 
-            if(newData.password == "" || retypedData.password == ""){
+            if(newData.newPassword == "" || retypedData.newPassword == ""){
               tempInputErrorDisplay.password = true;
               hasErrors = true;
               setMessage("Invalid Password")
             }
-            else if(!(newData.password == retypedData.password))
+            else if(!(newData.newPassword == retypedData.newPassword))
             {
               tempInputErrorDisplay.password = true;
               hasErrors = true;
@@ -64,16 +75,25 @@ function ResetPassword()
             
             // Completed Validation!
             try{
-              let response = await axios.post(`${GetServerPath()}/api/auth/register`,{
+              
+              setNewData(prev => ({...prev, token: token}));
+              setRetypedData(prev => ({...prev, token: token}));
+
+              console.log("What is being passed:",retypedData);
+
+              let response = await axios.post(`${GetServerPath()}/api/auth/reset-password`,
+              {
                 ...retypedData
               })
+              
 
               // Succes
               if(response.status == 200){
                 storeJWT(response.data.token)
                 console.log(response.data)
-                
-                navigate("/verify");
+                console.log(response)
+                console.log("it worked :D")
+                //navigate("/verify");
               }else{
                 // Failure
                 console.log(response.data)
@@ -107,12 +127,12 @@ function ResetPassword()
         <div className="bg-stone-800 bg-opacity-70 p-8 rounded-xl shadow-lg flex flex-col items-center gap-6">
            <div className="flex flex-col gap-1">
                 <div className="text-white font-bold">New Password</div>
-                <input type="password" onChange={(e)=>setNewData((oldData)=>{oldData.password = e.target.value; return oldData})} placeholder="xxxxxxxxxxxxx" className="bg-white border border-gray-400 rounded-sm h-10 pl-5" />           
+                <input type="password" onChange={(e)=>setNewData((oldData)=>{oldData.newPassword = e.target.value; return oldData})} placeholder="xxxxxxxxxxxxx" className="bg-white border border-gray-400 rounded-sm h-10 pl-5" />           
             </div>
 
             <div className="flex flex-col gap-1">
                 <div className="text-white font-bold">Re-Type Password</div>
-                <input type="password" onChange={(e)=>setRetypedData((oldData)=>{oldData.password = e.target.value; return oldData})} placeholder="xxxxxxxxxxxxx" className="bg-white border border-gray-400 rounded-sm h-10 pl-5" />
+                <input type="password" onChange={(e)=>setRetypedData((oldData)=>{oldData.newPassword = e.target.value; return oldData})} placeholder="xxxxxxxxxxxxx" className="bg-white border border-gray-400 rounded-sm h-10 pl-5" />
                            
             </div>
 

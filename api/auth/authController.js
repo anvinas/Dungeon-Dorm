@@ -263,6 +263,7 @@ exports.forgotPassword = async (req, res) => {
 
         // Construct the reset link (frontend will handle the token)
         //http://dungeon-dorm.online
+        //http://localhost:5173
         const resetLink = `http://dungeon-dorm.online/reset-password?token=${resetPasswordToken}`;
 
         const mailOptions = {
@@ -302,6 +303,7 @@ exports.forgotPassword = async (req, res) => {
 };
 
 exports.resetPassword = async (req, res) => {
+    console.log("Incoming body:", req.body); // 👈 Add this
     const { token, newPassword } = req.body;
 
     if (!token || !newPassword) {
