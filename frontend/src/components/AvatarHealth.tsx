@@ -1,0 +1,52 @@
+
+// import styles from "./styles/loginModal.module.css"
+function AvatarHealth({
+  userData
+}:{
+  userData:{
+    stats: {
+      strength: number;
+      dexterity: number;
+      intelligence: number;
+      charisma: number;
+      defense: number;
+    };
+    maxHP: number;
+    currentHP: number;
+  };
+}){
+  
+  const userHealthPercentage = ((userData.currentHP / userData.maxHP )*100 );
+  
+  return (
+    <div className="relative h-fit">
+      <div className="flex items-end gap-1">
+        {/* Head */}
+        <div className="h-30 w-30 rounded-full bg-gradient-to-br from-blue-600 to-blue-400 shadow-md p-1">
+          <div className="h-full w-full rounded-full overflow-hidden border-4 border-blue-700 bg-purple-100">
+            <img
+              src="/assets/playableCharacter/warlock/head.png"
+              className="w-full h-full object-cover transform scale-x-[-1] bobAvatar"
+              alt="Avatar"
+              style={{ animationDelay: '0s' }} 
+            />
+          </div>
+        </div>
+
+        <div style={{WebkitTextStroke: '2px black',}} className="pb-5 font-bold text-4xl">{userData.currentHP}/{userData.maxHP} hp</div>
+      </div>
+      
+
+      {/* Health BAR*/}
+      <div className={`relative top-[-10%] w-[100%] h-5 border-2 bg-[#697284e3] border-blue-800 rounded-lg`}>
+        <div 
+          className={`absolute h-full  bg-green-400 rounded-sm ${userHealthPercentage > 80 ? "bg-green-400" : userHealthPercentage>40?"bg-orange-400":"bg-red-400"}`} 
+          style={{ width: `${userHealthPercentage}%` }}>
+        </div>
+      </div>
+    
+    </div>  
+  )
+}
+
+export default AvatarHealth

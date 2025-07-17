@@ -1,5 +1,5 @@
 // import styles from "./styles/loginModal.module.css"
-function Avatar(){
+function AvatarLevel(){
     
   return (
     <div className="relative h-fit">
@@ -8,7 +8,7 @@ function Avatar(){
         <div className="h-30 w-30 rounded-full bg-gradient-to-br from-blue-600 to-blue-400 shadow-md p-1">
           <div className="h-full w-full rounded-full overflow-hidden border-4 border-blue-700 bg-purple-100">
             <img
-              src="/assets/characterHead.png"
+              src="/assets/playableCharacter/warlock/head.png"
               className="w-full h-full object-cover transform scale-x-[-1] bobAvatar"
               alt="Avatar"
               style={{ animationDelay: '0s' }} 
@@ -29,4 +29,4 @@ function Avatar(){
   )
 }
 
-export default Avatar
+export default AvatarLevel

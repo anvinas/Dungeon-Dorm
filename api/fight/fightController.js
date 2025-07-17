@@ -22,19 +22,19 @@ async function loadEntity(id, type) {
 const classGrowthRules = {
   Barbarian: (stats, level) => {
     const updatedStats = { 
-      Strength: stats.Strength + 1,                           // +1 every level
-      Dexterity: stats.Dexterity + (level % 3 === 0 ? 1 : 0), // +1 every 3rd level
-      Intelligence: stats.Intelligence,                       // No increase
-      Charisma: stats.Charisma + (level % 3 === 0 ? 1 : 0),   // +1 every 3rd level
-      Defense: stats.Defense + 1,                             // +1 every level
+      strength: stats.strength + 1,                           // +1 every level
+      dexterity: stats.dexterity + (level % 3 === 0 ? 1 : 0), // +1 every 3rd level
+      intelligence: stats.intelligence,                       // No increase
+      charisma: stats.charisma + (level % 3 === 0 ? 1 : 0),   // +1 every 3rd level
+      defense: stats.defense + 1,                             // +1 every level
     };
 
     const maxHP =
       100 +
-      12 * updatedStats.Defense +
-      7 * updatedStats.Strength +
-      6 * updatedStats.Dexterity +
-      8 * updatedStats.Intelligence;
+      12 * updatedStats.defense +
+      7 * updatedStats.strength +
+      6 * updatedStats.dexterity +
+      8 * updatedStats.intelligence;
 
     return {
       ...updatedStats,
@@ -44,19 +44,19 @@ const classGrowthRules = {
 
   Rogue: (stats, level) => {
     const updatedStats = { 
-      Strength: stats.Strength + (level % 3 === 0 ? 1 : 0),    // +1 every 3rd level
-      Dexterity: stats.Dexterity + 1,                          // +1 every level
-      Intelligence: stats.Intelligence,                        // No increase
-      Charisma: stats.Charisma + (level % 2 === 0 ? 1 : 0),    // +1 every 2nd level
-      Defense: stats.Defense + 1,                              // +1 every level
+      strength: stats.strength + (level % 3 === 0 ? 1 : 0),    // +1 every 3rd level
+      dexterity: stats.dexterity + 1,                          // +1 every level
+      intelligence: stats.intelligence,                        // No increase
+      charisma: stats.charisma + (level % 2 === 0 ? 1 : 0),    // +1 every 2nd level
+      defense: stats.defense + 1,                              // +1 every level
     };
 
     const maxHP =
       100 +
-      12 * updatedStats.Defense +
-      7 * updatedStats.Strength +
-      6 * updatedStats.Dexterity +
-      8 * updatedStats.Intelligence;
+      12 * updatedStats.defense +
+      7 * updatedStats.strength +
+      6 * updatedStats.dexterity +
+      8 * updatedStats.intelligence;
 
     return {
       ...updatedStats,
@@ -66,19 +66,19 @@ const classGrowthRules = {
 
   Bard: (stats, level) => {
     const updatedStats = { 
-      Strength: stats.Strength + (level % 3 === 0 ? 1 : 0),         // +1 every 3rd level
-      Dexterity: stats.Dexterity + (level % 2 === 0 ? 1 : 0),       // +1 every 2nd level
-      Intelligence: stats.Intelligence + (level % 2 === 0 ? 1 : 0), // +1 every 2nd level
-      Charisma: stats.Charisma + 1,                                 // +1 every level
-      Defense: stats.Defense + (level % 3 === 0 ? 1 : 0),           // +1 every 3rd level
+      strength: stats.strength + (level % 3 === 0 ? 1 : 0),         // +1 every 3rd level
+      dexterity: stats.dexterity + (level % 2 === 0 ? 1 : 0),       // +1 every 2nd level
+      intelligence: stats.intelligence + (level % 2 === 0 ? 1 : 0), // +1 every 2nd level
+      charisma: stats.charisma + 1,                                 // +1 every level
+      defense: stats.defense + (level % 3 === 0 ? 1 : 0),           // +1 every 3rd level
     };
 
     const maxHP =
       100 +
-      12 * updatedStats.Defense +
-      7 * updatedStats.Strength +
-      6 * updatedStats.Dexterity +
-      8 * updatedStats.Intelligence;
+      12 * updatedStats.defense +
+      7 * updatedStats.strength +
+      6 * updatedStats.dexterity +
+      8 * updatedStats.intelligence;
 
     return {
       ...updatedStats,
@@ -88,19 +88,19 @@ const classGrowthRules = {
 
   Warlock: (stats, level) => {
     const updatedStats = { 
-      Strength: stats.Strength,                                // No increase
-      Dexterity: stats.Dexterity + (level % 2 === 0 ? 1 : 0),  // +1 every 2nd level
-      Intelligence: stats.Intelligence + 1,                    // +1 every level
-      Charisma: stats.Charisma + (level % 4 === 0 ? 1 : 0),    // +1 every 4th level
-      Defense: stats.Defense + (level % 3 === 0 ? 1 : 0),      // +1 every 3rd level
+      strength: stats.strength,                                // No increase
+      dexterity: stats.dexterity + (level % 2 === 0 ? 1 : 0),  // +1 every 2nd level
+      intelligence: stats.intelligence + 1,                    // +1 every level
+      charisma: stats.charisma + (level % 4 === 0 ? 1 : 0),    // +1 every 4th level
+      defense: stats.defense + (level % 3 === 0 ? 1 : 0),      // +1 every 3rd level
     };
 
     const maxHP =
       100 +
-      12 * updatedStats.Defense +
-      7 * updatedStats.Strength +
-      6 * updatedStats.Dexterity +
-      8 * updatedStats.Intelligence;
+      12 * updatedStats.defense +
+      7 * updatedStats.strength +
+      6 * updatedStats.dexterity +
+      8 * updatedStats.intelligence;
 
     return {
       ...updatedStats,
@@ -120,7 +120,7 @@ function applyStatGrowth(className, currentStats, level) //Class name, current s
     return growthFunction(currentStats, level);
 }
 
-exports.levelupUser = async (req, res) => {
+const levelupUser = async (req, res) => {
     const userId = req.user.userId;
     const user = await loadEntity(userId, 'User');
 
@@ -155,11 +155,10 @@ function rollD10()
 function getPrimaryStat(stats)
 {
     let maxVal = -Infinity;
-    let primary = "Strength";
-
+    let primary = "strength";
     for (const stat in stats) 
     {
-        if (stat !== "Defense" && stats[stat] > maxVal) 
+        if (stat !== "defense" && stats[stat] > maxVal) 
         {
             maxVal = stats[stat];
             primary = stat;
@@ -170,9 +169,15 @@ function getPrimaryStat(stats)
 }
 
 function rollAttack(attacker, defender) 
-{
-    const {name : primaryStatName, value: attackerStat} = getPrimaryStat(attacker.stats);
-    const defenderStat = defender.stats.Defense;
+{   
+    defender = JSON.parse(JSON.stringify(defender));
+    attacker = JSON.parse(JSON.stringify(attacker));
+
+    let attackerStats = attacker.stats ??attacker.currentStats
+    let defenderStats = defender.stats ??defender.currentStats
+
+    const { name: primaryStatName, value: attackerStat } = getPrimaryStat(attackerStats);
+    const defenderStat = defenderStats.defense;
 
     const d20 = rollD20();
     const d10 = rollD10();
@@ -216,7 +221,7 @@ function rollAttack(attacker, defender)
 
 function rollTalk(attacker, defender)
 {
-  const defenderStat = defender.stats.Charisma;
+  const defenderStat = defender.stats.charisma;
   let isCrit = 0;
   let friendshipContribution;
   const d20 = rollD20();
@@ -226,7 +231,7 @@ function rollTalk(attacker, defender)
     isCrit = 1;
   }
 
-  let success = ((d20 + attacker.stats.Charisma) > defender.stats.Charisma)
+  let success = ((d20 + attacker.stats.charisma) > defender.stats.charisma)
 
   //Charisma stat + roll > defender charisma
   
@@ -243,8 +248,8 @@ function rollTalk(attacker, defender)
     friendshipContribution : friendshipContribution,
     crit: isCrit,
     d20: d20,
-    totalRollWithModifiers: d20 + attacker.stats.Charisma,
-    totalRollNeeded: defender.stats.Charisma,
+    totalRollWithModifiers: d20 + attacker.stats.charisma,
+    totalRollNeeded: defender.stats.charisma,
     message : isCrit ? `${attacker.name} critically charmed ${defender.name} for ${friendshipContribution}!!` : success ? `${attacker.name} charmed ${defender.name} for ${friendshipContribution}!` : `${attacker.name}'s attempt to charm ${defedner.name} did NOT work!!!!`
   }
 }
@@ -345,10 +350,9 @@ function rollFlee(user, enemy)
   }
 }
 
-exports.startEncounter = async (req, res) => {
+const startEncounter = async (req, res) => {
   const userId = req.user.userId;
   const { enemyType, enemyId } = req.body; // Pass enemyType and enemyId from frontend
-
   // Load user
   const user = await loadEntity(userId, 'User');
   if (!user) return res.status(404).json({ error: 'User not found' });
@@ -369,15 +373,27 @@ exports.startEncounter = async (req, res) => {
     userId,
     enemyId: enemy._id,
     enemyType,
-    userHP: user.stats.maxHP,
-    enemyHP: enemy.stats.HP,
+    userHP: user.maxHP,
+    enemyHP: enemy.maxHP,
     currentTurn: 'User'
   });
+  
+  const enemyObject = enemy.toObject();
 
   res.json({
     message: 'Encounter started!',
-    userStats: user.stats,
-    enemyStats: enemy.stats,
+    user: {
+      stats:user.stats,
+      maxHP:user.maxHP,
+      currentHP:user.maxHP,
+    },
+    enemy: {
+      stats:enemyObject.stats,
+      relationshipGoal:enemyObject.relationshipGoal,
+      maxHP:enemyObject.maxHP,
+      currentHP:enemyObject.maxHP,
+      name:enemyObject.name
+    },
     currentTurn: 'User'
   });
 };
@@ -563,17 +579,16 @@ async function enemyAttackLogic(encounter, user, enemy)
   return result;
 }
 
-exports.userTurnAndEnemyResponse = async(req, res) => {
+const userTurnAndEnemyResponse = async(req, res) => {
   const userId = req.user.userId;
   const {action, item} = req.body;
   let userResult;
   let enemyResult;
   const encounter = await Encounter.findOne({userId, isActive: true});
-
   if (!encounter || encounter.currentTurn !== 'User')
     return res.status(400).json({error: 'Not the user turn or no active encounter'});
 
-  const user = await loadEntity(encounter.userID, 'User');
+  const user = await loadEntity(encounter.userId, 'User');
   const enemy = await loadEntity(encounter.enemyId, encounter.enemyType);
 
   if (action === 'attack') 

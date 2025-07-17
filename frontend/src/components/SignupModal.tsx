@@ -126,7 +126,7 @@ function SignupModal({onClickClose,isOpen}:SignupModalProps) {
           <div className="flex justify-between border-t-1 border-gray-200 p-5"> 
               <div></div>
               <div className="flex gap-3">
-                  <div className="p-5 pt-3 pb-3 rounded-md bg-green-400 hover:bg-green-500 hover:cursor-pointer" onClick={()=>handleSignup()}>Login</div>
+                  <div className="p-5 pt-3 pb-3 rounded-md bg-green-400 hover:bg-green-500 hover:cursor-pointer" onClick={()=>handleSignup()}>Signup</div>
               </div>
           </div>
       </div>

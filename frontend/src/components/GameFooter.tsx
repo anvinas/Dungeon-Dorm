@@ -1,18 +1,19 @@
 // import styles from "./styles/loginModal.module.css"
-import Avatar from "./Avatar"
-
+import { useState } from "react"
+import AvatarLevel from "./AvatarLevel"
+import styles from "./styles/GameFooter.module.css"
 
 function GameFooter({OnClickInventory}:{OnClickInventory:any}){
-    
+
   return (
-    <div className="flex items-end relative w-full justify-between h-full shadow-lg p-15 text-white">
-        <Avatar />
+    <div className={`${styles.container} flex items-end relative w-full justify-between h-full shadow-lg p-15 text-white`}>
+        <AvatarLevel />
 
         {/* Inventory button */}
-        <div onClick={()=>OnClickInventory()} className="p-5 bg-red-100 border-4 border-blue-500 rounded-[50%]">
+        <div onClick={()=>OnClickInventory()} className="p-5 bg-gray-300 border-4 border-blue-500 rounded-[50%] cursor-pointer hover:bg-gray-400">
             <img
               src="/assets/satchel.png"
-              className=" object-cover transform scale-x-[-1] bobAvatar h-20"
+              className="object-cover transform scale-x-[-1]  h-20 w-20"
               alt="Satchel"
             />
         </div>

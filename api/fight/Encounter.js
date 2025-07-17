@@ -3,7 +3,7 @@ const mongoose = require ('mongoose');
 const encounterSchema = new mongoose.Schema({
     userId: {type: mongoose.Schema.Types.ObjectId, ref : 'User', required: true},
     enemyId: {type: mongoose.Schema.Types.ObjectId, required: true},
-    enemyType: { type: String, enum: ['common_enemy', 'boss'], required: true},
+    enemyType: { type: String, enum: ['CommonEnemy', 'Boss'], required: true},
     userHP: Number,
     enemyHP: Number,
     enemyFriendliness: Number,

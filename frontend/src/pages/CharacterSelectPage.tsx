@@ -175,9 +175,10 @@ const ScrollCharacterModel = ({isSelected,index,characterInfo,onClick,setScrollF
             let response = await axios.post(`${GetServerPath()}/api/user/select-character`,{
                 characterClassId:characterInfo.id,
             }, 
-            { headers: {
-                Authorization: `Bearer ${token}`
-            },
+            { 
+                headers: {
+                    Authorization: `Bearer ${token}`
+                },
             });
             
             // Succes

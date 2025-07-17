@@ -20,6 +20,7 @@ require('./models/CharacterClass');
 app.use('/api/auth', require('./api/auth/authRoutes'));
 app.use('/api/barkeeper', require('./api/barkeeper/barkeeperRoutes'));
 app.use('/api/user', require('./api/user/userRoutes'));
+app.use('/api/fight', require('./api/fight/fightRoutes'));
 
 const PORT = process.env.PORT || 5000;
 const server = app.listen(PORT, () => console.log(`Connected to port ${PORT}`)); 
