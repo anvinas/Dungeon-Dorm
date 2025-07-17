@@ -1,7 +1,7 @@
 
 function IntroPage()
 {
-    return("")
+    return(" ")
 }
 
 

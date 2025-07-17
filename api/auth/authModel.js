@@ -1,4 +1,4 @@
-// api/auth/authModel.js (CORRECTED activityState definition)
+// api/auth/authModel.js (CORRECTED activityState definition) 
 const mongoose = require('mongoose');
 
 const userSchema = new mongoose.Schema({

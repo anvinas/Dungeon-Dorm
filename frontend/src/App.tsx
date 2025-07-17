@@ -4,7 +4,7 @@ import './App.css';
 
 import LoginPage from './pages/LoginPage';
 import PlayPage from './pages/PlayPage';
-import CharacterSelectPage from './pages/CharacterSelectPage';
+import CharacterSelectPage from './pages/CharacterSelectPage'; 
 import VerifyEmail from './pages/VerifyEmail';
 import IntroPage from './pages/IntroPage';
 

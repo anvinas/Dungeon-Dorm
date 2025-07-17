@@ -11,7 +11,7 @@ router.post('/login', loginUser);
 router.post('/find-user', verifyToken, findUserProfile);
 router.get('/profile', verifyToken, findUserProfile);
 router.post('/verify-email', verifyEmail);          // ✅ Email verification handler
-router.post('/forgot-password', forgotPassword);    // ✅ Forgot password handler
+router.post('/forgot-password', forgotPassword);    // ✅ Forgot password handler 
 
 
 // INVENTORY NEEDED FUNCTIONS JUST FOR TESTING
