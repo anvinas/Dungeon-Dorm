@@ -251,3 +251,28 @@ exports.fetchEnemyById = async (req, res) => {
         res.status(500).json({ error: 'Server error fetching Enemy by ID.' });
     }
 }
+
+exports.fetchUserProfile = async (req, res) => {
+    const userId = req.user.userId;
+    
+    try {
+        const user = await UserProfile.findById(userId).select('-passwordHash -emailVerificationToken -emailVerificationExpires -resetPasswordToken -resetPasswordExpires -email -activityState -currentHP -createdAt -updatedAt');
+        if (!user) {
+            return res.status(404).json({ error: 'User profile not found/Json Header incorrect' });
+        }
+        return res.json({user})
+    }
+    catch (err) {
+        console.error('Error fetching user profile:', err);
+        return res.status(500).json({ error: 'Server error fetching user profile.' });
+    }
+};
+
+module.exports = { 
+    selectCharacter,
+    setCurrentBoss,
+    defeatBoss,
+    returnEnemies,
+    fetchEnemyById,
+    fetchUserProfile
+};
