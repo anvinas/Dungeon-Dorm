@@ -1,6 +1,6 @@
 // api/user/userController.js
 const UserProfile = require('../auth/authModel'); // UserProfile model is in api/auth/
-const CharacterClass = require('../models/CharacterClass'); // CharacterClass model is now in top-level models/
+const CharacterClass = require('../../models/CharacterClass'); // CharacterClass model is now in top-level models/
 const InventoryItem = require('../barkeeper/InventoryItem'); // InventoryItem model is in api/barkeeper/
 const Boss = require('../global/Boss');
 const CommonEnemy = require('../global/CommonEnemy');
