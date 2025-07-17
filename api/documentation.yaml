@@ -162,14 +162,14 @@ paths:
         '400':
           description: Boss already defeated or not found
 
-  /user/boss:
+  /user/enemies:
     post:
       summary: Return all enemies, including bosses and common enemies
       responses:
         '200':
           description: List of all bosses, common enemies, their stats, and items returned
 
-  /user/boss:id:
+  /user/enemy:id:
     post:
       summary: Fetch boss or enemy by ID
       parameters:
