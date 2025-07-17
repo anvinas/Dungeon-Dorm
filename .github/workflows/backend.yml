@@ -37,5 +37,5 @@ jobs:
             npm install
 
             # Go back to root and restart server
-            pm2 restart server || pm2 start server.js --name server
+            pm2 restart server --update-env || pm2 start server.js --name server --update-env
           EOF
