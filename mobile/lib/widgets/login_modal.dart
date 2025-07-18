@@ -62,7 +62,7 @@ class _LoginModalState extends State<LoginModal> {
           } else {
             Navigator.pushReplacement(
               context,
-              MaterialPageRoute(builder: (_) => const MapPage()),
+              MaterialPageRoute(builder: (_) => const GameMapPage()),
             );
           }
         } else {

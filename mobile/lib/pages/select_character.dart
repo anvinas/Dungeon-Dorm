@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
-
-// Import your MapPage here, adjust the path as necessary
-import 'play_page.dart';
+import 'play_page.dart'; // Replace with your actual route
 
 class CharacterSelectPage extends StatefulWidget {
   @override
@@ -11,13 +9,35 @@ class CharacterSelectPage extends StatefulWidget {
 
 class _CharacterSelectPageState extends State<CharacterSelectPage> {
   int selectedScrollIndex = -1;
+  String? error;
+  String? successMessage;
 
   final List<int> allPossibleCharacterInfo = [
     500,
-    243,
-    784,
+    943,
+    3584,
     1255,
   ];
+
+  void onCharacterSelected(int index) async {
+    setState(() {
+      error = null;
+      successMessage = null;
+    });
+
+    try {
+      // Simulate async API call
+      await Future.delayed(Duration(seconds: 1));
+
+      setState(() {
+        successMessage = "Character selected successfully!";
+      });
+    } catch (e) {
+      setState(() {
+        error = "Failed to select character. Please try again.";
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -35,7 +55,7 @@ class _CharacterSelectPageState extends State<CharacterSelectPage> {
           ),
           Center(
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
                   "Choose Your Character",
@@ -49,7 +69,7 @@ class _CharacterSelectPageState extends State<CharacterSelectPage> {
                     ],
                   ),
                 ),
-                SizedBox(height: 30),
+                const SizedBox(height: 30),
                 SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
                   child: Row(
@@ -63,14 +83,45 @@ class _CharacterSelectPageState extends State<CharacterSelectPage> {
                           animDelay: delay,
                           isSelected: selectedScrollIndex == index,
                           onSelect: () => setState(() => selectedScrollIndex = index),
+                          onSelectCharacter: onCharacterSelected,
                         ),
                       );
                     }).toList(),
                   ),
-                )
+                ),
+                if (error != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 12),
+                    child: Container(
+                      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(6)),
+                      child: Text(error!, style: TextStyle(color: Colors.red)),
+                    ),
+                  ),
               ],
             ),
           ),
+          if (successMessage != null)
+            Center(
+              child: Container(
+                padding: EdgeInsets.all(24),
+                decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(successMessage!, style: TextStyle(fontWeight: FontWeight.bold)),
+                    SizedBox(height: 16),
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(backgroundColor: Colors.green, foregroundColor: Colors.black),
+                      onPressed: () {
+                        Navigator.push(context, MaterialPageRoute(builder: (_) => const GameMapPage()));
+                      },
+                      child: Text("BEGIN YOUR JOURNEY"),
+                    ),
+                  ],
+                ),
+              ),
+            )
         ],
       ),
     );
@@ -82,12 +133,14 @@ class ScrollCharacterModel extends StatefulWidget {
   final int animDelay;
   final bool isSelected;
   final VoidCallback onSelect;
+  final Function(int index) onSelectCharacter;
 
   const ScrollCharacterModel({
     required this.index,
     required this.animDelay,
     required this.isSelected,
     required this.onSelect,
+    required this.onSelectCharacter,
   });
 
   @override
@@ -102,10 +155,9 @@ class _ScrollCharacterModelState extends State<ScrollCharacterModel> {
   final int totalFrames = 6;
   final int animationSpeed = 100;
 
-  String get framePath => 'assets/MageScrollAnimation/frame_${frame.clamp(0, totalFrames - 1)}.png';
-
-  String get defaultImage => 'assets/Closed_Pixel_Scroll_2.png';
-  String get hoverImage => 'assets/Mage_SliverOpen.png';
+  String get framePath => 'assets/img/MageScrollAnimation/frame_${frame.clamp(0, totalFrames - 1)}.png';
+  String get defaultImage => 'assets/img/Closed_Pixel_Scroll_2.png';
+  String get hoverImage => 'assets/img/Mage_SliverOpen.png';
 
   void startAnimation() {
     isClicked = true;
@@ -117,7 +169,7 @@ class _ScrollCharacterModelState extends State<ScrollCharacterModel> {
         setState(() => frame++);
       } else {
         timer.cancel();
-        setState(() {}); // lock on last frame
+        setState(() {}); // stay on last frame
       }
     });
   }
@@ -143,7 +195,7 @@ class _ScrollCharacterModelState extends State<ScrollCharacterModel> {
         child: LayoutBuilder(
           builder: (context, constraints) {
             final screenWidth = MediaQuery.of(context).size.width;
-            final baseWidth = screenWidth * 0.18; // 18% of screen width
+            final baseWidth = screenWidth * 0.18;
             final baseHeight = baseWidth * 1.4;
 
             final width = widget.isSelected ? baseWidth * 1.2 : baseWidth;
@@ -152,7 +204,7 @@ class _ScrollCharacterModelState extends State<ScrollCharacterModel> {
             return Column(
               children: [
                 AnimatedContainer(
-                  duration: const Duration(milliseconds: 300),
+                  duration: Duration(milliseconds: 300),
                   width: width,
                   height: height,
                   child: Image.asset(
@@ -167,18 +219,7 @@ class _ScrollCharacterModelState extends State<ScrollCharacterModel> {
                       backgroundColor: Colors.green,
                       foregroundColor: Colors.black,
                     ),
-                    onPressed: () async {
-                      print("Character ${widget.index} selected");
-                      // TODO: Place API call here, await it, and check result
-                      // For now, we just navigate immediately
-
-                      if (context.mounted) {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => const MapPage()),
-                        );
-                      }
-                    },
+                    onPressed: () => widget.onSelectCharacter(widget.index),
                     child: const Text("Select"),
                   ),
               ],
@@ -223,7 +264,7 @@ class _AnimatedBackgroundState extends State<AnimatedBackground> with SingleTick
             BlendMode.darken,
           ),
           child: Image.asset(
-            'assets/pixel_bg2.png',
+            'assets/login/pixel_bg2.png',
             fit: BoxFit.cover,
             width: double.infinity,
             height: double.infinity,

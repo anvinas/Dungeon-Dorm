@@ -26,10 +26,8 @@ flutter:
   uses-material-design: true
 
   assets:
-    - assets/pixel_bg2.png
-    - assets/wood_texture2.png
-    - assets/img/pixel_bg2.png
-    - assets/MageScrollAnimation/
-    - assets/Closed_Pixel_Scroll_2.png
-    - assets/Mage_SliverOpen.png
+    - assets/login/
+    - assets/img/
+    - assets/gif/
+
 
