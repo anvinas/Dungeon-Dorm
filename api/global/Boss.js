@@ -6,7 +6,7 @@ const BossSchema = new mongoose.Schema({
     description: { type: String },
     level: { type: Number, required: true }, // Crucial for progression order
     maxHP: { type: Number, default: 100 },
-    friendship: {type: Number, default: 0},
+    relationshipGoal: {type: Number, default: 0},
     reward: { // Matches your screenshot's 'reward' field structure
         gold: { type: Number, default: 0 },
         items: [{
