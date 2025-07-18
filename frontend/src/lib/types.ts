@@ -11,14 +11,25 @@ export interface AttackResult_T {
   message: string;
 }
 
-export interface TurnResult_T {
-  currentTurn: 'User' | 'Enemy';
-  message: string;
-  postTurnEnemyHP: number;
-  postTurnUserHP: number;
-  userAttack: AttackResult_T;
-  enemyAttack: AttackResult_T;
-}
+
+
+export type TurnResult_T =
+  | {
+      currentTurn: 'User';
+      message: string;
+      postTurnEnemyHP: number;
+      postTurnUserHP: number;
+      userAttack: AttackResult_T;
+      enemyAttack: AttackResult_T;
+    }
+  | {
+      currentTurn: 'Enemy';
+      message: string;
+      postTurnEnemyHP: number;
+      postTurnUserHP: number;
+      enemyAttack: AttackResult_T;
+      userAttack: AttackResult_T;
+    };
 
 export interface userAttackTurnReturn_T {
   userResult:TurnResult_T;

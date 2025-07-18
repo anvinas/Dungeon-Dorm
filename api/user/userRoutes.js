@@ -20,6 +20,7 @@ router.post('/enemies', userController.returnEnemies);
 router.post('/enemy/:id', userController.fetchEnemyById);
 router.post('/fetch-user', verifyToken, userController.fetchUserProfile);
 router.post('/purchase-item', verifyToken, userController.purchaseItem);
+router.post('/use-item', verifyToken, userController.usePotionItem);
 
 
 // This is all for now, as per your request. No other user-related routes.

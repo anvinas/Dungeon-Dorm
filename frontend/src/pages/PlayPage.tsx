@@ -161,7 +161,11 @@ function App() {
       {/* Inventory modal*/}
       {!modalStates.preFight && modalStates.inventory &&   
         <div className='absolute w-full h-[65%] left-[0%] bottom-[00%] translate-[0%] z-5'>
-          <InventorySystem onClose={()=>setModalStates((old)=>{old.inventory=false;return old;})} />
+          <InventorySystem 
+            onClose={()=>setModalStates((old)=>{old.inventory=false;return old;})} 
+            // onHealthChange={(newHealth)=>{let tmp={...encounterData};tmp.user.currentHP=newHealth;setEncounterData({...tmp})}} 
+            onHealthChange={()=>{}}
+          />
         </div>
       }
 

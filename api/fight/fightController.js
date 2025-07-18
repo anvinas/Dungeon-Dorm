@@ -138,7 +138,6 @@ exports.levelupUser = async (req, res) => {
     user.level = user.level + 1;
 
 
-    console.log(user.Character.class);
     const newStats = applyStatGrowth(user.Character.class, user.stats, user.level);
 
     user.stats.strength = newStats.strength;
@@ -183,7 +182,7 @@ function rollD10()
 }
 
 function getPrimaryStat(stats)
-{
+{ 
     let maxVal = -Infinity;
     let primary = "strength";
 
@@ -201,8 +200,14 @@ function getPrimaryStat(stats)
 
 function rollAttack(attacker, defender) 
 {
-    const {name : primaryStatName, value: attackerStat} = getPrimaryStat(attacker.stats);
-    const defenderStat = defender.stats.defense;
+    attacker = attacker.toObject()
+    defender = defender.toObject()
+
+    const attackerStats = attacker.stats || attacker.currentStats;
+    const defenderStats = defender.stats || defender.currentStats;
+
+    const {name : primaryStatName, value: attackerStat} = getPrimaryStat(attackerStats);
+    const defenderStat = defenderStats.defense;
 
     const d20 = rollD20();
     const d10 = rollD10();
@@ -232,6 +237,9 @@ function rollAttack(attacker, defender)
         damage = Math.max(10, Math.round(damage));
     }
 
+    let attackerName = attacker.gamerTag || attacker.name
+    let defenderName = defender.gamerTag || defender.name
+
     return {
         hit,
         crit: isCrit,
@@ -240,13 +248,23 @@ function rollAttack(attacker, defender)
         totalRollNeeded: defenderStat,
         damage,
         primaryStat: primaryStatName,
-        message: isCrit ? `Critical hit! ${attacker.name} hit ${defender.name} for ${damage}!!!` : hit ? `${attacker.name} hit ${defender.name} for ${damage}` : `${attacker.name}'s attack missed completely!` 
+        message: isCrit ? `Critical hit! ${attackerName} hit ${defenderName} for ${damage}!!!` : hit ? `${attackerName} hit ${defenderName} for ${damage}` : `${attackerName}'s attack missed completely!` 
     }
 }
 
 function rollTalk(attacker, defender)
 {
-  const defenderStat = defender.stats.charisma;
+  defender = JSON.parse(JSON.stringify(defender))
+  attacker = JSON.parse(JSON.stringify(attacker))
+
+
+  let defenderCharisma = defender.stats.charisma
+  let attackerCharisma = attacker.currentStats.charisma 
+
+  let attackerName = attacker.gamerTag
+  let defenderName = defender.name
+
+  const defenderStat = defenderCharisma;
   let isCrit = 0;
   let friendshipContribution;
   const d20 = rollD20();
@@ -256,7 +274,7 @@ function rollTalk(attacker, defender)
     isCrit = 1;
   }
 
-  let success = (((d20 + attacker.stats.charisma) > defenderStat) || isCrit); //If d20 + Charisma stat > defender charisma or crit)
+  let success = (((d20 + attackerCharisma) > defenderStat) || isCrit); //If d20 + Charisma stat > defender charisma or crit)
 
   //Charisma stat + roll > defender charisma
   
@@ -267,15 +285,16 @@ function rollTalk(attacker, defender)
       friendshipContribution = friendshipContribution * 2;
   }
   else friendshipContribution = 0;
+  
 
   return {
     success: success,
     friendshipContribution : friendshipContribution,
     crit: isCrit,
     d20: d20,
-    totalRollWithModifiers: d20 + attacker.stats.charisma,
-    totalRollNeeded: defender.stats.charisma,
-    message : isCrit ? `${attacker.name} critically charmed ${defender.name} for ${friendshipContribution}!!` : success ? `${attacker.name} charmed ${defender.name} for ${friendshipContribution}!` : `${attacker.name}'s attempt to charm ${defender.name} did NOT work!!!!`
+    totalRollWithModifiers: d20 + attackerCharisma,
+    totalRollNeeded: defenderCharisma,
+    message : isCrit ? `${attackerName} critically charmed ${defenderName} for ${friendshipContribution}!!` : success ? `${attackerName} charmed ${defenderName} for ${friendshipContribution}!` : `${attacker.name}'s attempt to charm ${defender.name} did NOT work!!!!`
   }
 }
 
@@ -411,7 +430,7 @@ exports.startEncounter = async (req, res) => {
     user: {
       stats: user.stats,
       maxHP: user.maxHP,
-      currentHP: user.currentHP,
+      currentHP: encounter.userHP,
       level: user.level,
     },
     enemy: {
@@ -437,7 +456,7 @@ async function userAttackLogic(encounter, user, enemy)
     encounter.currentTurn = null;
     await encounter.save();
 
-    const rewards = await handleEnemyDefeat(userId, encounter.enemyId, encounter.enemyType);
+    const rewards = await handleEnemyDefeat(user._id, encounter.enemyId, encounter.enemyType);
 
     result = {
       message : 'Enemy defeated!',
@@ -466,10 +485,13 @@ async function userAttackLogic(encounter, user, enemy)
 async function userTalkLogic(encounter, user, enemy)
 {
   const userTalk = rollTalk(user, enemy);
-  encounter.enemyFriendliness = Math.min(encounter.enemyFriendliness + userTalk.friendshipContribution, enemy.relationshipGoal);
+  enemy = enemy.toObject()
+  user = user.toObject()
 
+  encounter.enemyFriendliness = Math.min(encounter.enemyFriendliness + userTalk.friendshipContribution, enemy.relationshipGoal);
   if (encounter.enemyFriendliness >= enemy.relationshipGoal)
   {
+    console.log("Here1")
     encounter.isActive = false;
     encounter.currentTurn = null;
     await encounter.save();
@@ -481,12 +503,13 @@ async function userTalkLogic(encounter, user, enemy)
       postTurnEnemyHP: encounter.enemyHP,
       postTurnFriendship: encounter.enemyFriendliness,
       currentTurn: null,
-      rewards: await handleEnemyDefeat(userId, encounter.enemyId, encounter.enemyType)
+      rewards: await handleEnemyDefeat(user._id, encounter.enemyId, encounter.enemyType)
     };
   }
   
   else if (encounter.enemyFriendliness < enemy.relationshipGoal && encounter.enemyFriendliness >= 0)
   {
+    console.log("Here2")
     await encounter.save();
     return {
       message: 'User attempted to charm enemy',
@@ -581,6 +604,7 @@ async function enemyAttackLogic(encounter, user, enemy)
     encounter.isActive = false;
     encounter.currentTurn = null;
     user.currency = Math.max(0, user.currency - 10); //Example penalty for defeat
+    
     await user.save();
     await encounter.save();
     result = 
@@ -595,7 +619,11 @@ async function enemyAttackLogic(encounter, user, enemy)
     }
   else if (encounter.userHP > 0)
   {
-    await encounter.save(); 
+    user.currentHP = encounter.userHP; //Actually update db!
+    await user.save();
+
+    await encounter.save();
+    // ADD CODE HERE FOR USER CURRENTHP 
     result = {
       message: 'Enemy attack complete',
       enemyAttack,
@@ -615,7 +643,6 @@ exports.userTurnAndEnemyResponse = async(req, res) => {
   let enemyResult;
   let foundItem = null;
   const encounter = await Encounter.findOne({userId, isActive: true});
-
   if (!encounter || encounter.currentTurn !== 'User')
     return res.status(400).json({error: 'Not the user turn or no active encounter'});
 
@@ -630,7 +657,6 @@ exports.userTurnAndEnemyResponse = async(req, res) => {
   if (action === 'attack') 
   {
     userResult = await userAttackLogic(encounter, user, enemy);
-
     if (userResult.message.includes('defeated'))
     {
       return res.json(userResult);
@@ -643,7 +669,6 @@ exports.userTurnAndEnemyResponse = async(req, res) => {
   else if (action === 'talk')
   {
     userResult = await userTalkLogic(encounter, user, enemy);
-
     if (userResult.message.includes('charmed successfully'))
     {
       return res.json(userResult);
@@ -657,25 +682,30 @@ exports.userTurnAndEnemyResponse = async(req, res) => {
       return res.json(userResult);
     }
   }
-
+  
+  console.log(`1.User Attacked\n`,userResult)
   // After user turn, switch to enemy turn
   encounter.currentTurn = 'Enemy';
 
   enemyResult = await enemyAttackLogic(encounter, user, enemy);
+  console.log(`2.Enemy Attacked\n`,enemyResult)
+
   if (!enemyResult) 
   {
     return res.status(500).json({error: 'Error processing enemy attack'});
   }
   else if ( enemyResult.message.includes('defeated')) 
   {
-    //Handle enemy defeat logic here
-    return res.json(userResult, enemyResult);
+    //Enemy killed user RESET HP
+    user.currentHP = user.maxHP;
+    await user.save()
+
+    return res.json({userResult, enemyResult});
   }
 
   encounter.expiresAt = new Date(Date.now() + 1000 * 60 * 10); // 10 minutes from now
   encounter.currentTurn = 'User';
   await encounter.save();
-
   res.json({
     message: 'Turn complete',
     userResult,

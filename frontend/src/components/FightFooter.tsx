@@ -7,11 +7,13 @@ function FightFooter({
   OnClickAttack,
   OnClickTalk,
   OnClickInventory,
+  OnClickRun,
   userData
 }:{
   OnClickAttack:()=>void;
   OnClickInventory:()=>void;
   OnClickTalk:()=>void;
+  OnClickRun:()=>void;
   userData:{
     stats: {
       strength: number;
@@ -42,7 +44,7 @@ function FightFooter({
 
             {/* RUN BUTTON */}
             <div className="flex flex-col justify-center items-center">
-              <div  className="w-20 h-20 bg-gray-400 border-3 border-gray-500 rounded-[50%] p-2 hover:cursor-pointer hover:bg-white hover:border-purple-800 hover:p-1">
+              <div onClick={()=>OnClickRun()} className="w-20 h-20 bg-gray-400 border-3 border-gray-500 rounded-[50%] p-2 hover:cursor-pointer hover:bg-white hover:border-purple-800 hover:p-1">
                 <img src="/assets/run.png" className="w-full h-full object-cover"/>
               </div>
               <div className="font-bold">run</div>
@@ -58,7 +60,7 @@ function FightFooter({
         </div>
 
         {/* Inventory button */}
-        <div onClick={()=>OnClickInventory()} className="p-5 bg-red-100 border-4 border-blue-500 rounded-[50%]">
+        <div onClick={()=>OnClickInventory()} className="p-5 bg-red-100 border-4 border-blue-500 rounded-[50%] hover:bg-red-200 hover:cursor-pointer">
             <img
               src="/assets/satchel.png"
               className=" object-cover transform scale-x-[-1] bobAvatar h-20"

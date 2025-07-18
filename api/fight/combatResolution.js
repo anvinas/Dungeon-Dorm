@@ -24,7 +24,7 @@ function addItemToUser(user, itemId, quantity) {
     }
 }
 
-async function handleEnemyDefeat(userId, enemyId, enemyType) {
+module.exports = async function handleEnemyDefeat(userId, enemyId, enemyType) {
     const user = await loadEntity(userId, 'User');
     const enemy = await loadEntity(enemyId, enemyType);
     let levelupTrigger = false;
@@ -50,7 +50,7 @@ async function handleEnemyDefeat(userId, enemyId, enemyType) {
         readyToLevelUp: levelupTrigger
     };
 
-    if (user.defeatedBosses.includes(boss._id.toString())) 
+    if (user.defeatedBosses.includes(enemy._id.toString())) 
     {
         await user.save();
         return {rewards};
@@ -61,21 +61,21 @@ async function handleEnemyDefeat(userId, enemyId, enemyType) {
         if (reward.itemId)
         {
             try {
-            addItemToUser(user, reward.itemId, reward.quantity);
-            rewards.items.push({
-                itemId: reward.itemId._id,
-                quantity: reward.quantity,
-                itemType: reward.itemId.itemType,
-                itemDescription: reward.itemId.description,
-                itemName: reward.itemId.name
-            });
-        } catch (error) {
-            console.error(`Error adding item to user: ${error.message}`);
-        }
+                addItemToUser(user, reward.itemId, reward.quantity);
+                rewards.items.push({
+                    itemId: reward.itemId._id,
+                    quantity: reward.quantity,
+                    itemType: reward.itemId.itemType,
+                    itemDescription: reward.itemId.description,
+                    itemName: reward.itemId.name
+                });
+            } catch (error) {
+                console.error(`Error adding item to user: ${error.message}`);
+            }
         }
     }
 
-    user.defeatedBosses.push(boss._id);
+    user.defeatedBosses.push(enemy._id);
 
     const nextBoss = await setNextBossForUser(user);
     user.currentBoss = nextBoss ? nextBoss._id : null;

@@ -330,6 +330,76 @@ const purchaseItem = async (req, res) => {
 };
 
 
+const usePotionItem = async (req, res) => {
+  const { itemId } = req.body;
+  const userId = req.user.userId;
+
+  if (!itemId) {
+    return res.status(400).json({ error: 'Item ID is required.' });
+  }
+
+  try {
+    const user = await UserProfile.findById(userId)
+      .select('-passwordHash -isEmailVerified -__v')
+      .populate('CurrentLoot.itemId'); // This loads the actual item details
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found.' });
+    }
+
+    const userItemIndex = user.CurrentLoot.findIndex(
+      loot => loot.itemId._id.toString() === itemId
+    );
+
+    if (userItemIndex === -1) {
+      return res.status(404).json({ error: 'Item not found in user inventory.' });
+    }
+
+    const userItem = user.CurrentLoot[userItemIndex];
+    let itemObject = userItem.itemId;
+    itemObject = itemObject.toObject()
+  
+    // Validate it's a Potion
+    if (itemObject.itemType !== 'Potion') {
+      return res.status(400).json({ error: 'This item is not a potion.' });
+    }
+
+    if (userItem.quantity < 1) {
+      return res.status(400).json({ error: 'Not enough quantity to use this item.' });
+    }
+
+    // Validate user HP data
+    if (typeof user.currentHP !== 'number' || typeof user.maxHP !== 'number') {
+      return res.status(500).json({ error: 'User HP data is invalid.' });
+    }
+
+    // Heal the user, but do not exceed maxHP
+    const healAmount = itemObject.healthAmount || 0;
+    const newHP = Math.min(user.currentHP + healAmount, user.maxHP);
+    const actualHealed = newHP - user.currentHP;
+    user.currentHP = newHP;
+
+    // Subtract 1 from quantity
+    userItem.quantity -= 1;
+
+    // Remove the item from inventory if quantity is 0
+    if (userItem.quantity <= 0) {
+      user.CurrentLoot.splice(userItemIndex, 1);
+    }
+
+    await user.save();
+
+    res.json({
+      message: `Used potion and healed for ${actualHealed} HP.`,
+      user:user
+    });
+  } catch (err) {
+    console.error('Error using potion:', err);
+    res.status(500).json({ error: 'Server error while using potion.' });
+  }
+};
+
+
 module.exports = { 
     selectCharacter,
     setCurrentBoss,
@@ -337,5 +407,6 @@ module.exports = {
     returnEnemies,
     fetchEnemyById,
     fetchUserProfile,
-    purchaseItem
+    purchaseItem,
+    usePotionItem
 };
