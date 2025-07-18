@@ -1,4 +1,14 @@
-interface UserStats {
+
+export interface InventoryItem_T {
+  _id: string;
+  name: string;
+  description: string;
+  damage: number;
+  itemType: string;
+  imageURL: string | null;
+  healthAmount?: number;
+}
+export interface UserStats {
   strength: number;
   dexterity: number;
   intelligence: number;
@@ -12,6 +22,17 @@ interface LootItem {
   _id: string;
 }
 
+export interface Character_T {
+  _id: string;
+  species: string;
+  class: string;
+  maxHP: number;
+  stats: {
+    gold: number;
+    weapon: string; // This is an ObjectId (string) referencing a weapon
+  };
+}
+
 export interface UserProfile_T {
   _id: string;
   email: string;
@@ -21,8 +42,12 @@ export interface UserProfile_T {
   maxHP: number;
   currentHP: number;
   currentStats: UserStats;
-  CurrentLoot: LootItem[];
-  Character: string;
+  CurrentLoot: {
+    itemId:InventoryItem_T,
+    quantity: number;
+    _id: string;
+  }[];
+  Character: Character_T;
   Bosses: string[];
   currentActiveBoss: string | null;
   createdAt: string;

@@ -253,7 +253,6 @@ const fetchEnemyById = async (req, res) => {
 }
 
 const fetchUserProfile = async (req, res) => {
-    console.log("here")
     const userId = req.user.userId;
         console.log(userId)
 
@@ -270,11 +269,75 @@ const fetchUserProfile = async (req, res) => {
     }
 };
 
+
+
+// @access  Private (requires token)
+const purchaseItem = async (req, res) => {
+    const { itemId, quantity ,price } = req.body; // ID of the item to purchase, and quantity
+    const userId = req.user.userId; // Extracted from JWT by verifyToken middleware
+
+    if (!itemId || !quantity || quantity <= 0 || !price) {
+        return res.status(400).json({ error: 'Item ID , valid quantity and price are required.' });
+    }
+
+    try {
+        const user = await UserProfile.findById(userId).select('-passwordHash -isEmailVerified -__v')
+            .populate('Character')
+        ; 
+
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        const itemInShop = await InventoryItem.findById(itemId)
+
+        if (!itemInShop) {
+            return res.status(404).json({ error: 'Item not found in shop inventory.' });
+        }
+
+
+        if (user.Currency < price) {
+            return res.status(400).json({ error: 'Not enough currency.' });
+        }
+
+        user.Currency -= price;
+
+        // Inventory logic: Find if item already exists in user's CurrentLoot
+        const existingUserItemIndex = user.CurrentLoot.findIndex(loot => loot.itemId.toString() === itemId);
+        
+        await user.populate('CurrentLoot.itemId');
+
+        if (existingUserItemIndex > -1) {
+            // If item exists, update its quantity
+            user.CurrentLoot[existingUserItemIndex].quantity += quantity;
+        } else {
+            // If item is new, push a new object with itemId and quantity
+            user.CurrentLoot.push({ itemId: itemId, quantity: quantity });
+        }
+        await user.save();
+
+        res.json({
+            message: 'Purchase successful!',
+            user: user,
+            purchasedItem: {
+                itemId: itemInShop._id,
+                name: itemInShop.name,
+                quantity: quantity
+            }
+        });
+
+    } catch (err) {
+        console.error('Error purchasing item:', err);
+        res.status(500).json({ error: 'Server error during purchase.' });
+    }
+};
+
 module.exports = { 
     selectCharacter,
     setCurrentBoss,
     defeatBoss,
     returnEnemies,
     fetchEnemyById,
-    fetchUserProfile
+    fetchUserProfile,
+    purchaseItem
 };

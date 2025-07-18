@@ -83,7 +83,10 @@ exports.findUserProfile = async (req, res) =>
         }
 
         // Fetch the user profile by ID, excluding sensitive fields
-        const userProfile = await User.findById(userId).select('-passwordHash -isEmailVerified -__v');
+        const userProfile = await User.findById(userId).select('-passwordHash -isEmailVerified -__v')
+            .populate('Character')
+            .populate('CurrentLoot.itemId');
+
         if (!userProfile) {
             return res.status(404).json({error: "User profile not found."});
         }
