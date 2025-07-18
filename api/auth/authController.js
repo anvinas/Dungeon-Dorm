@@ -113,6 +113,13 @@ exports.registerUser = async (req, res) => {
         };
 
         try {
+
+            console.log("📨 Preparing to send verification email...");
+            console.log("To:", mailOptions.to);
+            console.log("Subject:", mailOptions.subject);
+            console.log("Mode:", process.env.EMAIL_SEND_MODE);
+
+
             const info = await transporter.sendMail(mailOptions);
             console.log(`\n--- Verification email sent via Ethereal ---`);
             console.log(`Message ID: ${info.messageId}`);
