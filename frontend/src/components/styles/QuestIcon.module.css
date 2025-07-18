@@ -1,0 +1,13 @@
+@keyframes bobbing {
+  0%, 100% {
+    transform: translateY(-50%) translateY(0);
+  }
+  50% {
+    transform: translateY(-50%) translateY(-10%);
+  }
+}
+
+.container {
+  animation: bobbing 2.2s ease-in-out infinite;
+  transition: all 0.5s;
+}

@@ -1,0 +1,35 @@
+.container{
+    background-image: url('/assets/backgrounds/fight_bg_2.png');
+    background-size: cover;         /* 🔥 Makes the image zoom to cover the entire container */
+    background-repeat: no-repeat;   /* 🚫 Prevents tiling */
+    background-position: center;    /* 🎯 Keeps image centered */
+}
+
+.overlayDark{
+  animation: pulseBackground 4s ease-in-out infinite;
+}
+
+@keyframes pulseBackground {
+  0% {
+    background-color: rgba(0, 0, 0, 0); 
+  }
+  50% {
+    background-color: rgba(0, 0, 0, 0.103);
+  }
+  100% {
+    background-color: rgba(255, 255, 255, 0)
+  }
+}
+
+
+.playerImageContainer,.bossImageContainer{
+  animation: bob 5s ease-in-out infinite;
+}
+.playerImageContainer{
+    animation-delay: 300ms;
+}
+@keyframes bob {
+  0%   { transform: translateY(0); }
+  50%  { transform: translateY(-10px); }
+  100% { transform: translateY(0); }
+}

@@ -4,20 +4,91 @@ import axios from "axios"
 import GetServerPath from "../lib/GetServerPath.ts"
 import { storeJWT, fetchJWT } from "../lib/JWT.ts"
 import { useNavigate } from 'react-router-dom';
+import {type UserProfile_T, type UserStats,type InventoryItem_T } from "../lib/types.ts"
+
 import styles from "./styles/InventorySystem.module.css"
 
-interface InventoryItem {
-  _id: string;
-  name: string;
-  healthAmount?: number;
-  description?: string;
-  createdAt?: string;
-  updatedAt?: string;
-}
 
 function InventorySystem({onClose}:{onClose:()=>void;}){
-    
-  const fetchItems = async () => {
+  const navigate = useNavigate();
+  const [userData,setUserData] = useState<UserProfile_T | null >(null)
+  const [itemShopList,setItemShopList] = useState<InventoryItem_T[]>([])
+  
+  const [isShopOpen,setIsShopOpen] = useState<Boolean> (false)
+
+  const [purchasingItem,setPurchasingItem] = useState<InventoryItem_T | null> (null)
+  const [buyError,setBuyError] = useState<string> ("")
+
+  const [itemsSeperatedObj, setItemsSeperatedObj] = useState({
+    weapons: [] as { quantity: number; item: InventoryItem_T }[],
+    potions: [] as { quantity: number; item: InventoryItem_T }[],
+    keys: [] as { quantity: number; item: InventoryItem_T }[],
+  });
+
+
+  const handleCreatePaddingForItems = (CurrentLoot:any)=>{
+    let tempSeperated:{
+    weapons:{quantity:number;item:InventoryItem_T}[];
+    potions:{quantity:number;item:InventoryItem_T}[];
+    keys:{quantity:number;item:InventoryItem_T}[]
+    } = {
+      weapons:[],
+      potions:[],
+      keys:[],
+    }
+
+    for(let item of CurrentLoot){
+      if(item.itemId.itemType == "Weapon"){
+        tempSeperated.weapons.push({quantity:item.quantity,item:item.itemId})
+      }
+      else if(item.itemId.itemType == "Potion"){
+        tempSeperated.potions.push({quantity:item.quantity,item:item.itemId})
+      }else{
+        tempSeperated.keys.push({quantity:item.quantity,item:item.itemId})
+      }
+    }
+
+    // Fill blanks if needed
+    for(let i=0;i<5;i++){
+      // Weapon
+      if(i==0 && tempSeperated.weapons.length==0){
+        tempSeperated.weapons.push({quantity:0,item:FAKEITEM})
+      }
+      
+      if(!tempSeperated.keys[i]){
+        tempSeperated.keys.push({quantity:0,item:FAKEITEM})
+      }
+
+      if(i<4 && !tempSeperated.potions[i] ){
+        tempSeperated.potions.push({quantity:0,item:FAKEITEM})
+      }
+    }
+    setItemsSeperatedObj({...tempSeperated})
+  }
+
+  const fetchUserData = async () => {
+    try {
+      const token = fetchJWT(); 
+      const res = await axios.get(`${GetServerPath()}/api/auth/profile`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      storeJWT(res.data.token)
+      setUserData(res.data.userProfile)
+      console.log(res.data.userProfile)
+      handleCreatePaddingForItems(res.data.userProfile.CurrentLoot)
+
+    } catch (err:any) {
+      console.error("Error fetching userData:", err);
+      // Optional: redirect to login if 401
+      if (err.response?.status === 401 || err.response?.status === 403) {
+        navigate('/');
+      }
+    }
+  };
+
+  const fetchItemShop = async () => {
     try {
       const token = fetchJWT(); // Assuming this retrieves token from localStorage
       const res = await axios.get(`${GetServerPath()}/api/auth/inventory`, {
@@ -25,130 +96,415 @@ function InventorySystem({onClose}:{onClose:()=>void;}){
           Authorization: `Bearer ${token}`
         }
       });
-      setItems(res.data);
+      setItemShopList(res.data);
       storeJWT(res.data.token)
     } catch (err:any) {
       console.error("Error fetching inventory:", err);
       // Optional: redirect to login if 401
       if (err.response?.status === 401 || err.response?.status === 403) {
-        navigate('/login');
+        navigate('/');
       }
     }
   };
 
+  const handleCountRealItems = (arr:{quantity:number,item:InventoryItem_T}[])=>{
+    let count =0
+    for(let itemData of arr){
+      if(itemData.item.itemType!="fake"){
+        count++;
+      }
+    }
+    return count
+  }
   useEffect(()=>{
-    fetchItems()
+    fetchUserData()
+    fetchItemShop()
   },[])
- 
-  const navigate = useNavigate();
-  const [items,setItems] = useState<InventoryItem[]>([])
-  // const [showAddModal,setShowAddModal] = useState(false)
-  // const [createError,setCreateError] = useState("")
-  // const [newItemData,setNewItemData] = useState({
-  //   name:"",
-  //   healthAmount:0,
-  //   description:"",
-  //   showHealth:false
-  // })
+  
 
-  // const createItem = async () => {
-  //   try {
-  //     const token = fetchJWT(); // Assuming this retrieves token from localStorage
-  //     const res = await axios.post(`${GetServerPath()}/api/auth/inventory`, newItemData,{
-  //       headers: {
-  //         Authorization: `Bearer ${token}`
-  //       },
-  //     });
-  //     setShowAddModal(false)
-  //     setItems(prevItems => [...prevItems, res.data]); 
-  //   } catch (err:any) {
-  //     console.error("Error fetching inventory:", err);
-  //     setCreateError("Error creating item")
-  //     // Optional: redirect to login if 401
-  //     if (err.response?.status === 401 || err.response?.status === 403) {
-  //       navigate('/login');
-  //     }
-  //   }
-  // };
+  if(!userData) return(<div>Loading</div>)
+  const AllStatsKey = Object.keys(userData.currentStats)
+  let largestStatNumber = 0
+  for(let statKey of AllStatsKey){
+    const value = userData.currentStats[statKey as keyof UserStats];
+    if(value>largestStatNumber) largestStatNumber = value
+  }
 
-  // Divide into categories
-  const consumables = items.filter(item => item.healthAmount && item.healthAmount > 0);
-  const otherItems = items.filter(item => !item.healthAmount || item.healthAmount <= 0);
+  const handleBuyItem = async(itemData:InventoryItem_T,quantity:number,price:number)=>{
+    setBuyError("")
+    // If buing weapon
+    if(itemData.itemType =="Weapon"){
+      if(handleCountRealItems(itemsSeperatedObj.weapons)>=1){
+        setBuyError("Weapon slot is already used")
+        return;
+      }
+    }
+    console.log(itemData)
+    console.log(itemsSeperatedObj.potions)
+    if(itemData.itemType =="Potion"){
+      if(handleCountRealItems(itemsSeperatedObj.potions)>=3){
 
-  // Ensure fixed slot lengths
-  const paddedConsumables: (InventoryItem | null)[] = [...consumables.slice(0, 5)];
-  while (paddedConsumables.length < 5) paddedConsumables.push(null);
+        // Check if buying an already existing slot item
+        let allowBuy = false
+        for(let i=0;i<3;i++){
+          if(itemsSeperatedObj.potions[i].item._id == itemData._id){
+           allowBuy = true
+           break
+          }
+        }
 
-  const paddedOtherItems: (InventoryItem | null)[] = [...otherItems.slice(0, 15)];
-  while (paddedOtherItems.length < 15) paddedOtherItems.push(null);
+        if(!allowBuy){
+          setBuyError("All potion slots are full")
+          return;
+        }
+      }
+    }
+
+    if(itemData.itemType =="Key"){
+      return
+    }
+
+    try {
+      const token = fetchJWT(); // Assuming this retrieves token from localStorage
+      const res = await axios.post(`${GetServerPath()}/api/user/purchase-item`,{itemId:itemData._id,quantity,price}, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      handleCreatePaddingForItems(res.data.user.CurrentLoot)
+      setIsShopOpen(false)
+      storeJWT(res.data.token)
+    } catch (err:any) {
+      console.error("Error fetching inventory:", err)
+      setBuyError(err.response.data.error || "Server Error")
+      // Optional: redirect to login if 401
+      if (err.response?.status === 401 || err.response?.status === 403) {
+        navigate('/');
+      }
+    }
+
+  }
+
+  const userHealthPercentage = (userData.currentHP/userData.maxHP)*100 
+  return(
+    <div className={`${styles.container} w-full max-h-full h-full bg-gray-800 p-5 rounded-t-lg flex flex-col gap-2`}>
+      <div className="text-center font-bold text-white text-2xl bg-red-400 px-5 py-2 rounded-lg cursor-pointer hover:bg-red-500" onClick={()=>onClose()}>Close</div>
+      { userData &&
+        <div className="flex gap-5 flex-1">
+          {/* Left Inventory */}
+          <div className="flex-1 bg-gray-700 rounded-t-lg p-2 gap-3 flex flex-col">
+            {/* Header Text */}
+            <div className="flex items-center justify-center bg-gray-600 p-2 rounded-lg">
+              <div className="white text-2xl font-bold text-white text-center">Inventory</div>
+            </div>
+
+            <div className="flex flex-col flex-1 justify-center gap-5">
+              <div className="flex flex-col gap-2">
+                <div className="font-bold text-2xl text-white bg-gray-800 px-2 rounded-sm">Boss Keys</div>
+                <div className="flex items-center justify-center w-full gap-5">
+                  <ItemState onClick={()=>{}} size="3vw" itemSize="2vw"   display="bottom" bg="#1e2939" itemData={itemsSeperatedObj.keys[0].item} showQuantity={false} quantity={itemsSeperatedObj.keys[0].quantity}/>
+                  <ItemState onClick={()=>{}} size="3vw" itemSize="2vw"  display="bottom" bg="#1e2939" itemData={itemsSeperatedObj.keys[1].item} showQuantity={false} quantity={itemsSeperatedObj.keys[1].quantity}/>
+                  <ItemState onClick={()=>{}} size="3vw" itemSize="2vw"  display="bottom" bg="#1e2939" itemData={itemsSeperatedObj.keys[2].item} showQuantity={false} quantity={itemsSeperatedObj.keys[2].quantity}/>
+                  <ItemState onClick={()=>{}} size="3vw" itemSize="2vw"  display="bottom" bg="#1e2939" itemData={itemsSeperatedObj.keys[3].item} showQuantity={false} quantity={itemsSeperatedObj.keys[3].quantity}/>
+                  <ItemState onClick={()=>{}} size="3vw" itemSize="2vw"   display="bottom" bg="#1e2939" itemData={itemsSeperatedObj.keys[4].item} showQuantity={false} quantity={itemsSeperatedObj.keys[4].quantity}/>
+                </div>
+              </div>
+
+              <div className="flex flex-col flex-1 justify-center">
+                <div className="font-bold text-2xl text-white bg-gray-800 px-2 rounded-sm mb-2">Potions</div>
+                {/* Top Items */}
+                <div className="flex items-center justify-center w-full gap-5">
+                  <ItemState onClick={()=>{}} size="5vw" itemSize="3vw" display="bottom" bg="#1e2939" itemData={itemsSeperatedObj.potions[0].item} showQuantity={true} quantity={itemsSeperatedObj.potions[0].quantity}/>
+                </div>
+
+                {/* Bottom Items */}
+                <div className="flex items-center justify-center w-full gap-5">
+                  <ItemState onClick={()=>{}} size="5vw" itemSize="3vw"  display="bottom" bg="#1e2939" itemData={itemsSeperatedObj.potions[1].item} showQuantity={true} quantity={itemsSeperatedObj.potions[1].quantity}/>
+                  <ItemState onClick={()=>{}} size="5vw" itemSize="3vw"  display="bottom" bg="#1e2939" itemData={itemsSeperatedObj.potions[2].item} showQuantity={true} quantity={itemsSeperatedObj.potions[2].quantity}/>
+                </div>
+              </div>
+              
+              {/* Footer */}
+              <div className="flex items-center justify-between w-full gap-5 flex-0">
+                {/* Current Weapon */}
+                <div className="flex flex-col items-center justify-center" >
+                  {itemsSeperatedObj.weapons.length==0 && <div className={`h-3vw w-3vw bg-teal-500 rounded-[50%] p-3 hover:p-2 hover:cursor-pointer`}></div>}
+                  {itemsSeperatedObj.weapons.length>0 && <ItemState onClick={()=>{}} showQuantity={false} quantity={1} size="4vw" itemSize="3vw" display="top" bg="#008585" itemData={itemsSeperatedObj.weapons[0].item}/>}
+                  <div className="font-bold text-white text-xl">Weapon</div>
+                </div>
 
 
-  return (
-    <div className="flex flex-col relative w-full h-full shadow-lg rounded-sm bg-[#f8bd7e] text-white border-10 border-[#b56c34] p-4 z-4">
-      <div className="absolute top-[-3%] left-[50%] translate-[-50%] bg-[#95a0ba] px-10 py-2 border-2 border-[#afb5c4] rounded-lg">
-        <div onClick={()=>onClose()} className={`text-[#535f6c] font-bold text-3xl ${styles.font}`}>Inventory</div>
-      </div>
+                {/* Shop button */}
+                <div className="flex flex-col items-center justify-center" onClick={()=>setIsShopOpen(!isShopOpen)}>
+                  <div className={`h-20 w-20 ${isShopOpen?"bg-red-800":"bg-gray-800"} rounded-[50%] p-3 hover:p-2 hover:cursor-pointer`}>
+                      <img className="h-full w-full" src="/assets/shopIcon.png"/>
+                  </div>
+                  <div className="font-bold text-white text-xl">{isShopOpen?"Close":"Open"} Shop</div>
+                </div>
+                
+              </div>
+            </div>
 
-      {/* Collections */}
-      <div className="mb-1 flex-1 flex flex-col gap-5">
-        <InventoryCollectionConsumables itemsList={paddedConsumables} />
-        <InventoryCollectionItems itemsList={paddedOtherItems}/>
-      </div>
+          </div>
+
+          {/* Middle Player Data */}
+          {!isShopOpen &&
+            <div className="flex-1 bg-gray-700 rounded-t-lg p-2 gap-3 flex flex-col">
+              {/* Header Text */}
+              <div className="flex items-center justify-center bg-gray-600 p-2 rounded-lg">
+                <div className="white text-2xl font-bold text-white text-center">Character</div>
+              </div>
+
+              {/* Middle Main */}
+              <div className="flex flex-col flex-1">
+                <div className="text-center text-white font-bold capitalize text-lg">{userData.gamerTag}</div>
+                {/* Image takes up remaining space */}
+                <div className="flex-1 flex items-center justify-center">
+                  <img
+                    className={`${styles.pixelImage} w-[50%] max-w-full object-contain`}
+                    src={`/assets/playableCharacter/${userData.Character.class.toLowerCase()}/pixel.png`}
+                    alt="Character"
+                  />
+                </div>
+                {/* HP CONTAINER */}
+                <div className="flex flex-col gap-2">
+                  <div className="text-xl text-white font-bold">HP: {userData.currentHP} / {userData.maxHP}</div>
+                  <div className={`relative top-[-10%] w-[100%] h-5 border-2 bg-[#697284e3]  rounded-md`}>
+                      <div 
+                        className={`
+                          absolute h-full rounded-lg
+                          ${userHealthPercentage>75?"bg-green-400":userHealthPercentage>35?"bg-yellow-400":"bg-red-400"}
+                        `} 
+                        style={{ width: `${userHealthPercentage}%` }}>
+                      </div>
+                    </div>
+                </div>
+              </div>
+            </div>
+          }
+
+          {/* SHOP */}
+          {isShopOpen && !purchasingItem &&
+            <div className="flex-1 bg-gray-700 rounded-t-lg p-2 gap-3 flex flex-col">
+              {/* Header Text */}
+              <div className="flex items-center justify-center bg-gray-600 p-2 rounded-lg">
+                <div className="white text-2xl font-bold text-white text-center">Item Shop</div>
+              </div>
+
+              {/* Middle Main */}
+              <div className="flex flex-col flex-1 gap-5">
+
+                {/* Weapons */}
+                <div className="w-full bg-gray-600 p-2 rounded-md flex-1  flex flex-col gap-2">
+                  <div className="font-bold text-2xl text-white bg-green-800 px-2 rounded-lg">Weapons</div>
+                  <div className="flex flex-wrap gap-5">
+                    {itemShopList.map((itemData,i)=>{
+                      if(!itemData.imageURL || (itemData.itemType !== "Weapon")) return(<></>)
+                      return(
+                        <ItemState key={`item_${i}`} onClick={()=>setPurchasingItem(itemData)} showQuantity={false} quantity={1} size={"3vw"} itemSize="2vw" bg="#1e2939" display="bottom"  itemData={itemData}/>
+                      )
+                    })}
+                  </div>
+                </div>
+                
+                {/* Potions */}
+                <div className="w-full bg-gray-600 p-2 rounded-md flex-1 flex flex-col gap-2">
+                  <div className="font-bold text-2xl text-white bg-purple-800 px-2 rounded-lg">Potions</div>
+                  <div className="flex flex-wrap gap-5">
+                    {itemShopList.map((itemData,i)=>{
+                      if(!itemData.imageURL || (itemData.itemType !== "Potion")) return(<></>)
+                      return(
+                        <ItemState key={`item_${i}`} onClick={()=>setPurchasingItem(itemData)} showQuantity={false} quantity={1} size="3vw" itemSize="2vw" bg="#1e2939" display="bottom" itemData={itemData}/>
+                      )
+                    })}
+                  </div>
+                </div>
+              </div>
+            </div>
+          }
+          {isShopOpen && purchasingItem &&
+            <PurchaseItemScreen itemData={purchasingItem} onPressBack={()=>{setPurchasingItem(null);setBuyError("")}} onClickBuy={(itemData,quantity,price)=>handleBuyItem(itemData,quantity,price)} error={buyError}/>
+          }
+          {/* Right Stats */}
+          <div className="flex-1 bg-gray-700 rounded-t-lg p-2 gap-3 flex flex-col">
+            {/* Header Text */}
+            <div className="flex items-center justify-center bg-gray-600 p-2 rounded-lg">
+              <div className="white text-2xl font-bold text-white text-center">Stats</div>
+            </div>
+
+            {/* Right Main */}
+            <div className="flex flex-col flex-1 gap-2 p-3 w-[80%]">
+              {AllStatsKey.map((statKey,i)=>{
+                const value = userData.currentStats[statKey as keyof UserStats];
+                let percentage = (value /largestStatNumber) * 100
+                percentage = percentage == 0?5:percentage
+                return(
+                  <div key={`stat_${i}`}  className="flex flex-col gap-2">
+                    
+                    <div className="font-bold uppercase text-white">{statKey} : {value}</div>
+
+                    <div className={`relative top-[-10%] w-[100%] h-5 border-2 bg-[#697284e3]  rounded-lg`}>
+                      <div 
+                        className={`
+                          absolute h-full rounded-lg
+                          bg-${i==0?"red":i==1?"blue":i==2?"orange":i==3?"green":i==4?"red":"red"}-400
+                        `} 
+                        style={{ width: `${percentage}%` }}>
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+
+          </div>
+        </div>
+      }
+      
     </div>
   )
 }
+
 
 export default InventorySystem
 
-interface InventoryCollectionProps {
-  itemsList: (InventoryItem | null)[];
-}
 
+const ItemState = ({itemData,display,bg,size,itemSize,quantity,showQuantity,onClick}:{
+  itemData:InventoryItem_T;
+  display:"top"|"bottom";
+  bg:string;
+  size:string;
+  itemSize:string;
+  quantity:number;
+  showQuantity:boolean;
+  onClick:()=>void
+})=>{
+  const [isHover,setIsHover] = useState<Boolean>(false)
 
-const InventoryCollectionConsumables = ({itemsList}:InventoryCollectionProps)=>{
-  return(
-    <div className="flex flex-col bg-[#eec399] border-2 border-[#bf834a] p-3 rounded-lg">
-      <div>
-      <div className={`text-center font-bold text-2xl text-[#4b2f15] ${styles.font}`}>~ Consumables ~</div>
-        <div className="text-center font-bold text-xl text-[#4b2f15]">= = = =</div>
+  if(!itemData || !itemData.imageURL || itemData.itemType=="fake") return(
+    <div className="relative flex flex-col justify-center items-center">
+      <div className={`rounded-[50%] p-3 flex items-center justify-center hover:bg-gray-900 cursor-pointer`}
+        style={{ width: `${size}`, height: `${size}`, backgroundColor: isHover ? '#111827' : bg }}
+      >
+         
       </div>
-      
-      {/* Slots */}
-      <div className="flex gap-4 mt-2">
-        {itemsList.map((itemData,i)=>{
-          return(
-            <div key={i} className="w-[3.5vw] h-[3.5vw] aspect-square bg-[#fabe82] border-3 border-[#cd9159] rounded-sm">
-              {itemData?.name != "Mini Health Potion" ?
-                <div className="text-sm text-black">{itemData ? itemData.name : ""}</div> :
-                <img className="w-[3.5vw] h-[3.5vw] aspect-square" src="/assets/inventoryItem/health_mini.png"/>
-              }
-            </div>
-          )
-        })}
-        
+    </div>
+  )
+
+  return(
+    <div onClick={()=>onClick()} onMouseEnter={()=>setIsHover(true)} onMouseLeave={()=>setIsHover(false)} className="relative flex flex-col justify-center items-center">
+      {isHover && 
+        <div 
+          className={`absolute text-center text-white font-bold capitalize text-lg z-10`}
+          style={{transform: `translateY(${display === "top" ? "-" : ""} 120%)`}}
+        >{itemData.name}</div>
+      }
+      {showQuantity &&
+        <div 
+          className={`absolute left-[70%] p-3 flex items-center justify-center border-1 border-black text-center text-white font-bold capitalize text-xs z-5 bg-blue-600 rounded-[50%] h-[1vw] w-[1vw]`}
+          style={{[display === "top" ? "bottom" : "top"]: "-5%"}}
+        >
+          <div>x{quantity}</div>
+        </div>
+      }
+      <div className={`rounded-[50%] p-2 flex items-center justify-center hover:bg-gray-900 cursor-pointer`}
+          style={{ width: `${size}`, height: `${size}`, backgroundColor: isHover ? '#111827' : bg }}
+          
+      >
+          <img
+            className={`object-contain`}
+            style={{ width: `${itemSize}`, height: `${itemSize}`}}
+            src={`/assets/item${itemData.imageURL}.png`}
+            alt={itemData.name}
+          />
       </div>
     </div>
   )
 }
 
-const InventoryCollectionItems = ({itemsList}:InventoryCollectionProps)=>{
+
+const PurchaseItemScreen = ({itemData,onClickBuy,onPressBack,error}:
+  {
+    itemData:InventoryItem_T;
+    onClickBuy:(itemData:InventoryItem_T,quantity:number,price:number)=>void;
+    onPressBack:()=>void;
+    error:string;
+  }
+)=>{
+  const [quantity, setQuantity] = useState(1);
+  const price = (1 || 0) * quantity;
+
   return(
-    <div className="flex flex-col bg-[#eec399] border-2 border-[#bf834a] flex-1 p-3 rounded-lg">
-      <div>
-      <div className={`text-center font-bold text-2xl text-[#4b2f15] ${styles.font}`}>~ Items ~</div>
-        <div className="text-center font-bold text-xl text-[#4b2f15]">= = = =</div>
+    <div className="flex-1 bg-gray-700 rounded-t-lg p-2 gap-3 flex flex-col">
+      {/* Header Text */}
+      <div className="flex items-center justify-center bg-gray-600 p-2 rounded-lg">
+        <div className="white text-2xl font-bold text-white text-center">Purchase Item</div>
       </div>
-      
-      {/* Slots */}
-      <div className="flex gap-4 mt-2 flex-wrap">
-        {itemsList.map((itemData,i)=>{
-          return(
-            <div key={i} className="w-[3.5vw] h-[3.5vw] aspect-square bg-[#fabe82] border-3 border-[#cd9159] rounded-sm">
-                <div className="text-sm text-black">{itemData ? itemData.name : ""}</div>
+
+      {/* Middle Main */}
+      <div className="flex flex-col flex-1 gap-5">
+        <div className="flex flex-col flex-1">
+          <div className="text-center text-white font-bold capitalize text-lg">
+            {itemData.name}
+          </div>
+          <div className="text-center text-white font-semibold capitalize text-sm">
+            {itemData.description}
+          </div>
+
+          {/* Image */}
+          <div className="flex-1 flex items-center justify-center">
+            <img
+              className={`${styles.pixelImage} h-[60%] max-w-full object-contain`}
+              src={`/assets/item${itemData.imageURL}.png`}
+              alt={itemData.name}
+            />
+          </div>
+
+          {/* Quantity & Price */}
+          <div className="flex flex-col items-center gap-2 mt-4">
+            <div className="flex items-center gap-2">
+              <span className="text-white text-sm">Quantity:</span>
+              <input
+                type="number"
+                min={1}
+                max={99}
+                value={quantity}
+                onChange={(e) => {if(itemData.itemType=="Weapon"){setQuantity(1)}else{setQuantity(Math.max(1, +e.target.value))}}}
+                className="w-16 text-center rounded px-2 py-1 text-black bg-white"
+              />
             </div>
-          )
-        })}
+            <div className="text-white text-md">
+              Total: <span className="font-bold">{price} gold</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Buy Button */}
+        <div className="w-full flex justify-center gap-3">
+          <button
+            className="bg-red-600 cursor-pointer hover:bg-red-700 text-white font-bold py-2 px-6 rounded shadow-lg transition-all duration-200 "
+            onClick={() => onPressBack()}
+          >Back</button>
+
+          <button
+            className="bg-green-600 cursor-pointer hover:bg-green-700 text-white font-bold py-2 px-6 rounded shadow-lg transition-all duration-200 "
+            onClick={() => onClickBuy(itemData,quantity,price)}
+          >Buy</button>
+        </div>
+
+        <div className="text-red-600 text-center">{error}</div>
       </div>
     </div>
   )
+}
+
+
+const FAKEITEM:InventoryItem_T = {
+  _id: "",
+  name: "",
+  description: "",
+  itemType: "fake",
+  healthAmount: 200,
+  imageURL: null,
+  damage:3
 }

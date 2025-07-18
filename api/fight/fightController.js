@@ -9,7 +9,7 @@ async function loadEntity(id, type) {
 
   switch (type) {
     case 'User':
-      return await UserProfile.findById(id).populate('CurrentLoot.itemId');
+      return await User.findById(id).populate('CurrentLoot.itemId');
     case 'boss':
       return await Boss.findById(id);
     case 'common_enemy':
@@ -378,7 +378,6 @@ function rollFlee(user, enemy)
 exports.startEncounter = async (req, res) => {
   const userId = req.user.userId;
   const { enemyType, enemyId } = req.body; // Pass enemyType and enemyId from frontend
-
   // Load user
   const user = await loadEntity(userId, 'User');
   if (!user) return res.status(404).json({ error: 'User not found' });
@@ -419,7 +418,7 @@ exports.startEncounter = async (req, res) => {
       stats: enemyObject.stats,
       relationshipGoal: enemyObject.relationshipGoal,
       maxHP: enemyObject.maxHP,
-      currentHP: enemyObject.currentHP,
+      currentHP: enemyObject.maxHP,
       name: enemyObject.name,
     },
     currentTurn: 'User',
@@ -694,10 +693,10 @@ exports.getActiveEncounter =  async (req, res) => {
   res.json({inFight: true, encounter});
 }
 
-module.exports = {
-  levelupUser,
-  startEncounter,
-  userTurnAndEnemyResponse,
-  loadEntity,
-  getActiveEncounter
-};
+// module.exports = {
+//   levelupUser,
+//   startEncounter,
+//   userTurnAndEnemyResponse,
+//   loadEntity,
+//   getActiveEncounter
+// };

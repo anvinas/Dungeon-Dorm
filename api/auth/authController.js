@@ -191,7 +191,8 @@ exports.findUserProfile = async (req, res) =>
                     path: 'weapon' // The field to populate within the CharacterClass document
                 }
             })
-            .select('-passwordHash -__v');
+            .select('-passwordHash -__v')
+            .populate('CurrentLoot.itemId');
 
         if (!userProfile) {
             return res.status(404).json({error: "User profile not found."});
