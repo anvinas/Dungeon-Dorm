@@ -96,7 +96,7 @@ exports.registerUser = async (req, res) => {
 
         await newUser.save();
 
-        const verificationLink = `http://dungeon-dorm.online/verify?token=${emailVerificationToken}`; // Your frontend link
+        const verificationLink = `https://dungeons-dorm.online/verify?token=${emailVerificationToken}`; // Your frontend link
 
         const mailOptions = {
             from: process.env.EMAIL_USER,          // This will be your Ethereal user ID
@@ -264,7 +264,7 @@ exports.forgotPassword = async (req, res) => {
         await user.save();
 
         // Construct the reset link (frontend will handle the token)
-        const resetLink = `http://dungeon-dorm.online/reset-password?token=${resetPasswordToken}`;
+        const resetLink = `https://dungeons-dorm.online/reset-password?token=${resetPasswordToken}`;
 
         const mailOptions = {
             from: process.env.EMAIL_USER,
