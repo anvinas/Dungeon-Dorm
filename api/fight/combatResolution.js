@@ -84,3 +84,6 @@ async function handleEnemyDefeat(userId, enemyId, enemyType) {
     return rewards;
 }
 
+module.exports = {
+    setNextBossForUser
+}

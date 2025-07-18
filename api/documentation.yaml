@@ -265,6 +265,87 @@ paths:
                 properties:
                   error:
                     type: string
+                    
+  /user/delete-user-progress:
+    post:
+      summary: Reset a user's progress to initial state
+      description: Resets the user's level, bosses, currency, inventory, character, stats, HP, XP, and sets the next boss. Requires authentication.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: User progress reset successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: User progress has been reset successfully.
+                  userProfile:
+                    type: object
+                    properties:
+                      gamerTag:
+                        type: string
+                      level:
+                        type: integer
+                      currency:
+                        type: integer
+                      currentLoot:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            itemId:
+                              type: string
+                            quantity:
+                              type: integer
+                      character:
+                        type: string
+                        nullable: true
+                      currentStats:
+                        type: object
+                        properties:
+                          strength:
+                            type: integer
+                          dexterity:
+                            type: integer
+                          intelligence:
+                            type: integer
+                          charisma:
+                            type: integer
+                          defense:
+                            type: integer
+                      maxHP:
+                        type: integer
+                      currentHP:
+                        type: integer
+                      currentXP:
+                        type: integer
+                      toLevelUpXP:
+                        type: integer
+                      currentBoss:
+                        type: string
+                        nullable: true
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '500':
+          description: Server error resetting user progress
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
 
 components:
   securitySchemes:
