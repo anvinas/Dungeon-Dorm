@@ -5,3 +5,29 @@
     font-weight: 400;
     font-style: normal;
 }
+
+
+
+.container {
+  animation: slideUp 0.5s ease-out forwards;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0%);
+    opacity: 1;
+  }
+}
+
+.pixelImage{
+    animation: bob 5s ease-in-out infinite;
+}
+@keyframes bob {
+  0%   { transform: translateY(0); }
+  50%  { transform: translateY(-10px); }
+  100% { transform: translateY(0); }
+}

@@ -1,9 +1,10 @@
 // api/user/userController.js
 const UserProfile = require('../auth/authModel'); // UserProfile model is in api/auth/
-const CharacterClass = require('../models/CharacterClass'); // CharacterClass model is now in top-level models/
+const CharacterClass = require('../../models/CharacterClass'); // CharacterClass model is now in top-level models/
 const InventoryItem = require('../barkeeper/InventoryItem'); // InventoryItem model is in api/barkeeper/
 const Boss = require('../global/Boss');
 const CommonEnemy = require('../global/CommonEnemy');
+const {setNextBossForUser} = require('../fight/combatResolution'); // Import the function to set next boss
 
 // Helper function to add items to user's inventory (re-usable)
 const addItemToUserInventory = (user, itemId, quantity) => {
@@ -20,7 +21,7 @@ const addItemToUserInventory = (user, itemId, quantity) => {
 // @desc    Select a character class for the user
 // @route   POST /api/user/select-character
 // @access  Private (requires token)
-exports.selectCharacter = async (req, res) => {
+const selectCharacter = async (req, res) => {
     const { characterClassId } = req.body;
     const userId = req.user.userId;
 
@@ -94,7 +95,7 @@ exports.selectCharacter = async (req, res) => {
 // @desc    Sets the ID of the boss the user is currently on/facing
 // @route   POST /api/user/set-current-boss
 // @access  Private (requires token)
-exports.setCurrentBoss = async (req, res) => {
+const setCurrentBoss = async (req, res) => {
     const { bossId } = req.body;
     const userId = req.user.userId;
 
@@ -140,7 +141,7 @@ exports.setCurrentBoss = async (req, res) => {
 // @desc    Update user profile after defeating a boss and progress to next
 // @route   POST /api/user/defeat-boss
 // @access  Private (requires token)
-exports.defeatBoss = async (req, res) => {
+const defeatBoss = async (req, res) => {
     const { bossId } = req.body; // The ID of the boss that was JUST DEFEATED
     const userId = req.user.userId;
 
@@ -219,7 +220,7 @@ exports.defeatBoss = async (req, res) => {
     }
 };
 
-exports.returnEnemies = async (req, res) => {
+const returnEnemies = async (req, res) => {
     try {
         const Bosses = await Boss.find({}).sort({level : 1});
         const Enemies = await CommonEnemy.find({}).sort({level : 1});
@@ -231,7 +232,7 @@ exports.returnEnemies = async (req, res) => {
     }
 }
 
-exports.fetchEnemyById = async (req, res) => {
+const fetchEnemyById = async (req, res) => {
     const {id} = req.params;
     try {
         const boss = await Boss.findById(id);
@@ -252,7 +253,7 @@ exports.fetchEnemyById = async (req, res) => {
     }
 }
 
-exports.fetchUserProfile = async (req, res) => {
+const fetchUserProfile = async (req, res) => {
     const userId = req.user.userId;
     
     try {
@@ -268,11 +269,125 @@ exports.fetchUserProfile = async (req, res) => {
     }
 };
 
+// @access  Private (requires token)
+const purchaseItem = async (req, res) => {
+    const { itemId, quantity ,price } = req.body; // ID of the item to purchase, and quantity
+    const userId = req.user.userId; // Extracted from JWT by verifyToken middleware
+    
+    if (!itemId || !quantity || quantity <= 0 || !price) {
+        return res.status(400).json({ error: 'Item ID , valid quantity and price are required.' });
+    }
+
+    try {
+        const user = await UserProfile.findById(userId).select('-passwordHash -isEmailVerified -__v')
+            .populate('Character')
+        ; 
+
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        const itemInShop = await InventoryItem.findById(itemId)
+
+        if (!itemInShop) {
+            return res.status(404).json({ error: 'Item not found in shop inventory.' });
+        }
+
+
+        if (user.Currency < price) {
+            return res.status(400).json({ error: 'Not enough currency.' });
+        }
+
+        user.Currency -= price;
+
+        // Inventory logic: Find if item already exists in user's CurrentLoot
+        const existingUserItemIndex = user.CurrentLoot.findIndex(loot => loot.itemId.toString() === itemId);
+        
+        await user.populate('CurrentLoot.itemId');
+
+        if (existingUserItemIndex > -1) {
+            // If item exists, update its quantity
+            user.CurrentLoot[existingUserItemIndex].quantity += quantity;
+        } else {
+            // If item is new, push a new object with itemId and quantity
+            user.CurrentLoot.push({ itemId: itemId, quantity: quantity });
+        }
+        await user.save();
+
+        res.json({
+            message: 'Purchase successful!',
+            user: user,
+            purchasedItem: {
+                itemId: itemInShop._id,
+                name: itemInShop.name,
+                quantity: quantity
+            }
+        });
+
+    } catch (err) {
+        console.error('Error purchasing item:', err);
+        res.status(500).json({ error: 'Server error during purchase.' });
+    }
+};
+
+const deleteUserProgress = async (req, res) => {
+    const userId = req.user.userId;
+    let currentBoss;
+    
+    try{
+        const user = await UserProfile.findById(userId);
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        // Reset user progress
+        user.level = 1;
+        user.Bosses = [];
+        user.Currency = 0;
+        user.CurrentLoot = [];
+        user.Character = null
+        user.currentStats.strength = 0;
+        user.currentStats.dexterity = 0;
+        user.currentStats.intelligence = 0;
+        user.currentStats.charisma = 0;
+        user.currentStats.defense = 0;
+        user.maxHP = 100;
+        user.CurrentHP = 100;
+        user.currentXP = 0;
+        user.toLevelUpXP = 1000
+        currentBoss = setNextBossForUser(user);
+
+        //console.log(`User progress reset for user ID: ${userId}`);
+        return res.json({
+            message: 'User progress has been reset successfully.',
+            userProfile: {
+                gamerTag: user.gamerTag,
+                level: user.level,
+                currency: user.Currency,
+                currentLoot: user.CurrentLoot,
+                character: user.Character,
+                currentStats: user.currentStats,
+                maxHP: user.maxHP,
+                currentHP: user.CurrentHP,
+                currentXP: user.currentXP,
+                toLevelUpXP: user.toLevelUpXP,
+                currentBoss: currentBoss ? currentBoss._id : null
+            }
+        })
+    }
+    catch (err) {
+        console.error('Error resetting user progress:', err);
+        return res.status(500).json({ error: 'Server error resetting user progress.' });
+    }
+}
+
 module.exports = { 
     selectCharacter,
     setCurrentBoss,
     defeatBoss,
     returnEnemies,
     fetchEnemyById,
-    fetchUserProfile
+    fetchUserProfile,
+    purchaseItem,
+    deleteUserProgress
 };

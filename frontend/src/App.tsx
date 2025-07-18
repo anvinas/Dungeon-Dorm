@@ -5,6 +5,7 @@ import './App.css';
 import LoginPage from './pages/LoginPage';
 import PlayPage from './pages/PlayPage';
 import CharacterSelectPage from './pages/CharacterSelectPage';
+import BossFightPage from './pages/BossFightPage';
 
 function App() {
   return (
@@ -13,6 +14,8 @@ function App() {
         <Route path="/" element={<LoginPage/>} />
         <Route path="/play" element={<PlayPage/>} />
         <Route path="/character" element={<CharacterSelectPage/>} />
+        <Route path="/bossfight" element={<BossFightPage/>} />
+
         {/* <Route path="about" element={<CardPage/>} /> */}
       </Routes>
       </Router>
