@@ -1,4 +1,31 @@
 
+
+export interface AttackResult_T {
+  hit: boolean;
+  crit: number;
+  d20: number;
+  totalRollWithModifiers: number;
+  totalRollNeeded: number;
+  damage: number;
+  primaryStat: string;
+  message: string;
+}
+
+export interface TurnResult_T {
+  currentTurn: 'User' | 'Enemy';
+  message: string;
+  postTurnEnemyHP: number;
+  postTurnUserHP: number;
+  userAttack: AttackResult_T;
+  enemyAttack: AttackResult_T;
+}
+
+export interface userAttackTurnReturn_T {
+  userResult:TurnResult_T;
+  enemyResult:(TurnResult_T | null);
+  message:(string|null);
+}
+
 export interface InventoryItem_T {
   _id: string;
   name: string;
@@ -16,11 +43,11 @@ export interface UserStats {
   defense: number;
 }
 
-interface LootItem {
-  itemId: string;
-  quantity: number;
-  _id: string;
-}
+// interface LootItem {
+//   itemId: string;
+//   quantity: number;
+//   _id: string;
+// }
 
 export interface Character_T {
   _id: string;

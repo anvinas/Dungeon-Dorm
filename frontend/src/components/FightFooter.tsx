@@ -1,8 +1,7 @@
 // import styles from "./styles/loginModal.module.css"
-import { useState } from "react"
 import AvatarHealth from "./AvatarHealth"
 import styles from "./styles/GameFooter.module.css"
-import type {Encounter_T} from "../lib/types";
+// import type {Encounter_T} from "../lib/types";
 
 function FightFooter({
   OnClickAttack,
@@ -58,7 +57,14 @@ function FightFooter({
             </div>
         </div>
 
-        <div></div>
+        {/* Inventory button */}
+        <div onClick={()=>OnClickInventory()} className="p-5 bg-red-100 border-4 border-blue-500 rounded-[50%]">
+            <img
+              src="/assets/satchel.png"
+              className=" object-cover transform scale-x-[-1] bobAvatar h-20"
+              alt="Satchel"
+            />
+        </div>
     </div>
     
   )
