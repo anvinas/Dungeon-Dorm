@@ -4,6 +4,7 @@ const CharacterClass = require('../../models/CharacterClass'); // CharacterClass
 const InventoryItem = require('../barkeeper/InventoryItem'); // InventoryItem model is in api/barkeeper/
 const Boss = require('../global/Boss');
 const CommonEnemy = require('../global/CommonEnemy');
+const {setNextBossForUser} = require('../fight/combatResolution'); // Import the function to set next boss
 
 // Helper function to add items to user's inventory (re-usable)
 const addItemToUserInventory = (user, itemId, quantity) => {
@@ -329,6 +330,56 @@ const purchaseItem = async (req, res) => {
     }
 };
 
+const deleteUserProgress = async (req, res) => {
+    const userId = req.user.userId;
+    let currentBoss;
+    
+    try{
+        const user = await UserProfile.findById(userId);
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        // Reset user progress
+        user.level = 1;
+        user.Bosses = [];
+        user.Currency = 0;
+        user.CurrentLoot = [];
+        user.Character = null
+        user.currentStats.strength = 0;
+        user.currentStats.dexterity = 0;
+        user.currentStats.intelligence = 0;
+        user.currentStats.charisma = 0;
+        user.currentStats.defense = 0;
+        user.maxHP = 100;
+        user.CurrentHP = 100;
+        user.currentXP = 0;
+        user.toLevelUpXP = 1000
+        currentBoss = setNextBossForUser(user);
+
+        //console.log(`User progress reset for user ID: ${userId}`);
+        return res.json({
+            message: 'User progress has been reset successfully.',
+            userProfile: {
+                gamerTag: user.gamerTag,
+                level: user.level,
+                currency: user.Currency,
+                currentLoot: user.CurrentLoot,
+                character: user.Character,
+                currentStats: user.currentStats,
+                maxHP: user.maxHP,
+                currentHP: user.CurrentHP,
+                currentXP: user.currentXP,
+                toLevelUpXP: user.toLevelUpXP,
+                currentBoss: currentBoss ? currentBoss._id : null
+            }
+        })
+    }
+    catch (err) {
+        console.error('Error resetting user progress:', err);
+        return res.status(500).json({ error: 'Server error resetting user progress.' });
+    }
+}
 
 module.exports = { 
     selectCharacter,
@@ -337,5 +388,6 @@ module.exports = {
     returnEnemies,
     fetchEnemyById,
     fetchUserProfile,
-    purchaseItem
+    purchaseItem,
+    deleteUserProgress
 };
