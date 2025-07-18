@@ -156,6 +156,7 @@ exports.loginUser = async (req, res) =>
         res.json({
             token,
             user: {
+                character:user.Character,
                 gamerTag: user.gamerTag,
                 level: user.level,
                 isEmailVerified: user.isEmailVerified // <--- ADD THIS LINE

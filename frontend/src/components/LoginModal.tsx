@@ -74,18 +74,17 @@ function LoginModal({onClickClose,isOpen} : LoginModalProps) {
         storeJWT(response.data.token)
         console.log(response.data)
 
-        const profileResponse = await axios.get(`${GetServerPath()}/api/auth/profile`,{
-          headers:{
-            Authorization: `Bearer ${response.data.token}`
-          }
-        });
+        // const profileResponse = await axios.get(`${GetServerPath()}/api/auth/profile`,{
+        //   headers:{
+        //     Authorization: `Bearer ${response.data.token}`
+        //   }
+        // });
 
-        console.log(profileResponse.data.userProfile);
-
+        console.log(response.data.user)
         // Already selected character
-        if(response.data.user.character && profileResponse.data.userProfile.isEmailVerified == true){
+        if(response.data.user.character && response.data.user.isEmailVerified == true){
           navigate("/play");
-        }else if(!response.data.user.character && profileResponse.data.userProfile.isEmailVerified == true){  
+        }else if(!response.data.user.character && response.data.user.isEmailVerified == true){  
           navigate("/character");
         }
         else
