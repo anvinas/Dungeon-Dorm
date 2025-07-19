@@ -6,7 +6,7 @@ const Boss = require('../global/Boss');
 const CommonEnemy = require('../global/CommonEnemy');
 const {setNextBossForUser} = require('../fight/combatResolution'); // Import the function to set next boss
 const Encounter = require('../fight/Encounter');
-const { default: createToken } = require('../global/refreshToken');
+const createToken = require('../global/refreshToken');
 
 // Helper function to add items to user's inventory (re-usable)
 const addItemToUserInventory = (user, itemId, quantity) => {

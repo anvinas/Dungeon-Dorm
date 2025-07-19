@@ -1,7 +1,7 @@
 const User = require('../auth/authModel');
 const Boss = require('../global/Boss');
 const CommonEnemy = require('../global/CommonEnemy');
-const { default: createToken } = require('../global/refreshToken');
+const createToken = require('../global/refreshToken');
 // const { handleEnemyDefeat } = require('./combatResolution');
 const Encounter = require('./Encounter');
 
