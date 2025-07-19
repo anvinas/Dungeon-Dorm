@@ -4,8 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import '../utils/get_path.dart';
 import '../utils/jwt_storage.dart';
-import '../utils/types.dart';
-import '../widgets/fight_footer.dart';
 
 class Enemy {
   final String name;

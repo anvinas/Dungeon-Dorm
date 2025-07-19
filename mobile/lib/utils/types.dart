@@ -236,27 +236,28 @@ class UserProfile {
 
   factory UserProfile.fromJson(Map<String, dynamic> json) {
     return UserProfile(
-      id: json['_id'],
-      email: json['email'],
-      gamerTag: json['gamerTag'],
-      level: json['level'],
-      currency: json['Currency'],
-      maxHP: json['maxHP'],
-      currentHP: json['currentHP'],
-      currentStats: UserStats.fromJson(json['currentStats']),
-      currentLoot: List<CurrentLootItem>.from(
-        json['CurrentLoot'].map((x) => CurrentLootItem.fromJson(x)),
-      ),
-      character: Character.fromJson(json['Character']),
-      bosses: List<String>.from(json['Bosses']),
-      currentActiveBoss: json['currentActiveBoss'],
-      createdAt: json['createdAt'],
-      updatedAt: json['updatedAt'],
-      toLevelUpXP: json['toLevelUpXP'],
-      currentXP: json['currentXP'],
+      id: json['_id'] is Map ? json['_id']['\$oid'] ?? '' : json['_id']?.toString() ?? '',
+      email: json['email'] ?? '',
+      gamerTag: json['gamerTag'] ?? '',
+      level: json['level'] ?? 0,
+      currency: json['Currency'] ?? 0,
+      maxHP: json['maxHP'] ?? 0,
+      currentHP: json['currentHP'] ?? 0,
+      currentStats: UserStats.fromJson(json['currentStats'] ?? {}),
+      currentLoot: (json['CurrentLoot'] as List<dynamic>? ?? [])
+          .map((x) => CurrentLootItem.fromJson(x))
+          .toList(),
+      character: Character.fromJson(json['Character'] ?? {}),
+      bosses: List<String>.from(json['Bosses'] ?? []),
+      currentActiveBoss: json['currentActiveBoss']?.toString(),
+      createdAt: json['createdAt'] ?? '',
+      updatedAt: json['updatedAt'] ?? '',
+      toLevelUpXP: json['toLevelUpXP'] ?? 0,
+      currentXP: json['currentXP'] ?? 0,
     );
   }
 }
+
 
 class Encounter {
   final String message;

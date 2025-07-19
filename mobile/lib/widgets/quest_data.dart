@@ -13,10 +13,6 @@ class QuestIcon extends StatelessWidget {
     required this.onClick,
   }) : super(key: key);
 
-  String getBossFolderName(String name) {
-    return name.toLowerCase().replaceAll(' ', '-');
-  }
-
   @override
   Widget build(BuildContext context) {
     if (zoom < 15) return const SizedBox.shrink();
@@ -38,7 +34,7 @@ class QuestIcon extends StatelessWidget {
             // Boss Image
             ClipOval(
               child: Image.asset(
-                'assets/img/boss/${getBossFolderName(questData.name)}/real.png',
+                'assets/img/boss/andrea/real.png',
                 fit: BoxFit.cover,
                 width: 80,
                 height: 80,

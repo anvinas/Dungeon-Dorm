@@ -63,6 +63,7 @@ final List<QuestData> QUESTZONE = [
   enemyType: 'ghost',
 ),
 ];
+
 class GameMapPage extends StatefulWidget {
   const GameMapPage({Key? key}) : super(key: key);
 
@@ -74,15 +75,16 @@ class _GameMapPageState extends State<GameMapPage>
     with TickerProviderStateMixin {
   late final MapController _mapController;
   LatLng _userLocation = const LatLng(28.6016, -81.2005);
-  double _zoom = 18.0;
+  double _zoom = 17.0;
   double _pulse = 1.0;
 
   bool _inventoryModal = false;
   bool _preFightModal = false;
   QuestData? _currentQuest;
-  UserProfile? _userProfile;
 
   late final AnimationController _pulseController;
+  UserProfile? _userProfile;
+
 
   @override
   void initState() {
@@ -121,27 +123,63 @@ class _GameMapPageState extends State<GameMapPage>
   }
 
   Future<void> _fetchUserData() async {
-    try {
-      final token = await fetchJWT();
-      final response = await http.get(
-        Uri.parse('${getPath()}/api/auth/profile'),
-        headers: {'Authorization': 'Bearer $token'},
-      );
+  try {
+    // final token = await fetchJWT();
+    // final response = await http.get(
+    //   Uri.parse('${getPath()}/api/auth/profile'),
+    //   headers: {'Authorization': 'Bearer $token'},
+    // );
+    // if (response.statusCode == 200) {
+    //   final data = jsonDecode(response.body);
+    //   final userData = UserProfile.fromJson(data['userProfile']);
+    //   await storeJWT(data['token']);
+    //   setState(() => _userProfile = userData);
+    // }
 
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        final userData = UserProfile.fromJson(data['userProfile']);
-        await storeJWT(data['token']);
-        setState(() {
-          _userProfile = userData;
-        });
-      } else if (response.statusCode == 401 || response.statusCode == 403) {
-        if (context.mounted) Navigator.pushReplacementNamed(context, '/');
-      }
-    } catch (e) {
-      print('Failed to fetch user: $e');
-    }
+    // Mock user data
+    final mockUser = UserProfile(
+      id: '1',
+      email: 'test@mock.com',
+      gamerTag: 'MockKnight',
+      level: 3,
+      currency: 120,
+      maxHP: 100,
+      currentHP: 85,
+      currentStats: UserStats(
+        strength: 7,
+        dexterity: 5,
+        intelligence: 9,
+        charisma: 6,
+        defense: 4,
+      ),
+      currentLoot: [],
+      character: Character(
+        id: 'char123',
+        species: 'Elf',
+        characterClass: 'Mage',
+        maxHP: 100,
+        stats: {
+          'strength': 7,
+          'dexterity': 5,
+          'intelligence': 9,
+          'charisma': 6,
+          'defense': 4,
+        },
+      ),
+      bosses: [],
+      currentActiveBoss: null,
+      createdAt: '',
+      updatedAt: '',
+      toLevelUpXP: 200,
+      currentXP: 50,
+    );
+
+    setState(() => _userProfile = mockUser);
+  } catch (e) {
+    print('Failed to load user: $e');
   }
+}
+
 
   @override
   void dispose() {
@@ -162,6 +200,49 @@ class _GameMapPageState extends State<GameMapPage>
       _currentQuest = quest;
       _preFightModal = true;
     });
+  }
+
+  Widget _buildQuestMarker(QuestData quest) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+          decoration: BoxDecoration(
+            color: Colors.black.withOpacity(0.6),
+            borderRadius: BorderRadius.circular(4),
+          ),
+          child: Text(
+            quest.name,
+            style: const TextStyle(
+              fontSize: 10,
+              color: Colors.white,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ),
+        const SizedBox(height: 2),
+        Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () => _handleClickQuest(quest),
+            borderRadius: BorderRadius.circular(20),
+            child: SizedBox(
+              width: 40,
+              height: 40,
+              child: Center(
+                child: Image.asset(
+                  "assets/img/boss/andrea/real.png",
+                  width: 28,
+                  height: 28,
+                  fit: BoxFit.contain,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
   }
 
   Widget _buildMap(double radiusPixels, double playerMarkerSize) {
@@ -207,13 +288,9 @@ class _GameMapPageState extends State<GameMapPage>
                 quest.location.latitude,
                 quest.location.longitude,
               ),
-              width: 80,
-              height: 92,
-              child: QuestIcon(
-                zoom: _zoom,
-                questData: quest,
-                onClick: () => _handleClickQuest(quest),
-              ),
+              width: 40,
+              height: 60,
+              child: _buildQuestMarker(quest),
             );
           }).toList(),
         ),
@@ -221,26 +298,9 @@ class _GameMapPageState extends State<GameMapPage>
     );
   }
 
-  Widget _buildModalBarrier({required Widget child, required VoidCallback onTap}) {
-    return Positioned.fill(
-      child: Stack(
-        children: [
-          GestureDetector(
-            onTap: onTap,
-            child: AbsorbPointer(
-              absorbing: true,
-              child: Container(color: Colors.black54),
-            ),
-          ),
-          Center(child: child),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
-    const radiusMeters = 50.0;
+    const radiusMeters = 100.0;
     final radiusPixels = metersToPixelsAtLatitude(
           radiusMeters,
           _userLocation.latitude,
@@ -291,9 +351,32 @@ class _GameMapPageState extends State<GameMapPage>
           Align(
             alignment: Alignment.bottomCenter,
             child: GameFooter(
-              userData: _userProfile,
               onClickInventory: () => setState(() => _inventoryModal = true),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildModalBarrier({
+    required Widget child,
+    required VoidCallback onTap,
+  }) {
+    return Positioned.fill(
+      child: Stack(
+        children: [
+          GestureDetector(
+            onTap: onTap,
+            child: AbsorbPointer(
+              absorbing: true,
+              child: Container(
+                color: Colors.black54,
+              ),
+            ),
+          ),
+          Center(
+            child: child,
           ),
         ],
       ),
@@ -307,8 +390,14 @@ class HotzoneCirclePainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final center = Offset(size.width / 2, size.height / 2);
-    for (final zone in HOTZONES) {
+    const hotzones = [
+      {'difficulty': 1, 'lat': 28.6016, 'lng': -81.2005},
+      {'difficulty': 2, 'lat': 28.6016, 'lng': -81.1960},
+      {'difficulty': 3, 'lat': 28.6080, 'lng': -81.1970},
+    ];
+
+    for (final zone in hotzones) {
+      final center = Offset(size.width / 2, size.height / 2);
       final color = switch (zone['difficulty']) {
         1 => const Color(0xFFE07B7B),
         2 => const Color(0xFF9B59B6),
@@ -327,9 +416,3 @@ class HotzoneCirclePainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
 }
-
-const HOTZONES = [
-  {'difficulty': 1, 'lat': 28.6016, 'lng': -81.2005},
-  {'difficulty': 2, 'lat': 28.6016, 'lng': -81.1960},
-  {'difficulty': 3, 'lat': 28.6080, 'lng': -81.1970},
-];
