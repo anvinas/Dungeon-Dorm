@@ -5,6 +5,8 @@ const InventoryItem = require('../barkeeper/InventoryItem'); // InventoryItem mo
 const Boss = require('../global/Boss');
 const CommonEnemy = require('../global/CommonEnemy');
 const {setNextBossForUser} = require('../fight/combatResolution'); // Import the function to set next boss
+const Encounter = require('../fight/Encounter');
+const { default: createToken } = require('../global/refreshToken');
 
 // Helper function to add items to user's inventory (re-usable)
 const addItemToUserInventory = (user, itemId, quantity) => {
@@ -255,13 +257,16 @@ const fetchEnemyById = async (req, res) => {
 
 const fetchUserProfile = async (req, res) => {
     const userId = req.user.userId;
-    
+
+
     try {
         const user = await UserProfile.findById(userId).select('-passwordHash -emailVerificationToken -emailVerificationExpires -resetPasswordToken -resetPasswordExpires -email -activityState -currentHP -createdAt -updatedAt');
         if (!user) {
             return res.status(404).json({ error: 'User profile not found/Json Header incorrect' });
         }
-        return res.json({user})
+        let newToken = createToken(userId)
+
+        return res.json({user,token:newToken})
     }
     catch (err) {
         console.error('Error fetching user profile:', err);
@@ -390,9 +395,19 @@ const usePotionItem = async (req, res) => {
 
     await user.save();
 
+    // Aslo update all encounters wwith this userid
+    const up = await Encounter.updateMany(
+        { userId: user._id, isActive: true },
+        { $set: { userHP: newHP } }
+    );
+
+
+    let newToken = createToken(userId)
+
     res.json({
       message: `Used potion and healed for ${actualHealed} HP.`,
-      user:user
+      user:user,
+      token:newToken
     });
   } catch (err) {
     console.error('Error using potion:', err);
@@ -422,7 +437,7 @@ const deleteUserProgress = async (req, res) => {
         user.currentStats.charisma = 0;
         user.currentStats.defense = 0;
         user.maxHP = 100;
-        user.CurrentHP = 100;
+        user.currentHP = 100;
         user.currentXP = 0;
         user.toLevelUpXP = 1000
         currentBoss = setNextBossForUser(user);

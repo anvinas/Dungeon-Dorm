@@ -13,8 +13,13 @@ const PrefightModal = ({questData,onClickExit,onClickFight}:{questData:QuestData
                 <div className="bg-red-500 text-white px-4 py-2 text-xl rounded hover:bg-red-600 hover:cursor-pointer" onClick={()=>onClickExit()}>Exit</div>
             </div>
 
+            <div className="flex justify-between mb-0 md:mb-5">
+                <div className="font-bold text-white">Name: {questData.name}</div>
+                <div className="font-bold text-white">Level: {questData.level}</div>
+            </div>
+
             {/* main */}
-            <div className="flex gap-4">
+            <div className="flex gap-4 flex-col md:flex-row overflow-auto md:overflow-visible flex-1">
                 <div className="flex items-center justify-center w-[30%]">
                     <img className={`${styles.bossImg} aspect-square w-full  object-cover object-top `} src={`/assets/boss/${getBossFolderName(questData.name)}/real.png`}/>   
                 </div>
@@ -23,7 +28,7 @@ const PrefightModal = ({questData,onClickExit,onClickFight}:{questData:QuestData
                 <div className="flex flex-col gap-4 justify-center bg-gray-900 p-5 rounded flex-1">
                     {questData.dialogues.preFightMain.map((dialogue,i)=>{
                         return(
-                            <div key={`dialog_${i}`} className={`text-white font-bold`}>
+                            <div key={`dialog_${i}`} className={`text-white font-bold text-sm md:text-sm`}>
                                 <div>{dialogue}</div>
                             </div>
                         )

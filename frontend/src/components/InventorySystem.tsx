@@ -5,15 +5,16 @@ import GetServerPath from "../lib/GetServerPath.ts"
 import { storeJWT, fetchJWT } from "../lib/JWT.ts"
 import { useNavigate } from 'react-router-dom';
 import {type UserProfile_T, type UserStats,type InventoryItem_T } from "../lib/types.ts"
+import { useMediaQuery } from 'react-responsive';
 
 import styles from "./styles/InventorySystem.module.css"
 
 
 function InventorySystem({onClose,onHealthChange}:{onClose:()=>void;onHealthChange:(newHealth:number)=>void;}){
   const navigate = useNavigate();
+
   const [userData,setUserData] = useState<UserProfile_T | null >(null)
   const [itemShopList,setItemShopList] = useState<InventoryItem_T[]>([])
-  
   const [isUsingItem,setIsUsingItem] = useState<InventoryItem_T | null> (null)
 
   const [isShopOpen,setIsShopOpen] = useState<Boolean> (false)
@@ -132,6 +133,28 @@ function InventorySystem({onClose,onHealthChange}:{onClose:()=>void;onHealthChan
     if(value>largestStatNumber) largestStatNumber = value
   }
 
+  const handlePopupDeleteModal = async()=>{
+    const answer = confirm("Are you sure you want to delete your account?")
+    if(answer){
+      try {
+        const token = fetchJWT(); // Assuming this retrieves token from localStorage
+        const res = await axios.post(`${GetServerPath()}/api/user/delete-user-progress`,{}, {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+        navigate('/');
+      } catch (err:any) {
+        console.error("Error buying item:", err)
+        setBuyError(err.response.data.error || "Server Error")
+        // Optional: redirect to login if 401
+        if (err.response?.status === 401 || err.response?.status === 403) {
+          navigate('/');
+        }
+      }
+    }
+  }
+
   const handleBuyItem = async(itemData:InventoryItem_T,quantity:number,price:number)=>{
     setBuyError("")
     // If buying weapon
@@ -228,7 +251,7 @@ function InventorySystem({onClose,onHealthChange}:{onClose:()=>void;onHealthChan
     <div className={`${styles.container} w-full max-h-full h-full bg-gray-800 p-5 rounded-t-lg flex flex-col gap-2`}>
       <div className="text-center font-bold text-white text-2xl bg-red-400 px-5 py-2 rounded-lg cursor-pointer hover:bg-red-500" onClick={()=>onClose()}>Close</div>
       
-        <div className="flex gap-5 flex-1">
+        <div className="flex gap-5 flex-col md:flex-row overflow-auto md:flex-1 md:overflow-visible max-h-[100vh]">
           
           {/* Left Inventory */}
           {(!isUsingItem || isUsingItem.itemType=="fake") && 
@@ -326,7 +349,10 @@ function InventorySystem({onClose,onHealthChange}:{onClose:()=>void;onHealthChan
                 </div>
                 {/* XP CONTAINER */}
                 <div className="flex flex-col gap-2">
-                  <div className="text-xl text-white font-bold">XP: {userData.currentXP} / {userData.toLevelUpXP}</div>
+                  <div className="flex gap-2">
+                    <div className="text-xl text-white font-bold">Level: {userData.level} --</div>
+                    <div className="text-xl text-white font-bold">XP: {userData.currentXP} / {userData.toLevelUpXP}</div>
+                  </div>
                   <div className={`relative top-[-10%] w-[100%] h-5 border-2 bg-[#697284e3]  rounded-md`}>
                       <div 
                         className={`
@@ -416,6 +442,20 @@ function InventorySystem({onClose,onHealthChange}:{onClose:()=>void;onHealthChan
               })}
             </div>
 
+            <div className="w-full bg-red-600 rounded text-center hover:bg-red-800 cursor-pointer text-white font-bold py-2" onClick={()=>handlePopupDeleteModal()}>
+              Delete Account
+            </div>
+
+            {/* {isTryingToDelete && 
+              <div className="flex flex-col gap-2">
+                <div className="text-center text-white font-bold">Are you sure you you want to delete? Your Entire Data will be wiped!</div>
+                <div className="flex items-center justify-around">
+                    <div className="w-[20%] px-4 py-2 bg-green-400 hover:bg-green-500 font-bold rounded text-center cursor-pointer" onClick={()=>setIsTryingDelete(false)}>Cancel</div>
+                    <div className="w-[20%] px-4 py-2 bg-red-400 hover:bg-red-500 font-bold rounded text-center cursor-pointer">Delete</div>
+                </div>
+              </div>
+            } */}
+
           </div>
         </div>
       
@@ -439,11 +479,14 @@ const ItemState = ({itemData,display,bg,size,itemSize,quantity,showQuantity,onCl
   onClick:()=>void
 })=>{
   const [isHover,setIsHover] = useState<Boolean>(false)
+  const isMobile = useMediaQuery({ maxWidth: 768 });
+  const computedSize = isMobile ? "10vw" : size;
+  const computedItemSize = isMobile ? "8vw" : itemSize;
 
   if(!itemData || !itemData.imageURL || itemData.itemType=="fake") return(
     <div className="relative flex flex-col justify-center items-center">
       <div className={`rounded-[50%] p-3 flex items-center justify-center hover:bg-gray-900 cursor-pointer`}
-        style={{ width: `${size}`, height: `${size}`, backgroundColor: isHover ? '#111827' : bg }}
+        style={{ width: `${computedSize}`, height: `${computedSize}`, backgroundColor: isHover ? '#111827' : bg }}
       >
          
       </div>
@@ -467,12 +510,12 @@ const ItemState = ({itemData,display,bg,size,itemSize,quantity,showQuantity,onCl
         </div>
       }
       <div className={`rounded-[50%] p-2 flex items-center justify-center hover:bg-gray-900 cursor-pointer`}
-          style={{ width: `${size}`, height: `${size}`, backgroundColor: isHover ? '#111827' : bg }}
+          style={{ width: `${computedSize}`, height: `${computedSize}`, backgroundColor: isHover ? '#111827' : bg }}
           
       >
           <img
             className={`object-contain`}
-            style={{ width: `${itemSize}`, height: `${itemSize}`}}
+            style={{ width: `${computedItemSize}`, height: `${computedItemSize}`}}
             src={`/assets/item${itemData.imageURL}.png`}
             alt={itemData.name}
           />
