@@ -121,25 +121,6 @@ function applyStatGrowth(className, currentStats, level) //Class name, current s
     return growthFunction(currentStats, level);
 }
 
-async function levelupUser(req, res) {
-    const userId = req.user.userId;
-    const user = await User.findById(userId).populate('Character');
-
-
-    user.xp -= user.toLevelUpXP;
-    user.level += 1;
-
-    const newStats = applyStatGrowth(user.Character.class, user.stats, user.level);
-    user.stats.strength = newStats.strength;
-    user.stats.dexterity = newStats.dexterity;
-    user.stats.intelligence = newStats.intelligence;
-    user.stats.charisma = newStats.charisma;
-    user.maxHP = newStats.maxHP;
-    user.currentHP = newStats.maxHP; // currentHP exists in the database, should be removed but fine for now
-    user.toLevelUpXP = 1000 + (150 * user.level); // Example formula, can be changed
-    await user.save();
-}
-
 exports.levelupUser = async (req, res) => {
     const userId = req.user.userId;
     const user = await UserProfile.findById(userId).populate('Character');
@@ -617,7 +598,7 @@ async function handleEnemyDefeat(userId, enemyId, enemyType) {
 
     const nextBoss = await setNextBossForUser(user);
     user.currentActiveBoss = nextBoss ? nextBoss._id : null;
-    
+
 
     const newStats = applyStatGrowth(user.Character.class, user.stats, user.level);
     user.stats.strength = newStats.strength;
