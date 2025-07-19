@@ -14,13 +14,15 @@ async function setNextBossForUser(user)
 }
 
 function addItemToUser(user, itemId, quantity) {
-    if (!itemiId) throw new Error('Item does not exist!');
-    const existingItem = user.currentLoot.findIndex(loot => loot.itemId && loot.itemId.toString() === itemId.toString());
+    user = user.toObject()
+    let CurrentLoot = user.CurrentLoot
+    if (!itemId) throw new Error('Item does not exist!');
+    const existingItem = CurrentLoot.findIndex(loot => loot.itemId && loot.itemId.toString() === itemId.toString());
 
     if (existingItem > -1) {
-        user.currentLoot[existingItem].quantity += quantity;    
+        user.CurrentLoot[existingItem].quantity += quantity;    
     } else {
-        user.currentLoot.push({ itemId, quantity });
+        user.CurrentLoot.push({ itemId, quantity });
     }
 }
 
@@ -50,7 +52,7 @@ async function handleEnemyDefeat(userId, enemyId, enemyType) {
         readyToLevelUp: levelupTrigger
     };
 
-    if (user.defeatedBosses.includes(boss._id.toString())) 
+    if (user.Bosses.includes(enemy._id.toString())) 
     {
         await user.save();
         return {rewards};
@@ -61,29 +63,30 @@ async function handleEnemyDefeat(userId, enemyId, enemyType) {
         if (reward.itemId)
         {
             try {
-            addItemToUser(user, reward.itemId, reward.quantity);
-            rewards.items.push({
-                itemId: reward.itemId._id,
-                quantity: reward.quantity,
-                itemType: reward.itemId.itemType,
-                itemDescription: reward.itemId.description,
-                itemName: reward.itemId.name
-            });
-        } catch (error) {
-            console.error(`Error adding item to user: ${error.message}`);
-        }
+                addItemToUser(user, reward.itemId, reward.quantity);
+                rewards.items.push({
+                    itemId: reward.itemId._id,
+                    quantity: reward.quantity,
+                    itemType: reward.itemId.itemType,
+                    itemDescription: reward.itemId.description,
+                    itemName: reward.itemId.name
+                });
+            } catch (error) {
+                console.error(`Error adding item to user: ${error.message}`);
+            }
         }
     }
 
-    user.defeatedBosses.push(boss._id);
+    user.Bosses.push(enemy._id);
 
     const nextBoss = await setNextBossForUser(user);
-    user.currentBoss = nextBoss ? nextBoss._id : null;
+    user.currentActiveBoss = nextBoss ? nextBoss._id : null;
     
     await user.save();
     return rewards;
 }
 
 module.exports = {
-    setNextBossForUser
+    setNextBossForUser,
+    handleEnemyDefeat
 }

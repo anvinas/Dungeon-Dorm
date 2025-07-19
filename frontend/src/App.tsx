@@ -20,7 +20,7 @@ function App() {
         <Route path="/character" element={<CharacterSelectPage/>} />
         <Route path="/verify" element={<VerifyEmail/>}/>
         <Route path='/intro' element={<IntroPage/>} />
-        <Route path='reset-password' element={<ResetPassword/>} />
+        <Route path='/reset-password' element={<ResetPassword/>} />
         <Route path="/bossfight" element={<BossFightPage/>} />
       </Routes>
       </Router>

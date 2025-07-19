@@ -1,4 +1,3 @@
-import { useState } from "react";
 import type { QuestData_T } from "../lib/types";
 import { getBossFolderName } from "../lib/helper";
 import styles from "./styles/PrefightModal.module.css"

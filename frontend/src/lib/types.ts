@@ -1,4 +1,45 @@
 
+
+export interface AttackResult_T {
+  hit: boolean;
+  crit: number;
+  d20: number;
+  totalRollWithModifiers: number;
+  totalRollNeeded: number;
+  damage: number;
+  primaryStat: string;
+  message: string;
+}
+
+
+
+export type TurnResult_T =
+  | {
+      currentTurn: 'User';
+      message: string;
+      postTurnEnemyHP: number;
+      postTurnUserHP: number;
+      userAttack: AttackResult_T;
+      enemyAttack: AttackResult_T;
+    }
+  | {
+      currentTurn: 'Enemy';
+      message: string;
+      postTurnEnemyHP: number;
+      postTurnUserHP: number;
+      enemyAttack: AttackResult_T;
+      userAttack: AttackResult_T;
+    };
+
+export interface userAttackTurnReturn_T {
+  userAttack: AttackResult_T;
+  postTurnUserHP: number;
+  postTurnEnemyHP: number;
+  userResult:TurnResult_T;
+  enemyResult:(TurnResult_T | null);
+  message:(string|null);
+}
+
 export interface InventoryItem_T {
   _id: string;
   name: string;
@@ -16,11 +57,11 @@ export interface UserStats {
   defense: number;
 }
 
-interface LootItem {
-  itemId: string;
-  quantity: number;
-  _id: string;
-}
+// interface LootItem {
+//   itemId: string;
+//   quantity: number;
+//   _id: string;
+// }
 
 export interface Character_T {
   _id: string;
@@ -52,6 +93,8 @@ export interface UserProfile_T {
   currentActiveBoss: string | null;
   createdAt: string;
   updatedAt: string;
+  toLevelUpXP:number;
+  currentXP:number;
 }
 
 

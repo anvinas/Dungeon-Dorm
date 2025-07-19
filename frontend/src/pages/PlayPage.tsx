@@ -3,7 +3,7 @@ import Map, { Marker } from 'react-map-gl/maplibre';
 import { Source, Layer } from 'react-map-gl/maplibre';
 import type { LayerProps } from 'react-map-gl/maplibre';
 import type { FeatureCollection, Feature, Point } from 'geojson';
-
+import { fetchJWT,storeJWT } from '../lib/JWT.ts';
 import 'maplibre-gl/dist/maplibre-gl.css';
 
 import InventorySystem from "../components/InventorySystem.tsx"
@@ -11,13 +11,16 @@ import GameFooter from "../components/GameFooter.tsx"
 import QuestIcon from "../components/QuestIcon.tsx"
 import PrefightModal from '../components/PrefightModal.tsx';
 import { useNavigate } from 'react-router-dom';
-
-import type { QuestData_T } from '../lib/types.ts';
+import axios from 'axios';
+import GetServerPath from '../lib/GetServerPath.ts';
+import type { QuestData_T,UserProfile_T } from '../lib/types.ts';
 
 
 function App() {
   const navigate = useNavigate();
   const [currentQuestData, setCurrentQuestData] = React.useState<null | QuestData_T>(null);
+  const [userData, setUserData] = React.useState<UserProfile_T | null >(null);
+
   // Modals
   const [modalStates, setModalStates] = React.useState<{inventory: Boolean;preFight:Boolean}>({
     inventory:false,
@@ -40,9 +43,8 @@ function App() {
   React.useEffect(() => {
     navigator.geolocation.getCurrentPosition(
       (position) => {
-        // const { longitude, latitude } = position.coords;
-        console.log("Actula Pos",position)
-        const { longitude, latitude } = { longitude: -81.2005, latitude: 28.6016 };
+        const { longitude, latitude } = position.coords;
+        // const { longitude, latitude } = { longitude: -81.2005, latitude: 28.6016 };
         setUserLocation({ longitude, latitude });
         setViewState((prev) => ({ ...prev, longitude, latitude }));
       },
@@ -50,6 +52,7 @@ function App() {
         console.error('Error getting location:', error);
       }
     );
+    fetchUserData()
   }, []);
 
   // Pulse animation effect (separate)
@@ -108,8 +111,26 @@ function App() {
     setModalStates(old => ({ ...old, preFight: true }));
   }
 
-
-
+const fetchUserData = async () => {
+    try {
+      const token = fetchJWT(); 
+      const res = await axios.get(`${GetServerPath()}/api/auth/profile`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      storeJWT(res.data.token)
+      setUserData(res.data.userProfile)
+      console.log(res.data.userProfile)
+    } catch (err:any) {
+      console.error("Error fetching userData:", err);
+      // Optional: redirect to login if 401
+      if (err.response?.status === 401 || err.response?.status === 403) {
+        navigate('/');
+      }
+    }
+  };
+  
   return (
     <div className='w-full h-full'>
 
@@ -155,13 +176,17 @@ function App() {
       
       {/* Footer */}
       <div className="absolute bottom-0 left-0 w-full z-3">
-          <GameFooter OnClickInventory={()=>setModalStates((old)=>{old.inventory=true;return old;})} />
+          {userData && <GameFooter userData={userData} OnClickInventory={()=>setModalStates((old)=>{old.inventory=true;return old;})} />}
       </div>
 
       {/* Inventory modal*/}
       {!modalStates.preFight && modalStates.inventory &&   
         <div className='absolute w-full h-[65%] left-[0%] bottom-[00%] translate-[0%] z-5'>
-          <InventorySystem onClose={()=>setModalStates((old)=>{old.inventory=false;return old;})} />
+          <InventorySystem 
+            onClose={()=>setModalStates((old)=>{old.inventory=false;return old;})} 
+            // onHealthChange={(newHealth)=>{let tmp={...encounterData};tmp.user.currentHP=newHealth;setEncounterData({...tmp})}} 
+            onHealthChange={()=>{}}
+          />
         </div>
       }
 

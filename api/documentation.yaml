@@ -163,6 +163,9 @@ paths:
       responses:
         '200':
           description: Encounter started
+        'message':
+          type: string
+          description: User already has an active encounter
 
   /fight/userTurn:
     post:
