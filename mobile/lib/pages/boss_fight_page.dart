@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
 import 'package:dungeon_and_dorms/widgets/fight_footer.dart';
+import 'package:dungeon_and_dorms/widgets/inventory_modal.dart';
 import 'package:flutter/material.dart';
 // import 'package:http/http.dart' as http;
 // import '../utils/get_path.dart';
@@ -53,6 +54,7 @@ class _BossFightPageState extends State<BossFightPage>
   bool userAttackAnimating = false;
   bool enemyAttackAnimating = false;
   String damageText = '';
+  String messageText = '';
   bool diedScreen = false;
   bool runScreen = false;
 
@@ -82,10 +84,9 @@ class _BossFightPageState extends State<BossFightPage>
     super.dispose();
   }
 
-
   Future<void> startEncounter() async {
     try {
-      // final token = await fetchJWT();
+       // final token = await fetchJWT();
       // final res = await http.post(
       //   Uri.parse("${getPath()}/api/fight/startEncounter"),
       //   headers: {
@@ -115,6 +116,13 @@ class _BossFightPageState extends State<BossFightPage>
             "level": 7,
             "currentHP": 100,
             "maxHP": 100,
+            "stats": {
+              "strength": 5,
+              "dexterity": 5,
+              "intelligence": 5,
+              "charisma": 5,
+              "defense": 5,
+            },
           },
         );
         loading = false;
@@ -160,7 +168,7 @@ class _BossFightPageState extends State<BossFightPage>
           encounterData!.enemy.currentHP -= dmg;
           if (encounterData!.enemy.currentHP <= 0) {
             encounterData!.enemy.currentHP = 0;
-            diedScreen = false;
+            messageText = "Enemy Defeated!";
           }
         }
       });
@@ -169,17 +177,38 @@ class _BossFightPageState extends State<BossFightPage>
 
   Future<void> handleClickAttack() async {
     await _sendTurnAction("attack");
+    final strength = encounterData!.user['stats']['strength'] ?? 5;
+    final roll = Random().nextInt(6) + 1;
+    final dmg = roll + strength;
     _animateUserAttack(hit: true, dmg: 5);
   }
 
   Future<void> handleClickTalk() async {
     await _sendTurnAction("talk");
+    final charisma = encounterData!.user['stats']['charisma'] ?? 5;
+    final roll = Random().nextInt(20) + 1;
+    if (roll + charisma >= 20) {
+      setState(() {
+        messageText = "You charmed the enemy! They flee peacefully.";
+        encounterData!.enemy.currentHP = 0;
+      });
+    } else {
+      setState(() {
+        messageText = "Your charm failed.";
+      });
+    }
   }
 
   Future<void> handleClickRun() async {
     await _sendTurnAction("flee");
     setState(() {
       runScreen = true;
+    });
+  }
+
+  void toggleInventory() {
+    setState(() {
+      showInventory = !showInventory;
     });
   }
 
@@ -297,19 +326,43 @@ class _BossFightPageState extends State<BossFightPage>
             ),
           ),
 
+          if (messageText.isNotEmpty)
+            Positioned(
+              top: 40,
+              left: 0,
+              right: 0,
+              child: Center(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withOpacity(0.6),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    messageText,
+                    style: const TextStyle(color: Colors.white, fontSize: 18),
+                  ),
+                ),
+              ),
+            ),
+
           Positioned(
-            bottom: 20,
+            bottom: 0,
             left: 0,
             right: 0,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                ElevatedButton(onPressed: handleClickAttack, child: const Text("Attack")),
-                ElevatedButton(onPressed: handleClickTalk, child: const Text("Talk")),
-                ElevatedButton(onPressed: handleClickRun, child: const Text("Run")),
-              ],
+            child: FightFooter(
+              onClickAttack: handleClickAttack,
+              onClickTalk: handleClickTalk,
+              onClickInventory: toggleInventory,
+              onClickRun: handleClickRun,
+              userData: encounterData!.user,
             ),
           ),
+
+          if (showInventory)
+            _buildOverlayModal(
+              child: InventorySystem(onClose: toggleInventory),
+            ),
 
           if (diedScreen)
             _buildOverlayModal(
@@ -322,13 +375,7 @@ class _BossFightPageState extends State<BossFightPage>
                 ],
               ),
             ),
-          FightFooter(
-            onClickAttack: handleClickAttack,
-            onClickTalk: handleClickTalk,
-            onClickInventory: () => {}, // Add logic
-            onClickRun: handleClickRun,
-            userData: encounterData!.user,
-          ),
+
           if (runScreen)
             _buildOverlayModal(
               child: Column(

@@ -29,9 +29,9 @@ class FightFooter extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                _actionButton("/assets/img/fight.webp", "attack", onClickAttack),
-                _actionButton("/assets/img/run.png", "run", onClickRun),
-                _actionButton("/assets/img/talk.png", "talk", onClickTalk),
+                _actionButton("assets/img/fight.webp", "attack", onClickAttack),
+                _actionButton("assets/img/run.png", "run", onClickRun),
+                _actionButton("assets/img/talk.png", "talk", onClickTalk),
               ],
             ),
           ),
@@ -56,7 +56,7 @@ class FightFooter extends StatelessWidget {
                       alignment: Alignment.center,
                       transform: Matrix4.identity()..scale(-1.0, 1.0),
                       child: Image.asset(
-                        'assets/satchel.png',
+                        'assets/img/satchel.png',
                         height: 64,
                         fit: BoxFit.cover,
                       ),
@@ -80,11 +80,11 @@ class FightFooter extends StatelessWidget {
           _avatarHealth(userData),
           Row(
             children: [
-              _actionButton("/assets/fight.webp", "attack", onClickAttack),
+              _actionButton("assets/img/fight.webp", "attack", onClickAttack),
               const SizedBox(width: 10),
-              _actionButton("/assets/run.png", "run", onClickRun),
+              _actionButton("assets/img/run.png", "run", onClickRun),
               const SizedBox(width: 10),
-              _actionButton("/assets/talk.png", "talk", onClickTalk),
+              _actionButton("assets/img/talk.png", "talk", onClickTalk),
             ],
           ),
           GestureDetector(
@@ -100,7 +100,7 @@ class FightFooter extends StatelessWidget {
                 alignment: Alignment.center,
                 transform: Matrix4.identity()..scale(-1.0, 1.0),
                 child: Image.asset(
-                  'assets/satchel.png',
+                  'assets/img/satchel.png',
                   height: 80,
                   fit: BoxFit.cover,
                 ),
