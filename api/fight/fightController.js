@@ -1,7 +1,7 @@
 const User = require('../auth/authModel');
 const Boss = require('../global/Boss');
 const CommonEnemy = require('../global/CommonEnemy');
-const { handleEnemyDefeat } = require('./combatResolution');
+// const { handleEnemyDefeat } = require('./combatResolution');
 const Encounter = require('./Encounter');
 
 async function loadEntity(id, type) {
@@ -138,7 +138,6 @@ exports.levelupUser = async (req, res) => {
     user.level = user.level + 1;
 
 
-    console.log(user.Character.class);
     const newStats = applyStatGrowth(user.Character.class, user.stats, user.level);
 
     user.stats.strength = newStats.strength;
@@ -183,7 +182,7 @@ function rollD10()
 }
 
 function getPrimaryStat(stats)
-{
+{ 
     let maxVal = -Infinity;
     let primary = "strength";
 
@@ -201,8 +200,14 @@ function getPrimaryStat(stats)
 
 function rollAttack(attacker, defender) 
 {
-    const {name : primaryStatName, value: attackerStat} = getPrimaryStat(attacker.stats);
-    const defenderStat = defender.stats.defense;
+    attacker = attacker.toObject()
+    defender = defender.toObject()
+
+    const attackerStats = attacker.stats || attacker.currentStats;
+    const defenderStats = defender.stats || defender.currentStats;
+
+    const {name : primaryStatName, value: attackerStat} = getPrimaryStat(attackerStats);
+    const defenderStat = defenderStats.defense;
 
     const d20 = rollD20();
     const d10 = rollD10();
@@ -232,6 +237,9 @@ function rollAttack(attacker, defender)
         damage = Math.max(10, Math.round(damage));
     }
 
+    let attackerName = attacker.gamerTag || attacker.name
+    let defenderName = defender.gamerTag || defender.name
+
     return {
         hit,
         crit: isCrit,
@@ -240,13 +248,23 @@ function rollAttack(attacker, defender)
         totalRollNeeded: defenderStat,
         damage,
         primaryStat: primaryStatName,
-        message: isCrit ? `Critical hit! ${attacker.name} hit ${defender.name} for ${damage}!!!` : hit ? `${attacker.name} hit ${defender.name} for ${damage}` : `${attacker.name}'s attack missed completely!` 
+        message: isCrit ? `Critical hit! ${attackerName} hit ${defenderName} for ${damage}!!!` : hit ? `${attackerName} hit ${defenderName} for ${damage}` : `${attackerName}'s attack missed completely!` 
     }
 }
 
 function rollTalk(attacker, defender)
 {
-  const defenderStat = defender.stats.charisma;
+  defender = JSON.parse(JSON.stringify(defender))
+  attacker = JSON.parse(JSON.stringify(attacker))
+
+
+  let defenderCharisma = defender.stats.charisma
+  let attackerCharisma = attacker.currentStats.charisma 
+
+  let attackerName = attacker.gamerTag
+  let defenderName = defender.name
+
+  const defenderStat = defenderCharisma;
   let isCrit = 0;
   let friendshipContribution;
   const d20 = rollD20();
@@ -256,7 +274,7 @@ function rollTalk(attacker, defender)
     isCrit = 1;
   }
 
-  let success = (((d20 + attacker.stats.charisma) > defenderStat) || isCrit); //If d20 + Charisma stat > defender charisma or crit)
+  let success = (((d20 + attackerCharisma) > defenderStat) || isCrit); //If d20 + Charisma stat > defender charisma or crit)
 
   //Charisma stat + roll > defender charisma
   
@@ -267,15 +285,16 @@ function rollTalk(attacker, defender)
       friendshipContribution = friendshipContribution * 2;
   }
   else friendshipContribution = 0;
+  
 
   return {
     success: success,
     friendshipContribution : friendshipContribution,
     crit: isCrit,
     d20: d20,
-    totalRollWithModifiers: d20 + attacker.stats.charisma,
-    totalRollNeeded: defender.stats.charisma,
-    message : isCrit ? `${attacker.name} critically charmed ${defender.name} for ${friendshipContribution}!!` : success ? `${attacker.name} charmed ${defender.name} for ${friendshipContribution}!` : `${attacker.name}'s attempt to charm ${defender.name} did NOT work!!!!`
+    totalRollWithModifiers: d20 + attackerCharisma,
+    totalRollNeeded: defenderCharisma,
+    message : isCrit ? `${attackerName} critically charmed ${defenderName} for ${friendshipContribution}!!` : success ? `${attackerName} charmed ${defenderName} for ${friendshipContribution}!` : `${attacker.name}'s attempt to charm ${defender.name} did NOT work!!!!`
   }
 }
 
@@ -378,6 +397,14 @@ function rollFlee(user, enemy)
 exports.startEncounter = async (req, res) => {
   const userId = req.user.userId;
   const { enemyType, enemyId } = req.body; // Pass enemyType and enemyId from frontend
+
+  //Check for existing
+  const existingEncounter = await Encounter.findOne({ userId, isActive: true });
+  if (existingEncounter) {
+    return res.json({ message: 'User already has an active encounter' });
+  }
+
+
   // Load user
   const user = await loadEntity(userId, 'User');
   if (!user) return res.status(404).json({ error: 'User not found' });
@@ -403,7 +430,6 @@ exports.startEncounter = async (req, res) => {
     currentTurn: 'User',
     enemyFriendliness: 0, // Initial friendliness for charm attempts
   });
-
   const enemyObject = enemy.toObject();
 
   res.json({
@@ -411,7 +437,7 @@ exports.startEncounter = async (req, res) => {
     user: {
       stats: user.stats,
       maxHP: user.maxHP,
-      currentHP: user.currentHP,
+      currentHP: encounter.userHP,
       level: user.level,
     },
     enemy: {
@@ -437,7 +463,7 @@ async function userAttackLogic(encounter, user, enemy)
     encounter.currentTurn = null;
     await encounter.save();
 
-    const rewards = await handleEnemyDefeat(userId, encounter.enemyId, encounter.enemyType);
+    const rewards = await handleEnemyDefeat(user._id, encounter.enemyId, encounter.enemyType);
 
     result = {
       message : 'Enemy defeated!',
@@ -463,11 +489,109 @@ async function userAttackLogic(encounter, user, enemy)
   return result;
 }
 
+// BROUGHT FROM OTHER FILE SOMEHOW NOT FINDING IT EVEN WITH YOUR EXPORT
+async function setNextBossForUser(user) 
+{
+    const allBosses = await Boss.find({}).sort({level : 1});
+    const defeatedBosses = user.Bosses.map(id => id.toString());
+    const nextBoss = allBosses.find (b => !defeatedBosses.includes(b._id.toString()));
+
+    user.currentBoss = nextBoss ? nextBoss._id : null;
+    await user.save();
+    return nextBoss;
+}
+
+function addItemToUser(user, itemId, quantity) {
+    
+    let CurrentLoot = user.CurrentLoot
+    if (!itemId) throw new Error('Item does not exist!');
+    const existingItem = CurrentLoot.findIndex(loot => loot.itemId && loot.itemId.toString() === itemId.toString());
+
+    if (existingItem > -1) {
+        user.CurrentLoot[existingItem].quantity += quantity;    
+    } else {
+        user.CurrentLoot.push({ itemId, quantity });
+    }
+}
+
+async function handleEnemyDefeat(userId, enemyId, enemyType) {
+    const user = await loadEntity(userId, 'User');
+    const enemy = await loadEntity(enemyId, enemyType);
+    let enemyObj = enemy.toObject()
+    let levelupTrigger = false;
+
+    if (!user || !enemy) 
+    {
+        throw new Error('User or Boss not found');
+    }
+    user.Currency = user.Currency + (enemyObj.reward.gold || 0);
+    user.currentXP = user.currentXP + (enemyObj.reward.xp || 0);
+
+    if (user.currentXP >= user.toLevelUpXP)
+    {
+      levelupTrigger = true;
+    }
+
+    let rewards = 
+    {
+        gold: enemyObj.reward.gold || 0,
+        items: [],
+        xp: enemyObj.reward.xp || 0,
+        readyToLevelUp: levelupTrigger
+    };
+    
+    // Add XP TO DB
+    if(rewards.readyToLevelUp){
+      user.level+=1;
+      user.toLevelUpXP = Math.ceil(user.toLevelUpXP * 1.6);
+    }
+
+    let expSave = await user.save()
+    console.log(expSave)
+
+    if (user.Bosses.includes(enemy._id.toString())) 
+    {
+        await user.save();
+        return {rewards};
+    }
+
+    console.log(enemy.reward)
+    for (const reward of enemy.reward.items || [])
+    {
+        if (reward.itemId)
+        {
+            try {
+                console.log("HERE2")
+                addItemToUser(user, reward.itemId, reward.quantity);
+                rewards.items.push({
+                    itemId: reward.itemId._id,
+                    quantity: reward.quantity,
+                    itemType: reward.itemId.itemType,
+                    itemDescription: reward.itemId.description,
+                    itemName: reward.itemId.name
+                });
+            } catch (error) {
+                console.error(`Error adding item to user: ${error.message}`);
+            }
+        }
+    }
+    user.Bosses.push(enemy._id);
+
+    const nextBoss = await setNextBossForUser(user);
+    user.currentActiveBoss = nextBoss ? nextBoss._id : null;
+    
+    await user.save();
+    return rewards;
+}
+
+
 async function userTalkLogic(encounter, user, enemy)
 {
   const userTalk = rollTalk(user, enemy);
-  encounter.enemyFriendliness = Math.min(encounter.enemyFriendliness + userTalk.friendshipContribution, enemy.relationshipGoal);
+  enemy = enemy.toObject()
+  user = user.toObject()
 
+  encounter.enemyFriendliness = Math.min(encounter.enemyFriendliness + userTalk.friendshipContribution, enemy.relationshipGoal);
   if (encounter.enemyFriendliness >= enemy.relationshipGoal)
   {
     encounter.isActive = false;
@@ -481,7 +605,7 @@ async function userTalkLogic(encounter, user, enemy)
       postTurnEnemyHP: encounter.enemyHP,
       postTurnFriendship: encounter.enemyFriendliness,
       currentTurn: null,
-      rewards: await handleEnemyDefeat(userId, encounter.enemyId, encounter.enemyType)
+      rewards: await handleEnemyDefeat(user._id, encounter.enemyId, encounter.enemyType)
     };
   }
   
@@ -581,6 +705,7 @@ async function enemyAttackLogic(encounter, user, enemy)
     encounter.isActive = false;
     encounter.currentTurn = null;
     user.currency = Math.max(0, user.currency - 10); //Example penalty for defeat
+    
     await user.save();
     await encounter.save();
     result = 
@@ -595,7 +720,11 @@ async function enemyAttackLogic(encounter, user, enemy)
     }
   else if (encounter.userHP > 0)
   {
-    await encounter.save(); 
+    user.currentHP = encounter.userHP; //Actually update db!
+    await user.save();
+
+    await encounter.save();
+    // ADD CODE HERE FOR USER CURRENTHP 
     result = {
       message: 'Enemy attack complete',
       enemyAttack,
@@ -615,7 +744,6 @@ exports.userTurnAndEnemyResponse = async(req, res) => {
   let enemyResult;
   let foundItem = null;
   const encounter = await Encounter.findOne({userId, isActive: true});
-
   if (!encounter || encounter.currentTurn !== 'User')
     return res.status(400).json({error: 'Not the user turn or no active encounter'});
 
@@ -630,7 +758,6 @@ exports.userTurnAndEnemyResponse = async(req, res) => {
   if (action === 'attack') 
   {
     userResult = await userAttackLogic(encounter, user, enemy);
-
     if (userResult.message.includes('defeated'))
     {
       return res.json(userResult);
@@ -643,7 +770,6 @@ exports.userTurnAndEnemyResponse = async(req, res) => {
   else if (action === 'talk')
   {
     userResult = await userTalkLogic(encounter, user, enemy);
-
     if (userResult.message.includes('charmed successfully'))
     {
       return res.json(userResult);
@@ -657,25 +783,28 @@ exports.userTurnAndEnemyResponse = async(req, res) => {
       return res.json(userResult);
     }
   }
-
+  
   // After user turn, switch to enemy turn
   encounter.currentTurn = 'Enemy';
 
   enemyResult = await enemyAttackLogic(encounter, user, enemy);
+
   if (!enemyResult) 
   {
     return res.status(500).json({error: 'Error processing enemy attack'});
   }
   else if ( enemyResult.message.includes('defeated')) 
   {
-    //Handle enemy defeat logic here
-    return res.json(userResult, enemyResult);
+    //Enemy killed user RESET HP
+    user.currentHP = user.maxHP;
+    await user.save()
+
+    return res.json({userResult, enemyResult});
   }
 
   encounter.expiresAt = new Date(Date.now() + 1000 * 60 * 10); // 10 minutes from now
   encounter.currentTurn = 'User';
   await encounter.save();
-
   res.json({
     message: 'Turn complete',
     userResult,
