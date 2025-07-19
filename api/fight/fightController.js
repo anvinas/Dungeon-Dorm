@@ -397,6 +397,14 @@ function rollFlee(user, enemy)
 exports.startEncounter = async (req, res) => {
   const userId = req.user.userId;
   const { enemyType, enemyId } = req.body; // Pass enemyType and enemyId from frontend
+
+  //Check for existing
+  const existingEncounter = await Encounter.findOne({ userId, isActive: true });
+  if (existingEncounter) {
+    return res.json({ message: 'User already has an active encounter' });
+  }
+
+
   // Load user
   const user = await loadEntity(userId, 'User');
   if (!user) return res.status(404).json({ error: 'User not found' });
