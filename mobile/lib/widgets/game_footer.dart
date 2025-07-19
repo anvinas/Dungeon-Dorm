@@ -1,76 +1,60 @@
+import 'package:dungeon_and_dorms/widgets/avatar.dart';
 import 'package:flutter/material.dart';
+import '../utils/types.dart';
 
 class GameFooter extends StatelessWidget {
   final VoidCallback onClickInventory;
+  final UserProfile? userData;
 
-  const GameFooter({Key? key, required this.onClickInventory}) : super(key: key);
+  const GameFooter({
+    Key? key,
+    required this.onClickInventory,
+    this.userData,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      // equivalent to Tailwind: relative w-full h-full p-15 text-white shadow-lg
-      width: double.infinity,
-      height: double.infinity,
       padding: const EdgeInsets.all(15),
       decoration: BoxDecoration(
-        color: Colors.transparent, // background same as parent
+        color: Colors.black87,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.3),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+            color: Colors.black.withOpacity(0.4),
+            spreadRadius: 2,
+            blurRadius: 8,
+            offset: const Offset(0, -2),
           ),
         ],
       ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween, // justify-between
-        crossAxisAlignment: CrossAxisAlignment.end, // items-end
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          // Avatar (left side)
-          const Avatar(),
+          // 👤 Avatar widget placeholder
+          if (userData != null) AvatarWidget(userData: userData!),
 
-          // Inventory button (center)
+          // 🎒 Inventory button
           GestureDetector(
             onTap: onClickInventory,
             child: Container(
-              padding: const EdgeInsets.all(20), // p-5 (20px)
+              padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: Colors.red[100], // bg-red-100
-                border: Border.all(color: Colors.blue.shade500, width: 4), // border-4 border-blue-500
-                shape: BoxShape.circle, // rounded-[50%]
+                color: Colors.red[100],
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.blue.shade500, width: 4),
               ),
-              child: Transform(
+              child: Image.asset(
+                'assets/img/satchel.png',
+                height: 80,
+                fit: BoxFit.cover,
                 alignment: Alignment.center,
-                transform: Matrix4.identity()..scale(-1.0, 1.0), // scale-x-[-1]
-                child: Image.asset(
-                  'assets/img/satchel.png',
-                  height: 80, // h-20 (20 * 4 = 80px)
-                  fit: BoxFit.cover,
-                ),
               ),
             ),
           ),
 
-          // Right side placeholder
-          const SizedBox(width: 0),
+          const SizedBox(width: 50), // Empty placeholder (like the div in React)
         ],
-      ),
-    );
-  }
-}
-
-// Placeholder Avatar widget
-class Avatar extends StatelessWidget {
-  const Avatar({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return const CircleAvatar(
-      radius: 30,
-      backgroundColor: Colors.blueGrey,
-      child: Text(
-        'A',
-        style: TextStyle(fontSize: 24, color: Colors.white),
       ),
     );
   }

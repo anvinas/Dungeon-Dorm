@@ -1,15 +1,68 @@
+import 'dart:math' as math;
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
-import 'dart:math' as math;
+import 'package:geolocator/geolocator.dart';
+import 'package:http/http.dart' as http;
 
-// Import your custom widgets
-import '../widgets/quest_data.dart'; // This file primarily defines QuestIcon, not QuestData class itself
 import '../widgets/prefight_modal.dart';
-import '../widgets/inventory_modal.dart'; // Now refers to InventorySystem
+import '../widgets/inventory_modal.dart';
 import '../widgets/game_footer.dart';
-import '../utils/types.dart'; // Assumed to contain QuestData and QUESTZONE
+import '../widgets/quest_data.dart';
+import '../utils/types.dart';
+import '../utils/jwt_storage.dart';
+import '../utils/get_path.dart';
 
+final List<QuestData> QUESTZONE = [
+  QuestData(
+  id: '3',
+  name: 'Library of Whispers',
+  species: 'Specter',
+  characterClass: 'Phantom Mage',
+  maxHP: 120,
+  relationshipGoal: 3,
+  stats: UserStats(
+    strength: 6,
+    dexterity: 8,
+    intelligence: 18,
+    charisma: 10,
+    defense: 5,
+  ),
+  reward: QuestReward(
+    gold: 50,
+    xp: 150,
+    items: [
+      RewardItem(itemId: 'potion001', quantity: 1),
+      RewardItem(itemId: 'spellbook001', quantity: 1),
+    ],
+  ),
+  level: 3,
+  location: QuestLocation(
+    sceneName: 'Haunted Library',
+    description: 'A forgotten archive filled with ancient tomes and spectral secrets.',
+    environmentTags: ['indoor', 'mystic', 'dark'],
+    latitude: 28.6025,
+    longitude: -81.1990,
+  ),
+  dialogues: QuestDialogues(
+    ifNotUnlocked: 'You are not yet attuned to this place.',
+    preFightMain: ['The books whisper warnings...', 'You feel an unseen presence.'],
+    bossFightSuccess: ['The whispers fade. You are victorious.'],
+    bossFightFail: ['The library consumes another soul.'],
+    userFightSuccess: ['Your magic sears through the specter!'],
+    userFightFail: ['Your spell fizzles...'],
+    userTalkSuccess: ['You commune with the spirit peacefully.'],
+    userTalkFail: ['It shrieks in rage!'],
+    userHideSuccess: ['You blend into the shadows.'],
+    userHideFail: ['You knock over a bookstand. It notices you.'],
+    death: 'The last thing you hear is a whisper... then nothing.',
+    relationshipGain: 'The specter acknowledges your understanding.',
+    win: 'The knowledge of the past is now yours.',
+  ),
+  enemyType: 'ghost',
+),
+];
 class GameMapPage extends StatefulWidget {
   const GameMapPage({Key? key}) : super(key: key);
 
@@ -17,20 +70,25 @@ class GameMapPage extends StatefulWidget {
   State<GameMapPage> createState() => _GameMapPageState();
 }
 
-class _GameMapPageState extends State<GameMapPage> with TickerProviderStateMixin {
+class _GameMapPageState extends State<GameMapPage>
+    with TickerProviderStateMixin {
   late final MapController _mapController;
-  LatLng _userLocation = LatLng(28.6016, -81.2005); // Default to UCF
-  bool _showInventory = false;
-  bool _showPrefight = false;
-  QuestData? _currentQuest; // Holds the quest data for the modal
-
+  LatLng _userLocation = const LatLng(28.6016, -81.2005);
+  double _zoom = 18.0;
   double _pulse = 1.0;
-  late AnimationController _pulseController;
+
+  bool _inventoryModal = false;
+  bool _preFightModal = false;
+  QuestData? _currentQuest;
+  UserProfile? _userProfile;
+
+  late final AnimationController _pulseController;
 
   @override
   void initState() {
     super.initState();
     _mapController = MapController();
+
     _pulseController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 2),
@@ -42,192 +100,199 @@ class _GameMapPageState extends State<GameMapPage> with TickerProviderStateMixin
       });
     });
 
-    // Optional: Initialize real-time location (requires geolocator and flutter_map_location_marker)
-    // _initLocationService();
+    _fetchLocation();
+    _fetchUserData();
+  }
+
+  Future<void> _fetchLocation() async {
+    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) return;
+
+    LocationPermission permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) return;
+    }
+
+    final position = await Geolocator.getCurrentPosition();
+    setState(() {
+      _userLocation = LatLng(position.latitude, position.longitude);
+    });
+  }
+
+  Future<void> _fetchUserData() async {
+    try {
+      final token = await fetchJWT();
+      final response = await http.get(
+        Uri.parse('${getPath()}/api/auth/profile'),
+        headers: {'Authorization': 'Bearer $token'},
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final userData = UserProfile.fromJson(data['userProfile']);
+        await storeJWT(data['token']);
+        setState(() {
+          _userProfile = userData;
+        });
+      } else if (response.statusCode == 401 || response.statusCode == 403) {
+        if (context.mounted) Navigator.pushReplacementNamed(context, '/');
+      }
+    } catch (e) {
+      print('Failed to fetch user: $e');
+    }
   }
 
   @override
   void dispose() {
     _pulseController.dispose();
-    _mapController.dispose(); // Dispose map controller
     super.dispose();
   }
 
-  // Function to convert meters to pixels at a given latitude and zoom level
   double metersToPixelsAtLatitude(double meters, double latitude, double zoom) {
-    const double earthCircumference = 40075017; // Earth's circumference in meters
+    const double earthCircumference = 40075017;
     final latitudeRadians = latitude * math.pi / 180;
-    // Calculate meters per pixel at the current zoom level and latitude
     final metersPerPixel =
         earthCircumference * math.cos(latitudeRadians) / math.pow(2, zoom + 8);
     return meters / metersPerPixel;
   }
 
-  void _openQuestModal(QuestData quest) {
+  void _handleClickQuest(QuestData quest) {
     setState(() {
       _currentQuest = quest;
-      _showPrefight = true;
+      _preFightModal = true;
     });
   }
 
-  // Optional: Function to initialize location service for real-time user location
-  // Future<void> _initLocationService() async {
-  //   // Example using geolocator package
-  //   LocationPermission permission = await Geolocator.requestPermission();
-  //   if (permission == LocationPermission.denied || permission == LocationPermission.deniedForever) {
-  //     // Handle permission denial
-  //     return;
-  //   }
-  //
-  //   Geolocator.getPositionStream(locationSettings: LocationSettings(accuracy: LocationAccuracy.high))
-  //       .listen((Position position) {
-  //     setState(() {
-  //       _userLocation = LatLng(position.latitude, position.longitude);
-  //       // Optionally move map to user location
-  //       // _mapController.move(_userLocation, _mapController.zoom);
-  //     });
-  //   });
-  // }
+  Widget _buildMap(double radiusPixels, double playerMarkerSize) {
+    return FlutterMap(
+      mapController: _mapController,
+      options: MapOptions(
+        initialCenter: _userLocation,
+        initialZoom: _zoom,
+        maxZoom: 18,
+        minZoom: 10,
+        onMapEvent: (event) {
+          if (event is MapEventMove) {
+            final newZoom = event.camera.zoom;
+            if (newZoom != _zoom) {
+              setState(() {
+                _zoom = newZoom;
+              });
+            }
+          }
+        },
+      ),
+      children: [
+        TileLayer(
+          urlTemplate:
+              'https://api.maptiler.com/maps/streets-v2/{z}/{x}/{y}.png?key=6tt8Z9sB8XXEvl0jd1gY',
+          userAgentPackageName: 'com.example.app',
+        ),
+        MarkerLayer(markers: [
+          Marker(
+            point: _userLocation,
+            width: playerMarkerSize,
+            height: playerMarkerSize,
+            child: Image.asset(
+              'assets/img/playableCharacter/warlock/back.png',
+              fit: BoxFit.contain,
+            ),
+          ),
+        ]),
+        MarkerLayer(
+          markers: QUESTZONE.map((quest) {
+            return Marker(
+              point: LatLng(
+                quest.location.latitude,
+                quest.location.longitude,
+              ),
+              width: 80,
+              height: 92,
+              child: QuestIcon(
+                zoom: _zoom,
+                questData: quest,
+                onClick: () => _handleClickQuest(quest),
+              ),
+            );
+          }).toList(),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildModalBarrier({required Widget child, required VoidCallback onTap}) {
+    return Positioned.fill(
+      child: Stack(
+        children: [
+          GestureDetector(
+            onTap: onTap,
+            child: AbsorbPointer(
+              absorbing: true,
+              child: Container(color: Colors.black54),
+            ),
+          ),
+          Center(child: child),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
-    // Define zoom level as a constant or a state variable if it needs to change
-    final double zoom = 17.0;
-    final double questDetectionRadiusMeters = 50; // Radius for quest interaction in meters
-
-    // Calculate the radius in pixels, incorporating the pulse animation
-    final double radiusPixels = metersToPixelsAtLatitude(
-          questDetectionRadiusMeters,
+    const radiusMeters = 50.0;
+    final radiusPixels = metersToPixelsAtLatitude(
+          radiusMeters,
           _userLocation.latitude,
-          zoom,
-        ) * _pulse;
-
-    // Define a constant for player marker size
-    final double playerMarkerSize = zoom * 6; // Example size, adjust as needed
+          _zoom,
+        ) *
+        _pulse;
+    final playerMarkerSize = _zoom * 6;
 
     return Scaffold(
       body: Stack(
         children: [
-          FlutterMap(
-            mapController: _mapController,
-            options: MapOptions(
-              initialCenter: _userLocation,
-              initialZoom: zoom,
-              maxZoom: 18,
-              minZoom: 10,
-              // Optional: Add onTap to interact with map
-              // onTap: (tapPosition, latLng) {
-              //   print('Map tapped at: $latLng');
-              // },
-            ),
-            children: [ // Use `children` instead of `layers` for FlutterMap
-              TileLayer( // Use TileLayer instead of TileLayerOptions
-                urlTemplate:
-                    'https://api.maptiler.com/maps/streets-v2/{z}/{x}/{y}.png?key=6tt8Z9sB8XXEvl0jd1gY',
-                userAgentPackageName: 'com.example.app',
-                // Optional: attributionBuilder
-                // attributionBuilder: (_) {
-                //   return const Text("© OpenStreetMap contributors");
-                // },
-              ),
-              // If you're using flutter_map_location_marker, you'd add it here:
-              // CurrentLocationLayer(),
-             MarkerLayer( // Use MarkerLayer instead of MarkerLayerOptions
-              markers: [
-                Marker(
-                  point: _userLocation,
-                  width: playerMarkerSize,
-                  height: playerMarkerSize,
-                  child: Image.asset( // Changed 'builder' back to 'child'
-                    'assets/img/playableCharacter/warlock/back.png',
-                    fit: BoxFit.contain,
-                  ),
+          Stack(
+            children: [
+              _buildMap(radiusPixels, playerMarkerSize),
+              Positioned.fill(
+                child: CustomPaint(
+                  painter: HotzoneCirclePainter(radiusPixels),
                 ),
-              ],
-            ),
-              MarkerLayer( // Quest markers
-                markers: QUESTZONE.map((quest) {
-                  return Marker(
-                    point: LatLng(
-                      quest.location.latitude,
-                      quest.location.longitude,
-                    ),
-                    width: 40, // Consistent size for quest icons
-                    height: 40,
-                    child: GestureDetector(
-                      onTap: () => _openQuestModal(quest),
-                        child: QuestIcon(
-                         zoom: zoom,
-                         questData: quest,
-                         onClick: () => _openQuestModal(quest),
-                       ),
-                    ),
-                  );
-                }).toList(),
-              ),
-              CircleLayer( // Use CircleLayer instead of CircleLayerOptions
-                circles: QUESTZONE.map((quest) {
-                  Color color;
-                  switch (quest.difficulty) {
-                    case 1:
-                      color = const Color(0xFFE07B7B); // Reddish
-                      break;
-                    case 2:
-                      color = const Color(0xFF9B59B6); // Purple
-                      break;
-                    case 3:
-                      color = const Color(0xFFF39C12); // Orange
-                      break;
-                    default:
-                      color = Colors.black; // Default color for undefined difficulty
-                  }
-                  return CircleMarker(
-                    point: LatLng(quest.location.latitude, quest.location.longitude),
-                    color: color.withOpacity(0.5), // Semi-transparent
-                    radius: radiusPixels, // Dynamic radius based on pulse
-                    // Optional: border settings for the circle
-                    // useRadiusInMeter: true, // If radius is in meters directly
-                    // borderColor: color,
-                    // borderWidth: 2,
-                  );
-                }).toList(),
               ),
             ],
           ),
 
-          // Inventory Modal (Now using InventorySystem)
-          if (_showInventory)
-            InventorySystem( // Changed from InventoryModal to InventorySystem
-              onClose: () {
-                setState(() {
-                  _showInventory = false;
-                });
-              },
+          if (_inventoryModal && !_preFightModal)
+            _buildModalBarrier(
+              onTap: () => setState(() => _inventoryModal = false),
+              child: InventorySystem(
+                onClose: () => setState(() => _inventoryModal = false),
+              ),
             ),
 
-          // PreFight Modal
-          if (_showPrefight && _currentQuest != null)
-            PrefightModal(
-              questData: _currentQuest, // Renamed 'quest' to 'questData' to match PrefightModal
-              onClickFight: () {
-                Navigator.pushNamed(context, '/bossfight', arguments: _currentQuest);
-              },
-              onClickExit: () { // Renamed 'onExit' to 'onClickExit' to match PrefightModal
-                setState(() {
-                  _showPrefight = false;
-                });
-              },
+          if (_preFightModal && _currentQuest != null)
+            _buildModalBarrier(
+              onTap: () => setState(() => _preFightModal = false),
+              child: PrefightModal(
+                questData: _currentQuest!,
+                onClickFight: () {
+                  Navigator.pushNamed(
+                    context,
+                    '/bossfight',
+                    arguments: _currentQuest,
+                  );
+                  setState(() => _preFightModal = false);
+                },
+                onClickExit: () => setState(() => _preFightModal = false),
+              ),
             ),
 
-          // Footer
           Align(
             alignment: Alignment.bottomCenter,
             child: GameFooter(
-              onClickInventory: () { // Renamed 'onInventoryPressed' to 'onClickInventory' to match GameFooter
-                setState(() {
-                  _showInventory = true;
-                });
-              },
+              userData: _userProfile,
+              onClickInventory: () => setState(() => _inventoryModal = true),
             ),
           ),
         ],
@@ -236,5 +301,35 @@ class _GameMapPageState extends State<GameMapPage> with TickerProviderStateMixin
   }
 }
 
+class HotzoneCirclePainter extends CustomPainter {
+  final double radiusPixels;
+  HotzoneCirclePainter(this.radiusPixels);
 
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    for (final zone in HOTZONES) {
+      final color = switch (zone['difficulty']) {
+        1 => const Color(0xFFE07B7B),
+        2 => const Color(0xFF9B59B6),
+        3 => const Color(0xFFF39C12),
+        _ => Colors.black,
+      };
 
+      final paint = Paint()
+        ..color = color.withOpacity(0.5)
+        ..style = PaintingStyle.fill;
+
+      canvas.drawCircle(center, radiusPixels, paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
+}
+
+const HOTZONES = [
+  {'difficulty': 1, 'lat': 28.6016, 'lng': -81.2005},
+  {'difficulty': 2, 'lat': 28.6016, 'lng': -81.1960},
+  {'difficulty': 3, 'lat': 28.6080, 'lng': -81.1970},
+];

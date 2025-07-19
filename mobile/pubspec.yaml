@@ -28,6 +28,12 @@ flutter:
   assets:
     - assets/login/
     - assets/img/
+    - assets/img/boss/andrea/
+    - assets/img/boss/shaq/
+    - assets/img/boss/gabriel/
+    - assets/img/boss/narrator/
+    - assets/img/boss/dave/
+    - assets/img/boss/adrian/
     - assets/gif/
 
 
