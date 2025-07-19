@@ -15,6 +15,7 @@ function BossFightPage() {
   // const [questData, setQuestData] = useState<QuestData_T | null>(foundQuestData);
   const [encounterData, setEncounterData] = useState<Encounter_T | null>(null);
   const [currentCharm, setCurrentCharm] = useState<number>(0);
+  const [rewardsXP,setRewardsXP] = useState<number>(-1)
 
   //ANIMATIONS
   const [userMoveData, setUserMoveData] = useState<null|any>(null);
@@ -98,7 +99,7 @@ function BossFightPage() {
 
   
   const handleAnimationsAfterAttack = (userAttackResponseData:userAttackTurnReturn_T)=>{
-    let attackObjPlayer = userAttackResponseData.userResult.userAttack || userAttackResponseData.userAttack
+    let attackObjPlayer = userAttackResponseData.userAttack || userAttackResponseData.userResult.userAttack 
     let bossResponse = userAttackResponseData.enemyResult
 
     let bossAnimationObg = {damage:"MISS",responded:false}
@@ -173,8 +174,12 @@ function BossFightPage() {
       }
     }
 
+    console.log(userAttackResponseData.postTurnEnemyHP)
+
     // If defeated Enemy first
     if(userAttackResponseData.postTurnEnemyHP <= 0){
+      console.log(userAttackResponseData.rewards.rewards)
+      setRewardsXP(userAttackResponseData.rewards.rewards.xp)
       newEncounerObj.user.currentHP = userAttackResponseData.postTurnUserHP
       setModalStates((old)=>{let tmp={...old};tmp.wonScreen=true;return {...tmp}})
       setEncounterData({...newEncounerObj})
@@ -409,7 +414,7 @@ function BossFightPage() {
       {/* MODALS */}
       {/* Inventory modal*/}
       {modalStates.inventory &&   
-        <div className='absolute w-full h-[65%] left-[0%] bottom-[00%] translate-[0%] z-100'>
+        <div className='absolute w-full h-[100%] md:h-[65%] left-[0%] bottom-[00%] translate-[0%] z-100'>
           <InventorySystem 
             onHealthChange={(newHealth)=>{let tmp={...encounterData};tmp.user.currentHP=newHealth;setEncounterData({...tmp})}} 
             onClose={()=>setModalStates((old)=>{let temp ={...old}; temp.inventory=false;return temp;})} 
@@ -449,6 +454,12 @@ function BossFightPage() {
       {modalStates.AnimatedCharmScreen && lastCharmValue &&
         <div className='absolute w-screen h-screen left-[0%] top-[0%] translate-[0%] z-101'>
           <CharmedActivatedScreen value={lastCharmValue} />
+        </div>
+      }
+      
+      {modalStates.wonScreen && 
+       <div className='absolute w-screen h-screen left-[0%] top-[0%] translate-[0%] z-101'>
+          <WonScreenModal xp={rewardsXP} onClickLeave={()=>navigate("/play")}/>
         </div>
       }
 
@@ -507,6 +518,7 @@ function BossFightPage() {
 
         {/* Footer Container */}
         <div className="absolute bottom-0 left-0 w-full z-3">
+          
           <FightFooter
             OnClickInventory={() =>
               setModalStates((old) => ({ ...old, inventory: true }))
@@ -556,6 +568,15 @@ const CharmedcreenModal = ({onClickLeave}:{onClickLeave:()=>void})=>{
 )
 }
 
+const WonScreenModal = ({onClickLeave,xp}:{xp:number;onClickLeave:()=>void})=>{
+  return(
+  <div className="w-full h-full bg-[#000000db] flex items-center flex-col justify-center gap-3">
+    <div className="text-green-700 font-bold text-7xl">Succesfully Beat The Boss!</div>
+    <div className="text-white font-bold text-xl">Good Job! You've received 10 gold coins and {xp} XP!</div>
+    <div className="text-white font-bold text-xl bg-purple-800 p-2 rounded-lg hover:bg-purple-700 cursor-pointer" onClick={()=>onClickLeave()}>Leave Area</div>
+  </div>
+)
+}
 
 const CurrentMoveScreen = ({
   diceRoll20,

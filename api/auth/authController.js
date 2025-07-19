@@ -4,6 +4,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const nodemailer = require('nodemailer');
+const createToken = require('../global/refreshToken');
 
 // --- NEW: Function to dynamically create and return the transporter ---
 function getTransporter() {
@@ -203,8 +204,8 @@ exports.findUserProfile = async (req, res) =>
         if (!userProfile) {
             return res.status(404).json({error: "User profile not found."});
         }
-
-        res.json({ userProfile });
+         const newToken = createToken(userId)   
+        res.json({ userProfile ,token:newToken});
     }
     catch (err)
     {

@@ -22,7 +22,7 @@ function AvatarHealth({
     <div className="relative h-fit">
       <div className="flex items-end gap-1">
         {/* Head */}
-        <div className="h-30 w-30 rounded-full bg-gradient-to-br from-blue-600 to-blue-400 shadow-md p-1">
+        <div className="h-[20vw] w-[20vw] md:h-[10vw] md:w-[10vw] rounded-full bg-gradient-to-br from-blue-600 to-blue-400 shadow-md p-1">
           <div className="h-full w-full rounded-full overflow-hidden border-4 border-blue-700 bg-purple-100">
             <img
               src="/assets/playableCharacter/warlock/head.png"
@@ -33,7 +33,7 @@ function AvatarHealth({
           </div>
         </div>
 
-        <div style={{WebkitTextStroke: '2px black',}} className="pb-5 font-bold text-4xl">{userData.currentHP}/{userData.maxHP} hp</div>
+        <div style={{WebkitTextStroke: '2px black',}} className="pb-5 font-bold text-[1.3rem] md:text-[3rem] ">{userData.currentHP}/{userData.maxHP} hp</div>
       </div>
       
 

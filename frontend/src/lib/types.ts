@@ -32,6 +32,7 @@ export type TurnResult_T =
     };
 
 export interface userAttackTurnReturn_T {
+  rewards: any;
   userAttack: AttackResult_T;
   postTurnUserHP: number;
   postTurnEnemyHP: number;

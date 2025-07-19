@@ -1,6 +1,7 @@
 const User = require('../auth/authModel');
 const Boss = require('../global/Boss');
 const CommonEnemy = require('../global/CommonEnemy');
+const createToken = require('../global/refreshToken');
 // const { handleEnemyDefeat } = require('./combatResolution');
 const Encounter = require('./Encounter');
 
@@ -559,7 +560,7 @@ async function handleEnemyDefeat(userId, enemyId, enemyType) {
     };
     
     // Add XP TO DB
-    if(rewards.readyToLevelUp){
+    if(rewards.readyToLevelUp && user.level < 10){
       user.level+=1;
       user.toLevelUpXP = Math.ceil(user.toLevelUpXP * 1.6);
     }
@@ -823,10 +824,12 @@ exports.userTurnAndEnemyResponse = async(req, res) => {
   encounter.expiresAt = new Date(Date.now() + 1000 * 60 * 10); // 10 minutes from now
   encounter.currentTurn = 'User';
   await encounter.save();
+  let newToken = createToken(userId)
   res.json({
     message: 'Turn complete',
     userResult,
     enemyResult,
+    token:newToken
   });
 
 }

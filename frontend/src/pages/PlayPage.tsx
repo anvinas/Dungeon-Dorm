@@ -181,7 +181,7 @@ const fetchUserData = async () => {
 
       {/* Inventory modal*/}
       {!modalStates.preFight && modalStates.inventory &&   
-        <div className='absolute w-full h-[65%] left-[0%] bottom-[00%] translate-[0%] z-5'>
+        <div className='absolute w-full h-[100%] md:h-[65%] left-[0%] bottom-[00%] translate-[0%] z-5'>
           <InventorySystem 
             onClose={()=>setModalStates((old)=>{old.inventory=false;return old;})} 
             // onHealthChange={(newHealth)=>{let tmp={...encounterData};tmp.user.currentHP=newHealth;setEncounterData({...tmp})}} 
@@ -192,7 +192,7 @@ const fetchUserData = async () => {
 
       {/* PreFight modal*/}
       {modalStates.preFight && currentQuestData &&   
-        <div className='absolute w-[60%] left-[50%] top-[50%] translate-[-50%] z-5'>
+        <div className='absolute w-[100vw] md:w-[60%] h-[100%] md:h-fit left-[50%] top-[50%] translate-[-50%] z-5 '>
           <PrefightModal questData={currentQuestData} onClickFight={()=>{navigate(`/bossfight?_id=${currentQuestData._id.$oid}`)}} onClickExit={()=>{setModalStates(old => ({ ...old, preFight: false }))}}/>
         </div>
       }
