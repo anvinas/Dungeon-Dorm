@@ -33,3 +33,44 @@
   50%  { transform: translateY(-10px); }
   100% { transform: translateY(0); }
 }
+
+.lungeAnimation {
+  animation: lunge 0.4s ease-in-out ;
+}
+
+
+.lungeAnimationLeft {
+  animation: lungeLeft 0.4s ease-in-out ;
+}
+
+@keyframes lungeLeft {
+  0%   { transform: translateX(0); }
+  30%  { transform: translateX(-50px); }
+  100% { transform: translateX(0); }
+}
+
+@keyframes lunge {
+  0%   { transform: translateX(0); }
+  30%  { transform: translateX(50px); }
+  100% { transform: translateX(0); }
+}
+
+@keyframes beat {
+  0%, 100% {
+    transform: scale(1);
+  }
+  25% {
+    transform: scale(1.1);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  75% {
+    transform: scale(1.1);
+  }
+}
+
+.beatingHeart {
+  animation: beat 1s infinite;
+  transform-origin: center;
+}

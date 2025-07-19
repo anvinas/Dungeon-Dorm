@@ -72,6 +72,12 @@ exports.registerUser = async (req, res) => {
             return res.status(400).json({error : "More data required (gamerTag, email, password)"});
         }
 
+        // Password strength check: 5+ chars, 1 number, 1 special char
+        const passwordRegex = /^(?=.*[0-9])(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{5,}$/;
+        if (!passwordRegex.test(password)) {
+            return res.status(400).json({ error: "Password must be at least 5 characters long and include a number and a symbol (!, @, etc.)" });
+        }
+
         const existingUser = await User.findOne({$or: [{email}, {gamerTag}]});
         if(existingUser) return res.status(400).json({error : "Email or gamerTag already in use"});
 
@@ -308,7 +314,13 @@ exports.resetPassword = async (req, res) => {
     if (!token || !newPassword) {
         return res.status(400).json({ error: 'Token and new password are required.' });
     }
-
+    
+    // Password strength check: 5+ chars, 1 number, 1 special char
+    const passwordRegex = /^(?=.*[0-9])(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{5,}$/;
+    if (!passwordRegex.test(newPassword)) {
+        return res.status(400).json({ error: "Password must be at least 5 characters long and include a number and a symbol (!, @, etc.)" });
+    }
+    
     try {
         // Find user by the reset token and ensure it's not expired
         const user = await User.findOne({

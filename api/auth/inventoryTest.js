@@ -17,7 +17,6 @@ exports.findAll = async (req, res) => {
 // POST /inventory - Create new inventory item
 exports.create = async (req, res) => {
     try {
-        console.log("here")
         const { name, healthAmount, description } = req.body;
 
         if (!name) {
