@@ -11,6 +11,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_map: ^8.1.1
+  geolocator: ^14.0.2
   mobile: ^1.2.1
   shared_preferences: ^2.5.3
 
@@ -24,5 +26,15 @@ flutter:
   uses-material-design: true
 
   assets:
-    - assets/pixel_bg2.png
-    - assets/wood_texture2.png
+    - assets/login/
+    - assets/img/
+    - assets/img/boss/andrea/
+    - assets/img/boss/shaq/
+    - assets/img/boss/gabriel/
+    - assets/img/boss/narrator/
+    - assets/img/boss/dave/
+    - assets/img/boss/adrian/
+    - assets/img/backgrounds/
+    - assets/gif/
+
+

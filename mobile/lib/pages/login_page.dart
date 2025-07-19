@@ -21,7 +21,7 @@ class _LoginPageState extends State<LoginPage> {
           // Background image
           SizedBox.expand(
             child: Image.asset(
-              'assets/pixel_bg2.png',
+              'assets/login/pixel_bg2.png',
               fit: BoxFit.cover,
             ),
           ),
@@ -35,7 +35,7 @@ class _LoginPageState extends State<LoginPage> {
                   alignment: Alignment.center,
                   children: [
                     Image.asset(
-                      'assets/wood_texture2.png',
+                      'assets/login/wood_texture2.png',
                       height: 150,
                     ),
                     Positioned(
@@ -70,7 +70,7 @@ class _LoginPageState extends State<LoginPage> {
 
           // Modals
           if (loginModalOpen)
-            LoginModal(onClose: () => setState(() => loginModalOpen = false)),
+            LoginModal(onClose: () => setState(() => loginModalOpen = false), isOpen: true,),
           if (signupModalOpen)
             SignupModal(onClose: () => setState(() => signupModalOpen = false)),
         ],
