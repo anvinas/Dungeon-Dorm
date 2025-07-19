@@ -398,11 +398,6 @@ exports.startEncounter = async (req, res) => {
   const userId = req.user.userId;
   const { enemyType, enemyId } = req.body; // Pass enemyType and enemyId from frontend
 
-  //Check for existing
-  const existingEncounter = await Encounter.findOne({ userId, isActive: true });
-  if (existingEncounter) {
-    return res.json({ message: 'User already has an active encounter' });
-  }
 
 
   // Load user
@@ -420,6 +415,30 @@ exports.startEncounter = async (req, res) => {
   }
   if (!enemy) return res.status(404).json({ error: 'Enemy not found' });
 
+  const enemyObject = enemy.toObject();
+
+  //Check for existing
+  const existingEncounter = await Encounter.findOne({ userId, isActive: true });
+  if (existingEncounter) {
+    return res.json({
+    message: 'Encounter already exists for this user',
+    user: {
+      stats: user.stats,
+      maxHP: user.maxHP,
+      currentHP: existingEncounter.userHP,
+      level: user.level,
+    },
+    enemy: {
+      stats: enemyObject.stats,
+      relationshipGoal: enemyObject.relationshipGoal,
+      maxHP: enemyObject.maxHP,
+      currentHP: existingEncounter.enemyHP,
+      name: enemyObject.name,
+    },
+    currentTurn: existingEncounter.currentTurn,
+  });
+  }
+
   // Create encounter
   const encounter = await Encounter.create({
     userId,
@@ -430,7 +449,6 @@ exports.startEncounter = async (req, res) => {
     currentTurn: 'User',
     enemyFriendliness: 0, // Initial friendliness for charm attempts
   });
-  const enemyObject = enemy.toObject();
 
   res.json({
     message: 'Encounter started!',
