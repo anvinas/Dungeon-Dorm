@@ -338,13 +338,24 @@ class _GameMapPageState extends State<GameMapPage>
   Future<void> _fetchLocation() async {
   try {
     bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) return;
+    if (!serviceEnabled) {
+      print('Location services disabled. Playing without location.');
+      return; // fallback will be used
+    }
 
     LocationPermission permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied) return;
+      if (permission == LocationPermission.denied) {
+        print('Permission denied. Playing without location.');
+        return;
+      }
     }
+
+    final position = await Geolocator.getCurrentPosition();
+    setState(() {
+      _userLocation = LatLng(position.latitude, position.longitude);
+    });
 
     Geolocator.getPositionStream(
       locationSettings: const LocationSettings(
@@ -358,15 +369,13 @@ class _GameMapPageState extends State<GameMapPage>
         });
       }
     });
-
-    final position = await Geolocator.getCurrentPosition();
-    setState(() {
-      _userLocation = LatLng(position.latitude, position.longitude);
-    });
   } catch (e) {
     print('Location error: $e');
+    print('Using default fallback location.');
+    // no need to call setState because default _userLocation is already set
   }
 }
+
 
 
   Future<void> _fetchUserData() async {
@@ -454,25 +463,25 @@ class _GameMapPageState extends State<GameMapPage>
     String imagePath;
     switch (quest.enemyType) {
       case 'ghost':
-        imagePath = 'assets/img/boss/rogue/pixel.png';
+        imagePath = 'assets/img/boss/andrea/pixel.png';
         break;
       case 'orc':
-        imagePath = 'assets/img/boss/rogue/pixel.png';
+        imagePath = 'assets/img/boss/andrea/pixel.png';
         break;
       case 'dragon':
-        imagePath = 'assets/img/boss/rogue/pixel.png';
+        imagePath = 'assets/img/boss/andrea/pixel.png';
         break;
       case 'elf':
-        imagePath = 'assets/img/boss/rogue/pixel.png';
+        imagePath = 'assets/img/boss/andrea/pixel.png';
         break;
       case 'blue_imp':
-        imagePath = 'assets/img/boss/rogue/pixel.png';
+        imagePath = 'assets/img/boss/andrea/pixel.png';
         break;
       case 'gothic_priestess':
-        imagePath = 'assets/img/boss/rogue/pixel.png';
+        imagePath = 'assets/img/boss/andrea/pixel.png';
         break;
       default:
-        imagePath = 'assets/img/boss/rogue/pixel.png';
+        imagePath = 'assets/img/boss/andrea/pixel.png';
     }
 
     return GestureDetector(
@@ -552,7 +561,6 @@ class _GameMapPageState extends State<GameMapPage>
           );
         }).toList(),
       ),
-      // ✅ Player marker moved here
       MarkerLayer(
         markers: [
           Marker(
@@ -704,10 +712,13 @@ class _GameMapPageState extends State<GameMapPage>
             children: [
               _buildMap(),
               Positioned.fill(
-                child: CustomPaint(
-                  painter: HotzoneCirclePainter(radiusPixels, _userLocation, _zoom), // Pass user location and zoom
+                child: IgnorePointer(
+                  child: CustomPaint(
+                    painter: HotzoneCirclePainter(radiusPixels, _userLocation, _zoom),
+                  ),
                 ),
               ),
+
             ],
           ),
 
