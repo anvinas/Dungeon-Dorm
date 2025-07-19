@@ -10,7 +10,6 @@ type LoginData = {
   gamerTag: string;
   email: string;
   password: string; 
-  showPassword:boolean
 };
 
 type SignupModalProps = {
@@ -32,7 +31,6 @@ function SignupModal({onClickClose,isOpen}:SignupModalProps) {
     gamerTag:"",
     email:"",
     password:"",
-    showPassword:false
   })
 
 
