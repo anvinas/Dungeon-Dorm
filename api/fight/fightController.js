@@ -538,6 +538,7 @@ async function handleEnemyDefeat(userId, enemyId, enemyType) {
     const enemy = await loadEntity(enemyId, enemyType);
     let enemyObj = enemy.toObject()
     let levelupTrigger = false;
+    let newStats;
 
     if (!user || !enemy) 
     {
@@ -563,6 +564,13 @@ async function handleEnemyDefeat(userId, enemyId, enemyType) {
     if(rewards.readyToLevelUp && user.level < 10){
       user.level+=1;
       user.toLevelUpXP = Math.ceil(user.toLevelUpXP * 1.6);
+      newStats = applyStatGrowth(user.Character.class, user.stats, user.level);
+      user.stats.strength = newStats.strength;
+      user.stats.dexterity = newStats.dexterity;
+      user.stats.intelligence = newStats.intelligence;
+      user.stats.charisma = newStats.charisma;
+      user.maxHP = newStats.maxHP;
+      user.currentHP = newStats.maxHP; // currentHP exists in the database, should be removed but fine for now
     }
 
     let expSave = await user.save()
@@ -598,16 +606,6 @@ async function handleEnemyDefeat(userId, enemyId, enemyType) {
 
     const nextBoss = await setNextBossForUser(user);
     user.currentActiveBoss = nextBoss ? nextBoss._id : null;
-
-
-    const newStats = applyStatGrowth(user.Character.class, user.stats, user.level);
-    user.stats.strength = newStats.strength;
-    user.stats.dexterity = newStats.dexterity;
-    user.stats.intelligence = newStats.intelligence;
-    user.stats.charisma = newStats.charisma;
-    user.maxHP = newStats.maxHP;
-    user.currentHP = newStats.maxHP; // currentHP exists in the database, should be removed but fine for now
-    
     
     await user.save();
     return rewards;
