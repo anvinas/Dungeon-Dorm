@@ -38,6 +38,13 @@ function SignupModal({onClickClose,isOpen}:SignupModalProps) {
     let hasErrors= false;
     setError("")
     
+    const passwordRegex = /^(?=.*[0-9])(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{5,}$/;
+
+    if (!passwordRegex.test(signupData.password)) {
+      setError("Password must be at least 5 characters long and include a number and a symbol.");
+      return;
+    }
+
     // Reset all errors
     let tempInputErrorDisplay = {
       gamerTag:false,
@@ -110,10 +117,11 @@ function SignupModal({onClickClose,isOpen}:SignupModalProps) {
               </div>
 
               {/* Password */}
-              <div className="flex flex-col gap-1">
+              <div className="flex flex-col gap-1" >
                 <div className="font-bold">Password</div>
                 <input type="password" onChange={(e)=>setSignupData((oldData)=>{oldData.password = e.target.value; return oldData})} placeholder="xxxxxxxxxxxxx" className="border border-gray-400 rounded-sm h-10 pl-5" />
-                {inputErrorDisplay.password &&<div className="text-red-500 text-sm">Please Input a valid password</div>}           
+                <div className="text-sm text-gray-600">Password should have atleast 5 characters including a number and a symbol (!,@ etc)</div>
+                {inputErrorDisplay.password &&<div className="text-red-500 text-sm ">Please Input a valid password</div>}           
               </div>
 
               {/* Error Msg */}
@@ -125,7 +133,7 @@ function SignupModal({onClickClose,isOpen}:SignupModalProps) {
               <div></div>
 
               <div className="flex gap-3">
-                  <div className="w-60 p-5 pt-3 pb-3 text-center rounded-md bg-indigo-400 hover:bg-green-500 hover:cursor-pointer" onClick={()=>handleSignup()}>Create Account</div>
+                  <div className="w-60 p-5 pt-3 pb-3 text-center rounded-md bg-indigo-400 hover:bg-green-500 hover:cursor-pointer " onClick={()=>handleSignup()}>Create Account</div>
               </div>
           </div>
       </div>
