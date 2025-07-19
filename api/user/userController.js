@@ -459,5 +459,6 @@ module.exports = {
     fetchEnemyById,
     fetchUserProfile,
     purchaseItem,
-    deleteUserProgress
+    deleteUserProgress,
+    usePotionItem
 };

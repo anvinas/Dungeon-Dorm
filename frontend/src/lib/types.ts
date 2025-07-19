@@ -32,6 +32,9 @@ export type TurnResult_T =
     };
 
 export interface userAttackTurnReturn_T {
+  userAttack: AttackResult_T;
+  postTurnUserHP: number;
+  postTurnEnemyHP: number;
   userResult:TurnResult_T;
   enemyResult:(TurnResult_T | null);
   message:(string|null);
@@ -90,6 +93,8 @@ export interface UserProfile_T {
   currentActiveBoss: string | null;
   createdAt: string;
   updatedAt: string;
+  toLevelUpXP:number;
+  currentXP:number;
 }
 
 

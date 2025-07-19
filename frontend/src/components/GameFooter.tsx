@@ -1,12 +1,13 @@
 // import styles from "./styles/loginModal.module.css"
+import type { UserProfile_T } from "../lib/types"
 import Avatar from "./Avatar"
 
 
-function GameFooter({OnClickInventory}:{OnClickInventory:any}){
+function GameFooter({OnClickInventory,userData}:{OnClickInventory:any,userData:UserProfile_T}){
     
   return (
     <div className="flex items-end relative w-full justify-between h-full shadow-lg p-15 text-white">
-        <Avatar />
+        <Avatar userData={userData}/>
 
         {/* Inventory button */}
         <div onClick={()=>OnClickInventory()} className="p-5 bg-red-100 border-4 border-blue-500 rounded-[50%]">

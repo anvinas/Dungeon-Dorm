@@ -1,7 +1,7 @@
 const User = require('../auth/authModel');
 const Boss = require('../global/Boss');
 const CommonEnemy = require('../global/CommonEnemy');
-const { handleEnemyDefeat } = require('./combatResolution');
+// const { handleEnemyDefeat } = require('./combatResolution');
 const Encounter = require('./Encounter');
 
 async function loadEntity(id, type) {
@@ -422,7 +422,6 @@ exports.startEncounter = async (req, res) => {
     currentTurn: 'User',
     enemyFriendliness: 0, // Initial friendliness for charm attempts
   });
-
   const enemyObject = enemy.toObject();
 
   res.json({
@@ -482,6 +481,102 @@ async function userAttackLogic(encounter, user, enemy)
   return result;
 }
 
+// BROUGHT FROM OTHER FILE SOMEHOW NOT FINDING IT EVEN WITH YOUR EXPORT
+async function setNextBossForUser(user) 
+{
+    const allBosses = await Boss.find({}).sort({level : 1});
+    const defeatedBosses = user.Bosses.map(id => id.toString());
+    const nextBoss = allBosses.find (b => !defeatedBosses.includes(b._id.toString()));
+
+    user.currentBoss = nextBoss ? nextBoss._id : null;
+    await user.save();
+    return nextBoss;
+}
+
+function addItemToUser(user, itemId, quantity) {
+    
+    let CurrentLoot = user.CurrentLoot
+    if (!itemId) throw new Error('Item does not exist!');
+    const existingItem = CurrentLoot.findIndex(loot => loot.itemId && loot.itemId.toString() === itemId.toString());
+
+    if (existingItem > -1) {
+        user.CurrentLoot[existingItem].quantity += quantity;    
+    } else {
+        user.CurrentLoot.push({ itemId, quantity });
+    }
+}
+
+async function handleEnemyDefeat(userId, enemyId, enemyType) {
+    const user = await loadEntity(userId, 'User');
+    const enemy = await loadEntity(enemyId, enemyType);
+    let enemyObj = enemy.toObject()
+    let levelupTrigger = false;
+
+    if (!user || !enemy) 
+    {
+        throw new Error('User or Boss not found');
+    }
+    user.Currency = user.Currency + (enemyObj.reward.gold || 0);
+    user.currentXP = user.currentXP + (enemyObj.reward.xp || 0);
+
+    if (user.currentXP >= user.toLevelUpXP)
+    {
+      levelupTrigger = true;
+    }
+
+    let rewards = 
+    {
+        gold: enemyObj.reward.gold || 0,
+        items: [],
+        xp: enemyObj.reward.xp || 0,
+        readyToLevelUp: levelupTrigger
+    };
+    
+    // Add XP TO DB
+    if(rewards.readyToLevelUp){
+      user.level+=1;
+      user.toLevelUpXP = Math.ceil(user.toLevelUpXP * 1.6);
+    }
+
+    let expSave = await user.save()
+    console.log(expSave)
+
+    if (user.Bosses.includes(enemy._id.toString())) 
+    {
+        await user.save();
+        return {rewards};
+    }
+
+    console.log(enemy.reward)
+    for (const reward of enemy.reward.items || [])
+    {
+        if (reward.itemId)
+        {
+            try {
+                console.log("HERE2")
+                addItemToUser(user, reward.itemId, reward.quantity);
+                rewards.items.push({
+                    itemId: reward.itemId._id,
+                    quantity: reward.quantity,
+                    itemType: reward.itemId.itemType,
+                    itemDescription: reward.itemId.description,
+                    itemName: reward.itemId.name
+                });
+            } catch (error) {
+                console.error(`Error adding item to user: ${error.message}`);
+            }
+        }
+    }
+    user.Bosses.push(enemy._id);
+
+    const nextBoss = await setNextBossForUser(user);
+    user.currentActiveBoss = nextBoss ? nextBoss._id : null;
+    
+    await user.save();
+    return rewards;
+}
+
+
 async function userTalkLogic(encounter, user, enemy)
 {
   const userTalk = rollTalk(user, enemy);
@@ -491,7 +586,6 @@ async function userTalkLogic(encounter, user, enemy)
   encounter.enemyFriendliness = Math.min(encounter.enemyFriendliness + userTalk.friendshipContribution, enemy.relationshipGoal);
   if (encounter.enemyFriendliness >= enemy.relationshipGoal)
   {
-    console.log("Here1")
     encounter.isActive = false;
     encounter.currentTurn = null;
     await encounter.save();
@@ -509,7 +603,6 @@ async function userTalkLogic(encounter, user, enemy)
   
   else if (encounter.enemyFriendliness < enemy.relationshipGoal && encounter.enemyFriendliness >= 0)
   {
-    console.log("Here2")
     await encounter.save();
     return {
       message: 'User attempted to charm enemy',
@@ -683,12 +776,10 @@ exports.userTurnAndEnemyResponse = async(req, res) => {
     }
   }
   
-  console.log(`1.User Attacked\n`,userResult)
   // After user turn, switch to enemy turn
   encounter.currentTurn = 'Enemy';
 
   enemyResult = await enemyAttackLogic(encounter, user, enemy);
-  console.log(`2.Enemy Attacked\n`,enemyResult)
 
   if (!enemyResult) 
   {

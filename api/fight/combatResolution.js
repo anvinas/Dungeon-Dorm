@@ -14,17 +14,19 @@ async function setNextBossForUser(user)
 }
 
 function addItemToUser(user, itemId, quantity) {
-    if (!itemiId) throw new Error('Item does not exist!');
-    const existingItem = user.currentLoot.findIndex(loot => loot.itemId && loot.itemId.toString() === itemId.toString());
+    user = user.toObject()
+    let CurrentLoot = user.CurrentLoot
+    if (!itemId) throw new Error('Item does not exist!');
+    const existingItem = CurrentLoot.findIndex(loot => loot.itemId && loot.itemId.toString() === itemId.toString());
 
     if (existingItem > -1) {
-        user.currentLoot[existingItem].quantity += quantity;    
+        user.CurrentLoot[existingItem].quantity += quantity;    
     } else {
-        user.currentLoot.push({ itemId, quantity });
+        user.CurrentLoot.push({ itemId, quantity });
     }
 }
 
-module.exports = async function handleEnemyDefeat(userId, enemyId, enemyType) {
+async function handleEnemyDefeat(userId, enemyId, enemyType) {
     const user = await loadEntity(userId, 'User');
     const enemy = await loadEntity(enemyId, enemyType);
     let levelupTrigger = false;
@@ -50,7 +52,7 @@ module.exports = async function handleEnemyDefeat(userId, enemyId, enemyType) {
         readyToLevelUp: levelupTrigger
     };
 
-    if (user.defeatedBosses.includes(enemy._id.toString())) 
+    if (user.Bosses.includes(enemy._id.toString())) 
     {
         await user.save();
         return {rewards};
@@ -75,15 +77,16 @@ module.exports = async function handleEnemyDefeat(userId, enemyId, enemyType) {
         }
     }
 
-    user.defeatedBosses.push(enemy._id);
+    user.Bosses.push(enemy._id);
 
     const nextBoss = await setNextBossForUser(user);
-    user.currentBoss = nextBoss ? nextBoss._id : null;
+    user.currentActiveBoss = nextBoss ? nextBoss._id : null;
     
     await user.save();
     return rewards;
 }
 
 module.exports = {
-    setNextBossForUser
+    setNextBossForUser,
+    handleEnemyDefeat
 }

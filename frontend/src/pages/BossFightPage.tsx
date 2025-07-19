@@ -16,14 +16,29 @@ function BossFightPage() {
   const [encounterData, setEncounterData] = useState<Encounter_T | null>(null);
   const [currentCharm, setCurrentCharm] = useState<number>(0);
 
+  //ANIMATIONS
+  const [userMoveData, setUserMoveData] = useState<null|any>(null);
+  const [lastCharmValue, setLastCharmValue] = useState<null|number>(null);
+  const [userAttackAnimating, setUserAttackAnimating] = useState(false);
+  const [enemyAttackAnimating, setEnemyAttackAnimating] = useState(false);
+  const [damageText, setDamageText] = useState("");
+
   const [modalStates, setModalStates] = useState<{
     inventory: Boolean;
     diedScreen:Boolean;
+    wonScreen:Boolean;
     runScreen:Boolean;
+    charmedScreen:Boolean;
+    currentMoveScreen:Boolean;
+    AnimatedCharmScreen:Boolean
   }>({
     inventory: false,
     diedScreen:false,
     runScreen:false,
+    charmedScreen:false,
+    currentMoveScreen:false,
+    AnimatedCharmScreen:false,
+    wonScreen:false
   });
 
   useEffect(() => {
@@ -75,11 +90,75 @@ function BossFightPage() {
           },
         });
         console.log("User Attacked:", response.data);
-        updateUIAfterUserAttack(response.data)
+        handleAnimationsAfterAttack(response.data)
       } catch (error) {
         console.error("Failed to Attack:", error);
       }
   };
+
+  
+  const handleAnimationsAfterAttack = (userAttackResponseData:userAttackTurnReturn_T)=>{
+    let attackObjPlayer = userAttackResponseData.userResult.userAttack || userAttackResponseData.userAttack
+    let bossResponse = userAttackResponseData.enemyResult
+
+    let bossAnimationObg = {damage:"MISS",responded:false}
+    if(bossResponse){
+      bossAnimationObg.damage = (bossResponse.enemyAttack.hit?bossResponse.enemyAttack.damage:"MISS" ) as string
+      bossAnimationObg.responded = true
+    }
+
+    let userDamageString = attackObjPlayer.hit ? String(attackObjPlayer.damage) : "MISS";
+
+    handleAnimateDice(
+      attackObjPlayer.d20,
+      "Attack Roll!",
+      ()=>handleAnimateUserAttackMovement(
+        userDamageString,
+        ()=>{
+          if(bossAnimationObg.responded){
+            handleAnimateBossAttackMovement(bossAnimationObg.damage,()=>updateUIAfterUserAttack(userAttackResponseData))
+          }else{
+            updateUIAfterUserAttack(userAttackResponseData)
+          }
+        }
+      )
+    )
+  }
+
+  const handleAnimateDice = (diceNum:any,diceText:any,callBack:()=>void)=>{
+    // 🕒 Show the dice screen for 2 seconds
+    setUserMoveData({ diceRoll20: diceNum, mainText: diceText });
+    setModalStates((old) => ({ ...old, currentMoveScreen: true }));
+
+    setTimeout(() => {
+      // ⛔ Hide dice screen and continue
+      setModalStates((old) => ({ ...old, currentMoveScreen: false }));
+      setUserMoveData(null);
+
+      // ✅ Now update movements and text
+      callBack()
+    }, 2000);
+  }
+
+  const handleAnimateUserAttackMovement = (damageText:string,callBack:()=>void)=>{
+    setDamageText(damageText)
+    setUserAttackAnimating(true);
+    setTimeout(() => {
+      setUserAttackAnimating(false);
+      setDamageText("")
+      callBack()
+    }, 600);
+  }
+
+  const handleAnimateBossAttackMovement= (damageText:string,callBackUIUpdate:()=>void)=>{
+    setDamageText(damageText)
+    setEnemyAttackAnimating(true);
+    setTimeout(() => {
+      setEnemyAttackAnimating(false);
+      setDamageText("")
+      callBackUIUpdate()
+    }, 600);
+  }
 
   const updateUIAfterUserAttack = (userAttackResponseData:userAttackTurnReturn_T)=>{
     if(!encounterData) return;
@@ -93,6 +172,15 @@ function BossFightPage() {
         ...encounterData.user
       }
     }
+
+    // If defeated Enemy first
+    if(userAttackResponseData.postTurnEnemyHP <= 0){
+      newEncounerObj.user.currentHP = userAttackResponseData.postTurnUserHP
+      setModalStates((old)=>{let tmp={...old};tmp.wonScreen=true;return {...tmp}})
+      setEncounterData({...newEncounerObj})
+      return
+    }
+
     //If user attack data
     if(userAttackResponseData.userResult){
       newEncounerObj.user.currentHP = userAttackResponseData.userResult.postTurnUserHP
@@ -127,11 +215,36 @@ function BossFightPage() {
           },
         });
         console.log("User Clicked Run:", response.data);
-        updateUIAfterUserRun(response.data)
+        handleAnimationsAfterRun(response.data)
+        // updateUIAfterUserRun(response.data)
       } catch (error) {
         console.error("Failed to Attack:", error);
       }
   };
+
+  
+  const handleAnimationsAfterRun = (userRunResponseData:any)=>{
+    if(userRunResponseData.success){
+      handleAnimateDice(
+        userRunResponseData.d20,
+        "Run Roll!",
+        ()=>updateUIAfterUserRun(userRunResponseData)
+      )
+    }else{
+      // Enemy Hit Turn
+      let bossResponse = userRunResponseData.enemyResult
+      let dmg = (bossResponse.enemyAttack.hit?bossResponse.enemyAttack.damage:"MISS" ) as string
+
+      handleAnimateDice(
+        userRunResponseData.userResult.d20,
+        "Run Roll!",
+        ()=>handleAnimateBossAttackMovement(
+          dmg,
+          ()=>updateUIAfterUserRun(userRunResponseData)
+        )
+      )
+    }
+  }
 
   const updateUIAfterUserRun = (userRunResponseData:any)=>{
     console.log(userRunResponseData)
@@ -180,12 +293,110 @@ function BossFightPage() {
             Authorization: `Bearer ${token}`
           },
         });
-        console.log("User Talked:", response.data);
+        // updateUIAfterUserTalk(response.data)
+        handleAnimationsAfterTalk(response.data)
       } catch (error) {
         console.error("Failed to Talk:", error);
       }
   };
-  
+
+  const handleActivateCharmAnimation = (value:number,callBack:()=>void)=>{
+    // 🕒 Show the dice screen for 2 seconds
+    setLastCharmValue(()=>value);
+    setModalStates((old) => ({ ...old, AnimatedCharmScreen: true }));
+    console.log("ACTIVATED")
+    setTimeout(() => {
+      // ⛔ Hide dice screen and continue
+      setModalStates((old) => ({ ...old, AnimatedCharmScreen: false }));
+      setLastCharmValue(null);
+
+      // ✅ Now update movements and text
+      callBack()
+    }, 2000);
+  }
+
+  const handleAnimationsAfterTalk = (userTalkResponseData:any)=>{
+    console.log(userTalkResponseData)
+    let userTalk = userTalkResponseData.userTalk || userTalkResponseData.userResult.userTalk
+
+    // Enemy Hit Turn
+    let bossResponse = userTalkResponseData.enemyResult || null
+    console.log(bossResponse)
+    let dmg = bossResponse ? (bossResponse.enemyAttack.hit?bossResponse.enemyAttack.damage:"MISS" ) as string : ""
+    console.log(userTalkResponseData)
+    handleAnimateDice(
+        userTalk.d20,
+        "Charm Roll!",
+        ()=>{
+          if(userTalk.success){
+            handleActivateCharmAnimation(
+              userTalk.friendshipContribution,
+              ()=>{
+                if(bossResponse){
+                  handleAnimateBossAttackMovement(dmg,()=>{
+                    updateUIAfterUserTalk(userTalkResponseData)
+                  })
+                }else{
+                  updateUIAfterUserTalk(userTalkResponseData)
+                }
+              }
+            )
+          }else{
+            if(bossResponse){
+                handleAnimateBossAttackMovement(dmg,()=>{
+                updateUIAfterUserTalk(userTalkResponseData)
+              })
+            }else{
+              updateUIAfterUserTalk(userTalkResponseData)
+            }
+          }
+        }
+    )
+    return
+  }
+
+  const updateUIAfterUserTalk = (userTalkResponseData:any)=>{
+    if(!encounterData) return;
+    let newEncounerObj:Encounter_T = {
+      message:userTalkResponseData.message || "Turn Complete",
+      currentTurn:"User",
+      enemy:{
+        ...encounterData.enemy,
+      },
+      user:{
+        ...encounterData.user
+      }
+    }
+
+    console.log("IN UI OF CHARM")
+    console.log(userTalkResponseData)
+    //If charmed succefully
+    if(userTalkResponseData.message == "Enemy charmed successfully!"){
+      setCurrentCharm(encounterData.enemy.relationshipGoal)
+      setModalStates((old)=>{let tmp={...old};tmp.charmedScreen=true;return {...tmp}})
+      setEncounterData({...newEncounerObj})
+    }
+
+    //Check Post relationship
+    if(userTalkResponseData.userResult){
+      newEncounerObj.user.currentHP = userTalkResponseData.userResult.postTurnUserHP
+      newEncounerObj.enemy.currentHP = userTalkResponseData.userResult.postTurnEnemyHP
+      setCurrentCharm(userTalkResponseData.userResult.postTurnFriendship)
+    }
+
+    // If enemy didnt die and has attacked
+    if(userTalkResponseData.enemyResult){
+      newEncounerObj.user.currentHP = userTalkResponseData.enemyResult.postTurnUserHP
+      newEncounerObj.enemy.currentHP = userTalkResponseData.enemyResult.postTurnEnemyHP
+      
+      // User Died!
+      if(newEncounerObj.user.currentHP <= 0){
+        setModalStates((old)=>{let tmp={...old};tmp.diedScreen=true;return {...tmp}})
+      }
+    }
+
+    setEncounterData({...newEncounerObj})
+  }
   
   if(encounterData==null) return (<div>Loading</div>)
   
@@ -220,6 +431,27 @@ function BossFightPage() {
         </div>
       }
 
+      {/* Charmed modal*/}
+      {modalStates.charmedScreen &&   
+        <div className='absolute w-screen h-screen left-[0%] top-[0%] translate-[0%] z-101'>
+          <CharmedcreenModal onClickLeave={()=>navigate("/play")}/>
+        </div>
+      }
+
+      {/* Moves modal*/}
+      {modalStates.currentMoveScreen && userMoveData &&
+        <div className='absolute w-screen h-screen left-[0%] top-[0%] translate-[0%] z-101'>
+          <CurrentMoveScreen diceRoll20={userMoveData.diceRoll20} mainText={userMoveData.mainText}/>
+        </div>
+      }
+
+      {/* ANIMATED CHARM modal*/}
+      {modalStates.AnimatedCharmScreen && lastCharmValue &&
+        <div className='absolute w-screen h-screen left-[0%] top-[0%] translate-[0%] z-101'>
+          <CharmedActivatedScreen value={lastCharmValue} />
+        </div>
+      }
+
       {/* Dark overlay */}
       <div className={`${styles.overlayDark} absolute inset-0  bg-opacity-50 z-10`} />
 
@@ -227,13 +459,16 @@ function BossFightPage() {
       <div className="relative z-20 w-full h-full">
 
         {/* Player Character */}
-        <div className={`${styles.playerImageContainer} absolute bottom-[20%] left-20 flex justify-start z-3`}>
-          <img src={`/assets/playableCharacter/warlock/pixel.png`} className="w-[50%]" alt="player"/>
+        <div className={`${styles.playerImageContainer} absolute bottom-[20%] left-20 flex justify-start z-3 w-[20%]`}>
+          <div className={`w-fit relative ${userAttackAnimating ? `${styles.lungeAnimation}` : ""}`}>
+            {damageText &&userAttackAnimating&& <div className="absolute top-[0%] left-[50%] translate-x-[-50%] translate-y-[-50%] font-bold text-purple-800 text-4xl">{damageText}</div>}
+            <img src={`/assets/playableCharacter/warlock/pixel.png`} className="" alt="player"/>
+          </div>
         </div>
 
         {/* Boss Character Container */}
-        <div className={`${styles.bossImageContainer} absolute bottom-[30%] right-[5%] flex  justify-end z-3`}>
-          <div className="flex flex-col items-center w-[60%]">
+        <div className={`${styles.bossImageContainer} absolute bottom-[25%] right-[5%] flex  justify-end z-3`}>
+          <div className="flex flex-col items-center w-[50%]">
             {/* Boss Healthh Text */}
             <div style={{WebkitTextStroke: '2px black',}} className="pb-5 text-white font-bold text-4xl">{encounterData.enemy.currentHP}/{encounterData.enemy.maxHP} HP</div>
 
@@ -244,18 +479,26 @@ function BossFightPage() {
                 style={{ width: `${enemyHealthPercentage}%` }}>
               </div>
             </div>
-            {encounterData.enemy.name && <img src={`/assets/boss/${getBossFolderName(encounterData.enemy.name)}/pixel.png`} className="scale-x-[-1] " alt="player"/>}
+            
+            <div className={`w-fit relative ${enemyAttackAnimating ? `${styles.lungeAnimationLeft}` : ""}`}>
+              {damageText && enemyAttackAnimating && <div className="absolute top-[0%] left-[50%] translate-x-[-50%] translate-y-[-50%] font-bold text-red-800 text-4xl">{damageText}</div>}
+              <img src={`/assets/boss/${getBossFolderName(encounterData.enemy.name)}/pixel.png`} className="scale-x-[-1] " alt="boss"/>
+            </div>
             
             {/* Boss Charm BAR*/}
-            <div className="flex justify-center items-center w-full">
-              <img src="/assets/heart.png" className="h-10"/>
-              <div className={`relative w-[50%] h-5 border-2 bg-[#697284e3] border-blue-800 rounded-lg`}>
-                <div 
-                  className={`absolute h-full  bg-[#c0392b] rounded-sm`} 
-                  style={{ width: `${enemyCharmPercentage}%` }}>
+            <div className="flex flex-col gap-1 w-full items-center justify-center">
+                <div className="flex justify-center items-center w-full">
+                  <img src="/assets/heart.png" className="h-10"/>
+                  <div className={`relative w-[50%] h-5 border-2 bg-[#697284e3] border-blue-800 rounded-lg`}>
+                    <div 
+                      className={`absolute h-full  bg-[#c0392b] rounded-sm`} 
+                      style={{ width: `${enemyCharmPercentage}%` }}>
+                    </div>
+                  </div>
                 </div>
-              </div>
+                <div className="pb-5 text-black text-center font-bold text-xl">{currentCharm}/{encounterData.enemy.relationshipGoal}</div>
             </div>
+            
             
 
           </div>
@@ -299,6 +542,61 @@ const RunScreenModal = ({onClickLeave}:{onClickLeave:()=>void})=>{
     <div className="text-green-700 font-bold text-7xl">Succesfully Fled!</div>
     <div className="text-white font-bold text-xl">Whew that was close!</div>
     <div className="text-white font-bold text-xl bg-purple-800 p-2 rounded-lg hover:bg-purple-700 cursor-pointer" onClick={()=>onClickLeave()}>Leave Area</div>
+  </div>
+)
+}
+
+const CharmedcreenModal = ({onClickLeave}:{onClickLeave:()=>void})=>{
+  return(
+  <div className="w-full h-full bg-[#000000db] flex items-center flex-col justify-center gap-3">
+    <div className="text-green-700 font-bold text-7xl">Succesfully Charmed!</div>
+    <div className="text-white font-bold text-xl">Im surprised you talked yourself out of that!</div>
+    <div className="text-white font-bold text-xl bg-purple-800 p-2 rounded-lg hover:bg-purple-700 cursor-pointer" onClick={()=>onClickLeave()}>Leave Area</div>
+  </div>
+)
+}
+
+
+const CurrentMoveScreen = ({
+  diceRoll20,
+  mainText
+}:{
+  diceRoll20:number,
+  mainText:string
+})=>{
+  return(
+  <div className="w-full h-full bg-[#00000096] flex items-center flex-col justify-center">
+    <div className="font-bold text-white text-5xl" >{mainText}</div>
+    
+    {/* SHOW DICE */}
+    <div className="w-[30vw] relative">
+      <img src={"/assets/20dice.png"} className=""/>
+      <div className="text-white absolute top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%] flex justify-center items-center">
+        <div className="font-bold text-7xl" style={{WebkitTextStroke: '2px black',}} >{diceRoll20}</div>
+      </div>
+    </div>
+
+
+  </div>
+)
+}
+
+
+const CharmedActivatedScreen = ({
+  value
+}:{
+  value:number,
+})=>{
+  return(
+  <div className="w-full h-full bg-[#00000096] flex items-center flex-col justify-center">
+    <div className="font-bold text-red-500 text-5xl" >CHARMED + {value}</div>
+    
+    {/* SHOW Heart */}
+    <div className="w-[40vw] relative flex items-center justify-center">
+      <img src={"/assets/heart.png"} className={`${styles.beatingHeart}`}/>
+    </div>
+
+
   </div>
 )
 }

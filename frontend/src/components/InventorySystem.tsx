@@ -223,6 +223,7 @@ function InventorySystem({onClose,onHealthChange}:{onClose:()=>void;onHealthChan
   }
 
   const userHealthPercentage = (userData.currentHP/userData.maxHP)*100 
+  const userXPPercentage = Math.min(100,(userData.currentXP/userData.toLevelUpXP)*100 )
   return(
     <div className={`${styles.container} w-full max-h-full h-full bg-gray-800 p-5 rounded-t-lg flex flex-col gap-2`}>
       <div className="text-center font-bold text-white text-2xl bg-red-400 px-5 py-2 rounded-lg cursor-pointer hover:bg-red-500" onClick={()=>onClose()}>Close</div>
@@ -320,6 +321,19 @@ function InventorySystem({onClose,onHealthChange}:{onClose:()=>void;onHealthChan
                           ${userHealthPercentage>75?"bg-green-400":userHealthPercentage>35?"bg-yellow-400":"bg-red-400"}
                         `} 
                         style={{ width: `${userHealthPercentage}%` }}>
+                      </div>
+                    </div>
+                </div>
+                {/* XP CONTAINER */}
+                <div className="flex flex-col gap-2">
+                  <div className="text-xl text-white font-bold">XP: {userData.currentXP} / {userData.toLevelUpXP}</div>
+                  <div className={`relative top-[-10%] w-[100%] h-5 border-2 bg-[#697284e3]  rounded-md`}>
+                      <div 
+                        className={`
+                          absolute h-full rounded-lg
+                          bg-blue-400
+                        `} 
+                        style={{ width: `${userXPPercentage}%` }}>
                       </div>
                     </div>
                 </div>
