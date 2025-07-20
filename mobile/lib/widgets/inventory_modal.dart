@@ -72,44 +72,8 @@ class _InventorySystemState extends State<InventorySystem> {
               description: 'Restores 50 HP',
               damage: 0,
               itemType: 'Potion',
-              imageURL: 'potion/hyper.png', // Assuming this path exists
+              imageURL: 'health_mini.png', // Assuming this path exists
               healthAmount: 50,
-            ),
-          ),
-          CurrentLootItem(
-            id: 'c002',
-            quantity: 1,
-            itemId: InventoryItem(
-              id: 'weapon001', // Changed ID for clarity
-              name: 'Wooden Bow', // Changed name for clarity
-              description: 'A basic wooden bow.',
-              damage: 5,
-              itemType: 'Weapon',
-              imageURL: 'weapon/bow.png', // Assuming this path exists
-            ),
-          ),
-          CurrentLootItem(
-            id: 'c003',
-            quantity: 1,
-            itemId: InventoryItem(
-              id: 'key001',
-              name: 'Phantom Eye Key',
-              description: 'Key to unlock the Specter boss.',
-              itemType: 'Key',
-              damage: 0,
-              imageURL: 'key/phantom_eye_key.png', // Placeholder image for key
-            ),
-          ),
-          CurrentLootItem(
-            id: 'c004',
-            quantity: 1,
-            itemId: InventoryItem(
-              id: 'key002',
-              name: 'Whispering Heart Key',
-              description: 'Key to unlock another boss.',
-              itemType: 'Key',
-              damage: 0,
-              imageURL: 'key/whispering_heart_key.png', // Placeholder image for key
             ),
           ),
         ],
@@ -168,32 +132,7 @@ class _InventorySystemState extends State<InventorySystem> {
             description: 'Key to unlock the Specter boss.',
             itemType: 'Key',
             damage: 0,
-            imageURL: 'key/phantom_eye_key.png',
-          ),
-          InventoryItem(
-            id: 'key002',
-            name: 'Whispering Heart Key',
-            description: 'Key to unlock another boss.',
-            itemType: 'Key',
-            damage: 0,
-            imageURL: 'key/whispering_heart_key.png',
-          ),
-          InventoryItem(
-            id: 'potion001',
-            name: 'Health Potion',
-            description: 'Restores 50 HP',
-            itemType: 'Potion',
-            healthAmount: 50,
-            damage: 0,
-            imageURL: 'potion/hyper.png',
-          ),
-          InventoryItem(
-            id: 'weapon001',
-            name: 'Wooden Bow',
-            description: 'A basic wooden bow.',
-            damage: 5,
-            itemType: 'Weapon',
-            imageURL: 'weapon/bow.png',
+            imageURL: 'health_mini.png',
           ),
         ];
       });
@@ -222,93 +161,107 @@ class _InventorySystemState extends State<InventorySystem> {
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    if (userData == null) return const Center(child: CircularProgressIndicator());
-
-    return Scaffold(
-      backgroundColor: const Color(0xFF333642), // Dark grey background from image
-      body: Column(
-        children: [
-          // Close Button (Red Header)
-          GestureDetector(
-            onTap: widget.onClose,
-            child: Container(
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              width: double.infinity,
-              color: const Color(0xFFEC5C54), // Red from image
-              child: const Center(
-                child: Text(
-                  "Close",
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-            ),
-          ),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Row(
+@override
+Widget build(BuildContext context) {
+  return Theme(
+    data: ThemeData.dark().copyWith(
+      scaffoldBackgroundColor: const Color(0xFF1C1F26),
+      textTheme: const TextTheme(
+        bodyMedium: TextStyle(fontFamily: 'RobotoMono', fontSize: 14),
+      ),
+    ),
+    child: Scaffold(
+      body: userData == null
+          ? const Center(child: CircularProgressIndicator())
+          : SafeArea(
+              child: Column(
                 children: [
-                  _buildInventory(),
-                  const SizedBox(width: 16), // Spacing between sections
-                  _buildCharacterSection(),
-                  const SizedBox(width: 16), // Spacing between sections
-                  _buildStatsSection(),
+                  _buildCloseHeader(),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.all(12.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          _buildSection(_buildInventory()),
+                          const SizedBox(height: 12),
+                          _buildSection(_buildCharacterSection()),
+                          const SizedBox(height: 12),
+                          _buildSection(_buildStatsSection()),
+                        ],
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
-          ),
-        ],
-      ),
-    );
+    ),
+  );
+
   }
 
-  Widget _buildSectionContainer({required Widget child}) {
-    return Expanded(
-      child: Container(
-        decoration: BoxDecoration(
-          color: const Color(0xFF282B33), // Slightly lighter dark grey for sections
-          borderRadius: BorderRadius.circular(8),
+  Widget _buildCloseHeader() => GestureDetector(
+        onTap: widget.onClose,
+        child: Container(
+          width: double.infinity,
+          color: const Color(0xFFEC5C54),
+          padding: const EdgeInsets.symmetric(vertical: 14),
+          child: const Center(
+            child: Text(
+              'Close',
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+              ),
+            ),
+          ),
         ),
-        padding: const EdgeInsets.all(16.0),
-        child: child,
-      ),
-    );
-  }
+      );
 
-  Widget _buildInventory() {
-    return _buildSectionContainer(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+  Widget _buildSection(Widget child) {
+  return Container(
+    decoration: BoxDecoration(
+      color: const Color(0xFF282B33),
+      borderRadius: BorderRadius.circular(8),
+    ),
+    padding: const EdgeInsets.all(16),
+    child: child,
+  );
+}
+
+
+ Widget _buildInventory() {
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      _buildHeader("Inventory"),
+      const SizedBox(height: 16),
+      _buildLabel("Boss Keys"),
+      _buildItemGrid(keys, 5, itemType: 'Key'),
+      const SizedBox(height: 16),
+      _buildLabel("Potions"),
+      _buildItemGrid(potions, 3, itemType: 'Potion'),
+      const SizedBox(height: 16),
+      _buildLabel("Weapon"),
+      _buildWeaponSlot(weapons.isNotEmpty ? weapons[0] : null),
+      const SizedBox(height: 16),
+      Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        alignment: WrapAlignment.spaceBetween,
         children: [
-          _buildHeader("Inventory"),
-          const SizedBox(height: 16),
-          _buildLabel("Boss Keys"),
-          _buildItemGrid(keys, 5, itemType: 'Key'), // 5 slots for boss keys
-          const SizedBox(height: 16),
-          _buildLabel("Potions"),
-          _buildItemGrid(potions, 3, itemType: 'Potion'), // 3 slots for potions
-          const SizedBox(height: 16),
-          _buildLabel("Weapon"),
-          _buildWeaponSlot(weapons.isNotEmpty ? weapons[0] : null),
-          const Spacer(),
-          // Open Shop and Gold display
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              _buildOpenShopButton(),
-              _buildCurrencyDisplay(userData!.currency),
-            ],
-          ),
+          _buildOpenShopButton(),
+          _buildCurrencyDisplay(userData!.currency),
         ],
       ),
-    );
-  }
+
+    ],
+  );
+}
+
+
 
   Widget _buildItemGrid(List<CurrentLootItem> items, int totalSlots, {required String itemType}) {
     return LayoutBuilder(
@@ -486,7 +439,7 @@ class _InventorySystemState extends State<InventorySystem> {
           mainAxisSize: MainAxisSize.min, // Use min size for the row
           children: [
             Image.asset(
-              'assets/img/coin.png', // Placeholder for coin image
+              'assets/img/shopIcon.png', // Placeholder for coin image
               width: 20,
               height: 20,
               color: Colors.amber, // Gold coin color
@@ -507,40 +460,37 @@ class _InventorySystemState extends State<InventorySystem> {
   }
 
   Widget _buildCharacterSection() {
-    final hpPercent = userData!.currentHP / userData!.maxHP;
-    final xpPercent = userData!.currentXP / userData!.toLevelUpXP;
+  final hpPercent = userData!.currentHP / userData!.maxHP;
+  final xpPercent = userData!.currentXP / userData!.toLevelUpXP;
 
-    return _buildSectionContainer(
-      child: Column(
-        children: [
-          _buildHeader("Character"),
-          const SizedBox(height: 16),
-          Text(
-            userData!.gamerTag,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 16),
-          // Character image should try to take available space
-          Expanded(
-            child: Center(
-              child: Image.asset(
-                'assets/img/playableCharacter/rogue/pixel.png', // Or the actual character image
-                fit: BoxFit.contain, // Adjusts size to fit without distortion
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
-          _buildStatTextWithBar("HP", userData!.currentHP, userData!.maxHP, hpPercent, const Color(0xFF75B853)), // Green HP bar
-          const SizedBox(height: 10),
-          _buildStatTextWithBar("Level ${userData!.level} -- XP", userData!.currentXP, userData!.toLevelUpXP, xpPercent, const Color(0xFF4A90E2)), // Blue XP bar
-        ],
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.center,
+    children: [
+      _buildHeader("Character"),
+      const SizedBox(height: 16),
+      Text(
+        userData!.gamerTag,
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
+        ),
       ),
-    );
-  }
+      const SizedBox(height: 16),
+      Image.asset(
+        'assets/img/playableCharacter/rogue/pixel.png',
+        fit: BoxFit.contain,
+        height: 120,
+      ),
+      const SizedBox(height: 16),
+      _buildStatTextWithBar("HP", userData!.currentHP, userData!.maxHP, hpPercent, const Color(0xFF75B853)),
+      const SizedBox(height: 10),
+      _buildStatTextWithBar("Level ${userData!.level} -- XP", userData!.currentXP, userData!.toLevelUpXP, xpPercent, const Color(0xFF4A90E2)),
+    ],
+  );
+}
+
+
 
   Widget _buildStatTextWithBar(String label, int current, int max, double percent, Color barColor) {
     return Column(
@@ -579,26 +529,26 @@ class _InventorySystemState extends State<InventorySystem> {
   }
 
   Widget _buildStatsSection() {
-    final stats = userData!.currentStats;
-    final int maxStatValue = 20; // A reasonable max value for percentage calculation
+  final stats = userData!.currentStats;
+  final int maxStatValue = 20;
 
-    return _buildSectionContainer(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildHeader("Stats"),
-          const SizedBox(height: 16),
-          _buildStatRow("STRENGTH", stats.strength, maxStatValue, const Color(0xFFF39C12)), // Orange/Yellow
-          _buildStatRow("DEXTERITY", stats.dexterity, maxStatValue, const Color(0xFF8E44AD)), // Purple
-          _buildStatRow("INTELLIGENCE", stats.intelligence, maxStatValue, const Color(0xFF4A90E2)), // Blue
-          _buildStatRow("CHARISMA", stats.charisma, maxStatValue, const Color(0xFF75B853)), // Green
-          _buildStatRow("DEFENSE", stats.defense, maxStatValue, const Color(0xFFEC5C54)), // Red
-          const Spacer(),
-          _buildDeleteAccountButton(),
-        ],
-      ),
-    );
-  }
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      _buildHeader("Stats"),
+      const SizedBox(height: 16),
+      _buildStatRow("STRENGTH", stats.strength, maxStatValue, const Color(0xFFF39C12)),
+      _buildStatRow("DEXTERITY", stats.dexterity, maxStatValue, const Color(0xFF8E44AD)),
+      _buildStatRow("INTELLIGENCE", stats.intelligence, maxStatValue, const Color(0xFF4A90E2)),
+      _buildStatRow("CHARISMA", stats.charisma, maxStatValue, const Color(0xFF75B853)),
+      _buildStatRow("DEFENSE", stats.defense, maxStatValue, const Color(0xFFEC5C54)),
+      const SizedBox(height: 12),
+      _buildDeleteAccountButton(),
+    ],
+  );
+}
+
+
 
   Widget _buildStatRow(String label, int value, int max, Color barColor) {
     final percent = (value / max).clamp(0.0, 1.0); // Clamp to ensure valid percentage

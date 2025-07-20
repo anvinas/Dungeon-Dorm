@@ -14,79 +14,91 @@ class PrefightModal extends StatelessWidget {
   });
 
   String getBossImagePath(String name) {
-    final folder = name.toLowerCase().replaceAll(' ', '-');
-    return 'assets/img/boss/$folder/real.png';
+    return 'assets/img/boss/andrea/pixel.png';
   }
 
   @override
   Widget build(BuildContext context) {
     return Dialog(
-      backgroundColor: const Color(0xFF1E1E2C),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      backgroundColor: const Color(0xFF12121A),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       child: Padding(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header Row (Name + Level + Exit)
+            /// Title Row with Name, Level, and Exit
             Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Expanded(
-                  child: Text(
-                    'Name: ${questData.name}',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        questData.name,
+                        style: const TextStyle(
+                          color: Colors.amberAccent,
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Level: ${questData.level}',
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                Text(
-                  'Level: ${questData.level}',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                ElevatedButton(
+                IconButton(
                   onPressed: onClickExit,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red,
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  ),
-                  child: const Text("Exit"),
+                  tooltip: "Exit",
+                  icon: const Icon(Icons.close),
+                  color: Colors.redAccent,
+                  iconSize: 28,
                 ),
               ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
 
-            // Boss Image + Dialog
+            /// Boss Image + Dialogue
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Boss image (non-circular, like the example)
+                /// Boss Image
                 Container(
-                  width: 120,
-                  height: 120,
+                  width: 110,
+                  height: 110,
                   decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.deepPurpleAccent, width: 2),
+                    borderRadius: BorderRadius.circular(12),
                     image: DecorationImage(
                       image: AssetImage(getBossImagePath(questData.name)),
                       fit: BoxFit.cover,
                     ),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Colors.deepPurple,
+                        blurRadius: 12,
+                        offset: Offset(0, 4),
+                      ),
+                    ],
                   ),
                 ),
                 const SizedBox(width: 16),
 
-                // Dialogue
+                /// Dialogue Box
                 Expanded(
                   child: Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF2A2A3D),
-                      borderRadius: BorderRadius.circular(10),
+                      color: const Color(0xFF23233A),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.white10),
                     ),
                     child: const Text(
                       '''
@@ -102,28 +114,42 @@ Oh…You want my stone rune? I should have known you didn’t care about RadioHe
 ''',
                       style: TextStyle(
                         color: Colors.white,
-                        fontSize: 14,
-                        height: 1.4,
+                        fontSize: 13.5,
+                        height: 1.45,
+                        fontFamily: 'Courier',
+                        shadows: [
+                          Shadow(
+                            color: Colors.black45,
+                            blurRadius: 1,
+                            offset: Offset(1, 1),
+                          ),
+                        ],
                       ),
                     ),
                   ),
                 ),
               ],
             ),
+            const SizedBox(height: 28),
 
-            const SizedBox(height: 24),
-
-            // Fight Button
-            Center(
-              child: ElevatedButton(
-                onPressed: onClickFight,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.purple,
-                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
+            /// Fight Button
+            ElevatedButton(
+              onPressed: onClickFight,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.deepPurple,
+                padding: const EdgeInsets.symmetric(horizontal: 36, vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Text(
-                  "Fight Boss!",
-                  style: TextStyle(fontSize: 16),
+                elevation: 6,
+                shadowColor: Colors.deepPurpleAccent,
+              ),
+              child: const Text(
+                "⚔️ Fight Boss!",
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 1,
                 ),
               ),
             ),
