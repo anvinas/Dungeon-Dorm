@@ -1,17 +1,12 @@
 import 'dart:math' as math;
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:http/http.dart' as http;
 
 import '../widgets/prefight_modal.dart';
 import '../widgets/inventory_modal.dart';
-import '../widgets/quest_data.dart';
 import '../utils/types.dart';
-import '../utils/jwt_storage.dart';
-import '../utils/get_path.dart';
 
 // Mock Quest Data - Updated with specific image paths for variety
 final List<QuestData> QUESTZONE = [
