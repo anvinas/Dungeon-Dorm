@@ -10,7 +10,9 @@ const allowedOrigins = [
   'http://localhost:5000',
   'http://localhost:5173',
   'https://app.swaggerhub.com',
-  'https://virtserver.swaggerhub.com'
+  'https://virtserver.swaggerhub.com',
+  'https://editor.swagger.io',
+  'https://preview.swagger.io'
 ];
 
 app.use(cors({
