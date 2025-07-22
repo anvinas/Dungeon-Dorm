@@ -8,7 +8,9 @@ const allowedOrigins = [
   'https://dungeons-dorms.online',
   'http://localhost:3000',
   'http://localhost:5000',
-  'http://localhost:5173' 
+  'http://localhost:5173',
+  'https://app.swaggerhub.com',
+  'https://virtserver.swaggerhub.com'
 ];
 
 app.use(cors({
