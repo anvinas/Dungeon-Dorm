@@ -8,7 +8,7 @@ servers:
   - url: http://localhost:5000/api
 
 paths:
-  /auth/register:
+  api/auth/register:
     post:
       summary: Register a new user
       requestBody:
@@ -31,7 +31,7 @@ paths:
         '400':
           description: Missing or duplicate data
 
-  /auth/login:
+  api/auth/login:
     post:
       summary: Login and receive a JWT token
       requestBody:
@@ -52,7 +52,7 @@ paths:
         '400':
           description: Invalid credentials
 
-  /auth/find-user:
+  api/auth/find-user:
     post:
       summary: Find user profile (protected)
       security:
@@ -65,7 +65,7 @@ paths:
         '404':
           description: User profile not found
 
-  /auth/profile:
+  api/auth/profile:
     get:
       summary: Get authenticated user's profile (protected)
       security:
@@ -76,7 +76,7 @@ paths:
         '404':
           description: User profile not found
 
-  /auth/inventory:
+  api/auth/inventory:
     get:
       summary: Get user inventory (test)
       security:
@@ -99,7 +99,7 @@ paths:
         '200':
           description: Item added
 
-  /user/select-character:
+  api/user/select-character:
     post:
       summary: Select a character class for the user (one-time, protected)
       security:
@@ -120,14 +120,14 @@ paths:
         '400':
           description: Character already selected or missing data
 
-  /user/enemies:
+  api/user/enemies:
     post:
       summary: Return all enemies, including bosses and common enemies
       responses:
         '200':
           description: List of all bosses, common enemies, their stats, and items returned
 
-  /user/enemy:id:
+  api/user/enemy:id:
     post:
       summary: Fetch boss or enemy by ID
       parameters:
@@ -142,7 +142,7 @@ paths:
         '404':
           description: Not found
 
-  /fight/startEncounter:
+  api/fight/startEncounter:
     post:
       summary: Start a new encounter (protected), should be used before any turns
       security:
@@ -167,7 +167,7 @@ paths:
           type: string
           description: User already has an active encounter
 
-  /fight/userTurn:
+  api/fight/userTurn:
     post:
       summary: User takes a turn in an encounter (protected)
       security:
@@ -188,7 +188,7 @@ paths:
         '200':
           description: Turn processed, showing user/enemy defeat. If no one is defeated, returns total turn info. Prompts frontend for user levelup
 
-  /fight/levelup:
+  api/fight/levelup:
     post:
       summary: Level up the user (protected), should be used if userTurn prompts to do so
       security:
@@ -197,7 +197,7 @@ paths:
         '200':
           description: User leveled up, returns new stats and attributes.
 
-  /fight/getActiveEncounter:
+  api/fight/getActiveEncounter:
     post:
       summary: Get the user's active encounter (protected), should be used after login (ignore activityState, does not work as intended atm)
       security:
@@ -208,7 +208,7 @@ paths:
         '404':
           description: No active encounter found
 
-  /user/fetch-user:
+  api/user/fetch-user:
     post:
       summary: Fetch the authenticated user's profile
       description: Returns the user's profile with sensitive fields excluded. Requires authentication.
@@ -269,7 +269,7 @@ paths:
                   error:
                     type: string
                     
-  /user/delete-user-progress:
+  api/user/delete-user-progress:
     post:
       summary: Reset a user's progress to initial state
       description: Resets the user's level, bosses, currency, inventory, character, stats, HP, XP, and sets the next boss. Requires authentication.
