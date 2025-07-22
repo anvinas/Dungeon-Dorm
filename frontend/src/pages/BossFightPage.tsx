@@ -1,6 +1,6 @@
 import { useState, useEffect ,useRef} from "react";
 import axios from "axios";
-import type {Encounter_T,userAttackTurnReturn_T} from "../lib/types";
+import type {Encounter_T,userAttackTurnReturn_T,UserProfile_T} from "../lib/types";
 import FightFooter from "../components/FightFooter";
 import GetServerPath from "../lib/GetServerPath.ts"
 import { Navigate, useNavigate } from 'react-router-dom';
@@ -13,6 +13,7 @@ function BossFightPage() {
   const hasStartedRef = useRef(false);
 
   // const [questData, setQuestData] = useState<QuestData_T | null>(foundQuestData);
+  const [userData, setUserData] = useState<UserProfile_T | null >(null);
   const [encounterData, setEncounterData] = useState<Encounter_T | null>(null);
   const [currentCharm, setCurrentCharm] = useState<number>(0);
   const [rewardsXP,setRewardsXP] = useState<number>(-1)
@@ -46,9 +47,29 @@ function BossFightPage() {
     if (!hasStartedRef.current) {
       hasStartedRef.current = true;
       startEncounter();
+      fetchUserData()
     }
   }, []);
-  
+
+  const fetchUserData = async () => {
+    try {
+        const token = fetchJWT(); 
+        const res = await axios.get(`${GetServerPath()}/api/auth/profile`, {
+            headers: {
+            Authorization: `Bearer ${token}`
+            }
+        });
+        storeJWT(res.data.token)
+        setUserData(res.data.userProfile)
+    } catch (err:any) {
+        console.error("Error fetching userData:", err);
+        // Optional: redirect to login if 401
+        if (err.response?.status === 401 || err.response?.status === 403) {
+            navigate('/');
+        }
+    }
+    };
+
   const startEncounter = async () => {
       const urlParams = new URLSearchParams(window.location.search);
       const bossId = urlParams.get("_id");
@@ -179,7 +200,11 @@ function BossFightPage() {
     // If defeated Enemy first
     if(userAttackResponseData.postTurnEnemyHP <= 0){
       console.log(userAttackResponseData.rewards.rewards)
-      setRewardsXP(userAttackResponseData.rewards.rewards.xp)
+      try{
+        setRewardsXP(userAttackResponseData.rewards.xp || userAttackResponseData.rewards.rewards.xp)
+      }catch{
+        setRewardsXP(0)
+      }
       newEncounerObj.user.currentHP = userAttackResponseData.postTurnUserHP
       setModalStates((old)=>{let tmp={...old};tmp.wonScreen=true;return {...tmp}})
       setEncounterData({...newEncounerObj})
@@ -379,6 +404,11 @@ function BossFightPage() {
     if(userTalkResponseData.message == "Enemy charmed successfully!"){
       setCurrentCharm(encounterData.enemy.relationshipGoal)
       setModalStates((old)=>{let tmp={...old};tmp.charmedScreen=true;return {...tmp}})
+       try{
+        setRewardsXP(userTalkResponseData.rewards.xp || userTalkResponseData.rewards.rewards.xp)
+      }catch{
+        setRewardsXP(0)
+      }
       setEncounterData({...newEncounerObj})
     }
 
@@ -439,7 +469,7 @@ function BossFightPage() {
       {/* Charmed modal*/}
       {modalStates.charmedScreen &&   
         <div className='absolute w-screen h-screen left-[0%] top-[0%] translate-[0%] z-101'>
-          <CharmedcreenModal onClickLeave={()=>navigate("/play")}/>
+          <CharmedcreenModal  xp={rewardsXP} onClickLeave={()=>navigate("/play")}/>
         </div>
       }
 
@@ -473,7 +503,7 @@ function BossFightPage() {
         <div className={`${styles.playerImageContainer} absolute bottom-[20%] left-20 flex justify-start z-3 w-[20%]`}>
           <div className={`w-fit relative ${userAttackAnimating ? `${styles.lungeAnimation}` : ""}`}>
             {damageText &&userAttackAnimating&& <div className="absolute top-[0%] left-[50%] translate-x-[-50%] translate-y-[-50%] font-bold text-purple-800 text-4xl">{damageText}</div>}
-            <img src={`/assets/playableCharacter/warlock/pixel.png`} className="" alt="player"/>
+            <img src={`/assets/playableCharacter/${userData?.Character.class.toLowerCase()}/pixel.png`} className="" alt="player"/>
           </div>
         </div>
 
@@ -558,11 +588,12 @@ const RunScreenModal = ({onClickLeave}:{onClickLeave:()=>void})=>{
 )
 }
 
-const CharmedcreenModal = ({onClickLeave}:{onClickLeave:()=>void})=>{
+const CharmedcreenModal = ({onClickLeave,xp}:{xp:number;onClickLeave:()=>void})=>{
   return(
   <div className="w-full h-full bg-[#000000db] flex items-center flex-col justify-center gap-3">
     <div className="text-green-700 font-bold text-7xl">Succesfully Charmed!</div>
     <div className="text-white font-bold text-xl">Im surprised you talked yourself out of that!</div>
+    <div className="text-white font-bold text-xl">You've received 10 gold coins {xp>0?`and ${xp} XP!`:""}</div>
     <div className="text-white font-bold text-xl bg-purple-800 p-2 rounded-lg hover:bg-purple-700 cursor-pointer" onClick={()=>onClickLeave()}>Leave Area</div>
   </div>
 )
@@ -572,7 +603,7 @@ const WonScreenModal = ({onClickLeave,xp}:{xp:number;onClickLeave:()=>void})=>{
   return(
   <div className="w-full h-full bg-[#000000db] flex items-center flex-col justify-center gap-3">
     <div className="text-green-700 font-bold text-7xl">Succesfully Beat The Boss!</div>
-    <div className="text-white font-bold text-xl">Good Job! You've received 10 gold coins and {xp} XP!</div>
+    <div className="text-white font-bold text-xl">Good Job! You've received 10 gold coins {xp>0?`and ${xp} XP!`:""}</div>
     <div className="text-white font-bold text-xl bg-purple-800 p-2 rounded-lg hover:bg-purple-700 cursor-pointer" onClick={()=>onClickLeave()}>Leave Area</div>
   </div>
 )

@@ -113,7 +113,6 @@ const classGrowthRules = {
 function applyStatGrowth(className, currentStats, level) //Class name, current stats, level leveling up to
 {
     const growthFunction = classGrowthRules[className];
-
     if (!growthFunction){
         throw new Error(`Unknown class: ${className}`);
     }
@@ -138,8 +137,8 @@ exports.levelupUser = async (req, res) => {
     user.xp = user.xp - user.toLevelUpXP;
     user.level = user.level + 1;
 
-
-    const newStats = applyStatGrowth(user.Character.class, user.stats, user.level);
+    console.log("userStats",user.currentStats)
+    const newStats = applyStatGrowth(user.Character.class, user.currentStats, user.level);
 
     user.stats.strength = newStats.strength;
     user.stats.dexterity = newStats.dexterity;
@@ -533,6 +532,32 @@ function addItemToUser(user, itemId, quantity) {
     }
 }
 
+
+const handleCheckLevelUp = async(user)=>{
+    if (!user) {
+        return 
+    }
+    if (user.xp < user.toLevelUpXP) {
+        return 
+    }
+    if (user.level >= 10){
+        return 
+    }
+
+    user.xp = user.xp - user.toLevelUpXP;
+    user.level = user.level + 1;
+    await user.populate("Character")
+    const newStats = applyStatGrowth(user.Character.class, user.currentStats, user.level);
+    user.currentStats.strength = newStats.strength;
+    user.currentStats.dexterity = newStats.dexterity;
+    user.currentStats.intelligence = newStats.intelligence;
+    user.currentStats.charisma = newStats.charisma;
+    user.maxHP = newStats.maxHP;
+    user.currentHP = newStats.maxHP; //currentHP exists in the databse, should be removed but fine for now
+    user.toLevelUpXP = 1000 + (150 * user.level); //example formula, can be changed
+}
+
+
 async function handleEnemyDefeat(userId, enemyId, enemyType) {
     const user = await loadEntity(userId, 'User');
     const enemy = await loadEntity(enemyId, enemyType);
@@ -559,11 +584,12 @@ async function handleEnemyDefeat(userId, enemyId, enemyType) {
         readyToLevelUp: levelupTrigger
     };
     
-    // Add XP TO DB
-    if(rewards.readyToLevelUp && user.level < 10){
-      user.level+=1;
-      user.toLevelUpXP = Math.ceil(user.toLevelUpXP * 1.6);
-    }
+    // // Add XP TO DB
+    // if(rewards.readyToLevelUp && user.level < 10){
+    //   user.level+=1;
+    //   user.toLevelUpXP = Math.ceil(user.toLevelUpXP * 1.6);
+    // }
+    handleCheckLevelUp(user)
 
     let expSave = await user.save()
     console.log(expSave)

@@ -20,6 +20,7 @@ function App() {
   const navigate = useNavigate();
   const [currentQuestData, setCurrentQuestData] = React.useState<null | QuestData_T>(null);
   const [userData, setUserData] = React.useState<UserProfile_T | null >(null);
+  const [alreadyFetchedUserData, setAlreadyFetchedUserData] = React.useState<boolean>(false);
 
   // Modals
   const [modalStates, setModalStates] = React.useState<{inventory: Boolean;preFight:Boolean}>({
@@ -111,7 +112,7 @@ function App() {
     setModalStates(old => ({ ...old, preFight: true }));
   }
 
-const fetchUserData = async () => {
+  const fetchUserData = async () => {
     try {
       const token = fetchJWT(); 
       const res = await axios.get(`${GetServerPath()}/api/auth/profile`, {
@@ -121,7 +122,7 @@ const fetchUserData = async () => {
       });
       storeJWT(res.data.token)
       setUserData(res.data.userProfile)
-      console.log(res.data.userProfile)
+      setAlreadyFetchedUserData(true)
     } catch (err:any) {
       console.error("Error fetching userData:", err);
       // Optional: redirect to login if 401
@@ -131,6 +132,25 @@ const fetchUserData = async () => {
     }
   };
   
+  if(alreadyFetchedUserData){
+    if(userData == null){
+      navigate("/")
+      return
+    }
+    if(!userData.Character){
+      navigate("/character")
+      return
+    }
+  }
+
+  if(userData==null){
+    return(
+      <div className='w-full h-full justify-cnter items-center'>
+          <div className='font-bold text-3xl'>Loading</div>
+      </div>
+    )
+  }
+
   return (
     <div className='w-full h-full'>
 
@@ -146,7 +166,7 @@ const fetchUserData = async () => {
           {userLocation && (
               <Marker longitude={userLocation.longitude} latitude={userLocation.latitude}>
                 <img
-                  src="/assets/playableCharacter/warlock/back.png"
+                  src={`/assets/playableCharacter/${userData.Character.class.toLowerCase()}/pixel.png`}
                   alt="Character"
                   style={{
                     height: `${viewState.zoom * 6}px`, // You can tweak multiplier (e.g. 6) to suit your style

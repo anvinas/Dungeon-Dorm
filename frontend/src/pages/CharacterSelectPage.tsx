@@ -16,14 +16,17 @@ function CharacterSelectPage(){
 
     const [allPossibleCharacterInfo,setAllPossibleCharacterInfo] = useState([
         {id:"685d632886585be7727d064c",name:"warlock",animDelay:500,scrollFrame:1},
-        {id:"686552bddd55124b4da9b83e",name:"warlock",animDelay:943,scrollFrame:1},
-        {id:"686552bddd55124b4da9b83e",name:"warlock",animDelay:3584,scrollFrame:1},
-        {id:"686552bddd55124b4da9b83e",name:"warlock",animDelay:1255,scrollFrame:1},
+        {id:"68655295dd55124b4da9b83d",name:"bard",animDelay:943,scrollFrame:1},
+        {id:"686552bddd55124b4da9b83e",name:"barbarian",animDelay:3584,scrollFrame:1},
+        {id:"68655353dd55124b4da9b83f",name:"rogue",animDelay:1255,scrollFrame:1},
     ])
     const [selectedScrollIndex,setSelectedScrollIndex] = useState(-1)
     const [error,setError] = useState("")
     const [successSelectionData,setSuccessSelectionData] = useState<SuccessSelectionData | null>(null)
 
+    useEffect(()=>{
+        fetchUserData()
+    },[])
     useEffect(()=>{
         // fetchCharacterID()
         if(error.includes("already")){
@@ -42,6 +45,31 @@ function CharacterSelectPage(){
         })
         setAllPossibleCharacterInfo(tempCharacterInfo)
     }
+
+    const fetchUserData = async () => {
+        try {
+            const token = fetchJWT(); 
+            const res = await axios.get(`${GetServerPath()}/api/auth/profile`, {
+                headers: {
+                Authorization: `Bearer ${token}`
+                }
+            });
+            storeJWT(res.data.token)
+            try{
+                if(res.data.userProfile.Character.class){
+                    navigate("/play")
+                }
+            }catch{
+
+            }
+        } catch (err:any) {
+            console.error("Error fetching userData:", err);
+            // Optional: redirect to login if 401
+            if (err.response?.status === 401 || err.response?.status === 403) {
+                navigate('/');
+            }
+        }
+    };
 
     return (
         <div className="relative w-screen h-screen overflow-hidden">

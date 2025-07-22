@@ -327,9 +327,9 @@ function InventorySystem({onClose,onHealthChange}:{onClose:()=>void;onHealthChan
               <div className="flex flex-col flex-1">
                 <div className="text-center text-white font-bold capitalize text-lg">{userData.gamerTag}</div>
                 {/* Image takes up remaining space */}
-                <div className="flex-1 flex items-center justify-center">
+                <div className="flex-1 flex items-center justify-center overdlow-y-auto">
                   <img
-                    className={`${styles.pixelImage} w-[50%] max-w-full object-contain`}
+                    className={`${styles.pixelImage} w-[40%] object-contain`}
                     src={`/assets/playableCharacter/${userData.Character.class.toLowerCase()}/pixel.png`}
                     alt="Character"
                   />
