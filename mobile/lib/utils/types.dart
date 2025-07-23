@@ -113,14 +113,23 @@ class InventoryItem {
   });
 
   factory InventoryItem.fromJson(Map<String, dynamic> json) {
+    int parseInt(dynamic value) {
+      if (value == null) return 0; // or you can throw or set a default
+      if (value is int) return value;
+      if (value is String) return int.tryParse(value) ?? 0;
+      return 0;
+    }
+
     return InventoryItem(
-      id: json['_id'],
-      name: json['name'],
-      description: json['description'],
-      damage: json['damage'],
-      itemType: json['itemType'],
+      id: json['_id'] is Map ? json['_id']['\$oid'] ?? '' : json['_id']?.toString() ?? '',
+      name: json['name'] ?? '',
+      description: json['description'] ?? '',
+      damage: parseInt(json['damage']),
+      itemType: json['itemType'] ?? '',
       imageURL: json['imageURL'],
-      healthAmount: json['healthAmount'],
+      healthAmount: json['healthAmount'] != null
+          ? parseInt(json['healthAmount'])
+          : null,
     );
   }
 }

@@ -16,8 +16,14 @@ class InventorySystem extends StatefulWidget {
 
 class _InventorySystemState extends State<InventorySystem> {
   UserProfile? userData;
-  List<InventoryItem> itemShopList = [];
   InventoryItem? usingItem;
+  List<InventoryItem> itemShopList = [];
+
+  InventoryItem? purchasingItem;
+
+
+  bool isShopOpen = false;
+  bool isLoadingShop = false;
 
   List<CurrentLootItem> weapons = [];
   List<CurrentLootItem> potions = [];
@@ -32,114 +38,107 @@ class _InventorySystemState extends State<InventorySystem> {
 
   Future<void> fetchUserData() async {
     try {
-      // final token = await fetchJWT();
-      // final res = await http.get(
-      //   Uri.parse("${getPath()}/api/auth/profile"),
-      //   headers: {"Authorization": "Bearer $token"},
-      // );
-      // if (res.statusCode == 200) {
-      //   final json = jsonDecode(res.body);
-      //   final profile = UserProfile.fromJson(json['userProfile']);
-      //   await storeJWT(json['token']);
-      //   setState(() {
-      //     userData = profile;
-      //   });
-      //   createInventorySections(profile.currentLoot);
-      // }
+      final token = await fetchJWT(); // Your function to get stored JWT token
 
-      final dummyProfile = UserProfile(
-        id: 'u001',
-        email: 'mock@user.com',
-        gamerTag: 'NewGamer', // Updated gamerTag
-        level: 1, // Updated level
-        currency: 500, // Updated currency
-        maxHP: 100,
-        currentHP: 100, // Updated currentHP
-        currentStats: UserStats(
-          strength: 0, // Updated stats
-          dexterity: 0,
-          intelligence: 0,
-          charisma: 2,
-          defense: 0,
-        ),
-        currentLoot: [
-          CurrentLootItem(
-            id: 'c001',
-            quantity: 3, // Updated quantity
-            itemId: InventoryItem(
-              id: 'potion001',
-              name: 'Health Potion',
-              description: 'Restores 50 HP',
-              damage: 0,
-              itemType: 'Potion',
-              imageURL: 'health_mini.png', // Assuming this path exists
-              healthAmount: 50,
-            ),
-          ),
-        ],
-        character: Character(
-          id: 'char001',
-          species: 'Elf', // Match image
-          characterClass: 'Archer', // Match image
-          maxHP: 100,
-          stats: {
-            'strength': 0,
-            'dexterity': 0,
-            'intelligence': 0,
-            'charisma': 2,
-            'defense': 0,
-          },
-        ),
-        bosses: [],
-        currentActiveBoss: null,
-        createdAt: '',
-        updatedAt: '',
-        currentXP: 0, // Updated XP
-        toLevelUpXP: 1000, // Updated XP
+      final response = await http.get(
+        Uri.parse('${getPath()}/api/auth/profile'),
+        headers: {
+          'Authorization': 'Bearer $token',
+        },
       );
 
-      setState(() {
-        userData = dummyProfile;
-      });
-      createInventorySections(dummyProfile.currentLoot);
+      if (response.statusCode == 200) {
+        final json = jsonDecode(response.body);
+        final profile = UserProfile.fromJson(json['userProfile']);
+        await storeJWT(json['token']); // Your function to store JWT token
+
+        setState(() {
+          userData = profile;
+        });
+        createInventorySections(profile.currentLoot);
+      } else if (response.statusCode == 401 || response.statusCode == 403) {
+        // Handle unauthorized - maybe navigate to login screen
+        Navigator.of(context).pushReplacementNamed('/login');
+      } else {
+        print('Failed to fetch user data: ${response.statusCode}');
+      }
     } catch (e) {
-      print("Failed to load user data: $e");
+      print('Error fetching user data: $e');
     }
   }
 
   Future<void> fetchItemShop() async {
-    try {
-      // final token = await fetchJWT();
-      // final res = await http.get(
-      //   Uri.parse("${getPath()}/api/auth/inventory"),
-      //   headers: {"Authorization": "Bearer $token"},
-      // );
-      // if (res.statusCode == 200) {
-      //   final json = jsonDecode(res.body);
-      //   final items = (json as List)
-      //       .map((itemJson) => InventoryItem.fromJson(itemJson))
-      //       .toList();
-      //   setState(() {
-      //     itemShopList = items;
-      //   });
-      // }
+    setState(() {
+      isLoadingShop = true;
+    });
 
-      setState(() {
-        itemShopList = [
-          InventoryItem(
-            id: 'key001',
-            name: 'Phantom Eye Key',
-            description: 'Key to unlock the Specter boss.',
-            itemType: 'Key',
-            damage: 0,
-            imageURL: 'health_mini.png',
-          ),
-        ];
-      });
+    try {
+      final token = await fetchJWT(); // Replace with your actual token fetching
+      final response = await http.get(
+        Uri.parse('${getPath()}/api/auth/inventory'),
+        headers: {
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final List<InventoryItem> items = (data['items'] as List)
+            .map((itemJson) => InventoryItem.fromJson(itemJson))
+            .toList();
+
+        setState(() {
+          itemShopList = items;
+        });
+
+        await storeJWT(data['token']); // If token refresh is returned
+      } else if (response.statusCode == 401 || response.statusCode == 403) {
+        Navigator.pushReplacementNamed(context, '/');
+      } else {
+        print('Unexpected status: ${response.statusCode}');
+      }
     } catch (e) {
-      print("Failed to load shop items: $e");
+      print("Error fetching inventory: $e");
+    } finally {
+      setState(() {
+        isLoadingShop = false;
+      });
     }
   }
+
+  // Future<void> fetchItemShop() async {
+  //   try {
+  //     // final token = await fetchJWT();
+  //     // final res = await http.get(
+  //     //   Uri.parse("${getPath()}/api/auth/inventory"),
+  //     //   headers: {"Authorization": "Bearer $token"},
+  //     // );
+  //     // if (res.statusCode == 200) {
+  //     //   final json = jsonDecode(res.body);
+  //     //   final items = (json as List)
+  //     //       .map((itemJson) => InventoryItem.fromJson(itemJson))
+  //     //       .toList();
+  //     //   setState(() {
+  //     //     itemShopList = items;
+  //     //   });
+  //     // }
+
+  //     setState(() {
+  //       itemShopList = [
+  //         InventoryItem(
+  //           id: 'key001',
+  //           name: 'Phantom Eye Key',
+  //           description: 'Key to unlock the Specter boss.',
+  //           itemType: 'Key',
+  //           damage: 0,
+  //           imageURL: 'health_mini.png',
+  //         ),
+  //       ];
+  //     });
+  //   } catch (e) {
+  //     print("Failed to load shop items: $e");
+  //   }
+  // }
 
   void createInventorySections(List<CurrentLootItem> loot) {
     weapons.clear();
@@ -185,7 +184,7 @@ Widget build(BuildContext context) {
                         children: [
                           _buildSection(_buildInventory()),
                           const SizedBox(height: 12),
-                          _buildSection(_buildCharacterSection()),
+                          _buildSection(isShopOpen ? _buildShopSection() : _buildCharacterSection()),
                           const SizedBox(height: 12),
                           _buildSection(_buildStatsSection()),
                         ],
@@ -396,11 +395,11 @@ Widget build(BuildContext context) {
   }
 
   Widget _buildOpenShopButton() {
-    return Flexible(
-      child: ElevatedButton(
+    // return Flexible(
+      return ElevatedButton(
         onPressed: () {
           // Handle open shop logic
-          print("Open Shop button pressed!");
+          isShopOpen = true; // Open the shop modal
         },
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.transparent, // Transparent background
@@ -422,13 +421,13 @@ Widget build(BuildContext context) {
             textAlign: TextAlign.center, // Center text in case it wraps
           ),
         ),
-      ),
-    );
+      );
+    // );
   }
 
   Widget _buildCurrencyDisplay(int currency) {
-    return Flexible(
-      child: Container(
+    // return Flexible(
+      return Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
           color: Colors.transparent, // Transparent background
@@ -455,8 +454,8 @@ Widget build(BuildContext context) {
             ),
           ],
         ),
-      ),
-    );
+      );
+    // );
   }
 
   Widget _buildCharacterSection() {
@@ -611,6 +610,171 @@ Widget build(BuildContext context) {
           fontSize: 22,
           fontWeight: FontWeight.bold,
         ),
+      ),
+    );
+  }
+
+
+  
+  // ADDED
+  Widget _buildShopSection() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.grey[700],
+        borderRadius: BorderRadius.circular(12),
+      ),
+      padding: const EdgeInsets.all(12),
+      child: Column(
+        children: [
+          // Header
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.grey[600],
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: const Center(
+              child: Text(
+                'Item Shop',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 12),
+
+          // Weapons Section
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: Colors.green[800],
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Weapons',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
+                ),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 10,
+                  runSpacing: 10,
+                  children: itemShopList
+                      .where((item) => item.itemType == 'Weapon')
+                      .map((item) => ItemWidget(
+                            itemData: item,
+                            onClick: () => print(item),
+                          ))
+                      .toList(),
+                )
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 12),
+
+          // Potions Section
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: Colors.purple[800],
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Potions',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
+                ),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 10,
+                  runSpacing: 10,
+                  children: itemShopList
+                      .where((item) => item.itemType == 'Potion')
+                      .map((item) => ItemWidget(
+                            itemData: item,
+                            onClick: () => print(item),
+                          ))
+                      .toList(),
+                )
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+}
+
+
+
+
+class ItemWidget extends StatelessWidget {
+  final InventoryItem itemData;
+  final VoidCallback onClick;
+  final double size;
+  final bool showQuantity;
+  final int quantity;
+
+  const ItemWidget({
+    Key? key,
+    required this.itemData,
+    required this.onClick,
+    this.size = 50,
+    this.showQuantity = false,
+    this.quantity = 0,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onClick,
+      child: Stack(
+        children: [
+          Container(
+            width: size,
+            height: size,
+            decoration: BoxDecoration(
+              color: Colors.grey[800],
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.white12, width: 1),
+            ),
+            padding: const EdgeInsets.all(6),
+            child: Image.asset(
+              'assets/item${itemData.imageURL}.png',
+              fit: BoxFit.contain,
+            ),
+          ),
+          if (showQuantity && quantity > 0 && itemData.itemType != 'Weapon')
+            Positioned(
+              right: 2,
+              bottom: 2,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: Colors.blue[700],
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  'x$quantity',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }
