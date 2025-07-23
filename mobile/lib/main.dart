@@ -1,3 +1,4 @@
+import 'package:dungeon_and_dorms/pages/play_page.dart';
 import 'package:dungeon_and_dorms/utils/types.dart';
 import 'package:flutter/material.dart';
 import 'pages/boss_fight_page.dart';
@@ -22,7 +23,7 @@ class MyApp extends StatelessWidget {
       routes: {
         '/': (context) => const LoginPage(),
         '/select': (context) => CharacterSelectPage(),
-        '/play': (context) => const LoginPage(),
+        '/play': (context) => const GameMapPage(),
         '/bossfight': (context) {
           final questData = ModalRoute.of(context)!.settings.arguments as QuestData;
           return BossFightPage(bossId: questData.id);
