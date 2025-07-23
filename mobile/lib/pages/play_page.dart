@@ -14,284 +14,209 @@ import '../utils/jwt_storage.dart';
 import '../utils/get_path.dart';
 
 // Mock Quest Data - Updated with specific image paths for variety
-final List<QuestData> QUESTZONE = [
-  QuestData(
-    id: '3',
-    name: 'Library of Whispers',
-    species: 'Specter',
-    characterClass: 'Phantom Mage',
-    maxHP: 120,
-    relationshipGoal: 3,
-    stats: UserStats(
-      strength: 6,
-      dexterity: 8,
-      intelligence: 18,
-      charisma: 10,
-      defense: 5,
-    ),
-    reward: QuestReward(
-      gold: 50,
-      xp: 150,
-      items: [
-        RewardItem(itemId: 'potion001', quantity: 1),
-        RewardItem(itemId: 'spellbook001', quantity: 1),
+const QUESTZONE = [
+  {
+    "id": "685d5cb386585be7727d0621",
+    "name": "Gabriel the Hidden",
+    "species": "Tielfing",
+    "class": "Rogue",
+    "maxHP": 256,
+    "relationshipGoal": 60,
+    "stats": {
+      "strength": 8,
+      "dexterity": 0,
+      "intelligence": 2,
+      "charisma": 2,
+      "defense": 7
+    },
+    "level": 8,
+    "location": {
+      "sceneName": "Engineering Building",
+      "description": "Gears grind and steam hisses in this hub of innovation. Strange contraptions line the walls.",
+      "environmentTags": [
+        "indoor",
+        "industrial",
+        "noisy"
       ],
-    ),
-    level: 3,
-    location: QuestLocation(
-      sceneName: 'Haunted Library',
-      description: 'A forgotten archive filled with ancient tomes and spectral secrets.',
-      environmentTags: ['indoor', 'mystic', 'dark'],
-      latitude: 28.6010, // Adjusted to be near center of red hotzone
-      longitude: -81.2000,
-    ),
-    dialogues: QuestDialogues(
-      ifNotUnlocked: 'You are not yet attuned to this place.',
-      preFightMain: ['The books whisper warnings...', 'You feel an unseen presence.'],
-      bossFightSuccess: ['The whispers fade. You are victorious.'],
-      bossFightFail: ['The library consumes another soul.'],
-      userFightSuccess: ['Your magic sears through the specter!'],
-      userFightFail: ['Your spell fizzles...'],
-      userTalkSuccess: ['You commune with the spirit peacefully.'],
-      userTalkFail: ['It shrieks in rage!'],
-      userHideSuccess: ['You blend into the shadows.'],
-      userHideFail: ['You knock over a bookstand. It notices you.'],
-      death: 'The last thing you hear is a whisper... then nothing.',
-      relationshipGain: 'The specter acknowledges your understanding.',
-      win: 'The knowledge of the past is now yours.',
-    ),
-    enemyType: 'ghost',
-  ),
-  QuestData(
-    id: '4',
-    name: 'Ancient Crypt',
-    species: 'Orc', // Changed for visual variety
-    characterClass: 'Warrior',
-    maxHP: 150,
-    relationshipGoal: 2,
-    stats: UserStats(
-      strength: 10,
-      dexterity: 5,
-      intelligence: 12,
-      charisma: 7,
-      defense: 8,
-    ),
-    reward: QuestReward(
-      gold: 70,
-      xp: 200,
-      items: [
-        RewardItem(itemId: 'gold_coin', quantity: 10),
+      "latitude": 28.601807,
+      "longitude": -81.19874
+    },
+    "preFightMain": [
+      "...",
+      "You killed that BlobMan? I've been waiting for him to kick the bucket. Bro wouldn’t stop preaching.",
+      "...",
+      "So…. Do you listen to Radiohead? Wanna listen to Creep….",
+      "Oh…You want my stone rune? I should have known you didn't care about RadioHead."
+    ]
+  },
+  {
+    "id": "685d5cb386585be7727d0620",
+    "name": "Queen Andrea of the Pixies",
+    "species": "Fairy",
+    "class": "Bard",
+    "maxHP": 272,
+    "relationshipGoal": 80,
+    "stats": {
+      "strength": 0,
+      "dexterity": 8,
+      "intelligence": 8,
+      "charisma": 10,
+      "defense": 5
+    },
+    "level": 9,
+    "location": {
+      "sceneName": "Wooden Bridge (Night)",
+      "description": "A rickety bridge spanning a murky chasm. The wood creaks with every step. It feels especially eerie at nighttime.",
+      "environmentTags": [
+        "outdoor",
+        "dangerous",
+        "nature",
+        "nighttime"
       ],
-    ),
-    level: 4,
-    location: QuestLocation(
-      sceneName: 'Dusty Crypt',
-      description: 'A decaying crypt where the undead stir.',
-      environmentTags: ['underground', 'dark', 'eerie'],
-      latitude: 28.6025,
-      longitude: -81.1965,
-    ),
-    dialogues: QuestDialogues(
-      ifNotUnlocked: 'The crypt remains sealed to you.',
-      preFightMain: ['A chilling moan echoes...', 'The air grows heavy with dread.'],
-      bossFightSuccess: ['The crypt falls silent. Peace returns.'],
-      bossFightFail: ['The darkness claims another victim.'],
-      userFightSuccess: ['Your blade cleaves through the reanimated flesh!'],
-      userFightFail: ['Your attack glances off.'],
-      userTalkSuccess: ['You find common ground with the lost souls.'],
-      userTalkFail: ['Their screams fill the chamber!'],
-      userHideSuccess: ['You become one with the shadows.'],
-      userHideFail: ['A skeleton rattles a warning.'],
-      death: 'The cold embrace of the crypt is your final resting place.',
-      relationshipGain: 'The undead respect your mastery.',
-      win: 'The crypt\'s secrets are revealed.',
-    ),
-    enemyType: 'orc', // Using 'orc' to map to a specific image
-  ),
-  QuestData(
-    id: '5',
-    name: 'Golem Quarry',
-    species: 'Dragon', // Changed for visual variety
-    characterClass: 'Earth Shaper',
-    maxHP: 200,
-    relationshipGoal: 1,
-    stats: UserStats(
-      strength: 15,
-      dexterity: 3,
-      intelligence: 7,
-      charisma: 4,
-      defense: 12,
-    ),
-    reward: QuestReward(
-      gold: 100,
-      xp: 250,
-      items: [
-        RewardItem(itemId: 'ore', quantity: 5),
+      "latitude": 28.602777,
+      "longitude": -81.199921
+    },
+    "preFightMain": [
+      "Hey girlypop! What brings you into my beautiful kingdom?",
+      "Omg, you killed that blob thing? Slayyyyy.",
+      "Not to be like super mega rude or anything, but like I have royal things to do…",
+      "Why are you here?",
+      "You want fairy dust? Too bad, you’re like not a fairy.”"
+    ]
+  },
+  {
+    "id": "685d5cb386585be7727d0624",
+    "name": "Adrian the Prophet",
+    "species": "Plasmoid",
+    "class": "Cleric",
+    "maxHP": 145,
+    "relationshipGoal": 10,
+    "stats": {
+      "strength": 1,
+      "dexterity": 5,
+      "intelligence": 1,
+      "charisma": 0,
+      "defense": 0
+    },
+    "level": 2,
+    "location": {
+      "sceneName": "Bathroom",
+      "description": "A surprisingly clean bathroom. A faint smell of magic hangs in the air.",
+      "environmentTags": [
+        "indoor",
+        "magical"
       ],
-    ),
-    level: 5,
-    location: QuestLocation(
-      sceneName: 'Rocky Quarry',
-      description: 'A quarry where the very earth comes alive.',
-      environmentTags: ['outdoor', 'rocky', 'day'],
-      latitude: 28.6040,
-      longitude: -81.2020,
-    ),
-    dialogues: QuestDialogues(
-      ifNotUnlocked: 'The quarry guards its stony secrets.',
-      preFightMain: ['The ground rumbles...', 'A giant shadow looms.'],
-      bossFightSuccess: ['The earth settles. You are the master.'],
-      bossFightFail: ['You are crushed underfoot.'],
-      userFightSuccess: ['Your might shatters the stone!'],
-      userFightFail: ['Your blows are absorbed.'],
-      userTalkSuccess: ['You calm the earth spirit.'],
-      userTalkFail: ['The golem roars!'],
-      userHideSuccess: ['You meld with the rocks.'],
-      userHideFail: ['A dislodged pebble gives you away.'],
-      death: 'The earth reclaims your form.',
-      relationshipGain: 'The golem recognizes your strength.',
-      win: 'The quarry\'s heart is yours.',
-    ),
-    enemyType: 'dragon', // Using 'dragon' for visual variety
-  ),
-  QuestData(
-    id: '6',
-    name: 'Shadow Den',
-    species: 'Elf', // Changed for visual variety
-    characterClass: 'Void Hunter',
-    maxHP: 100,
-    relationshipGoal: 4,
-    stats: UserStats(
-      strength: 8,
-      dexterity: 15,
-      intelligence: 10,
-      charisma: 6,
-      defense: 7,
-    ),
-    reward: QuestReward(
-      gold: 60,
-      xp: 180,
-      items: [
-        RewardItem(itemId: 'shadow_essence', quantity: 2),
+      "latitude": 28.60141,
+      "longitude": -81.199118
+    },
+    "preFightMain": [
+      "Greetings, traveler. I am the Prophet Adrain, voice of the Great and Powerful Blob Lord.",
+      "Have you come to talk about joining my faithful following in devoting our lives to the blobness?",
+      "Oh, you just want my magical amulet? Erm, no, it's mine."
+    ]
+  },
+  {
+    "id": "685d5cb386585be7727d061f",
+    "name": "Evil Narrator",
+    "species": "Human",
+    "class": "Wizard",
+    "maxHP": 430,
+    "relationshipGoal": 100,
+    "stats": {
+      "strength": 10,
+      "dexterity": 10,
+      "intelligence": 10,
+      "charisma": 10,
+      "defense": 10
+    },
+    "level": 10,
+    "location": {
+      "sceneName": "Classroom",
+      "description": "Desks and chairs are neatly arranged, awaiting students. A chalkboard lists obscure equations.",
+      "environmentTags": [
+        "indoor",
+        "learning",
+        "quiet"
       ],
-    ),
-    level: 3,
-    location: QuestLocation(
-      sceneName: 'Dark Alley',
-      description: 'A shadowy corner where strange things lurk.',
-      environmentTags: ['urban', 'dark', 'eerie'],
-      latitude: 28.6030,
-      longitude: -81.1980,
-    ),
-    dialogues: QuestDialogues(
-      ifNotUnlocked: 'The shadows are too deep for you.',
-      preFightMain: ['A cold draft embraces you...', 'Eyes glint from the darkness.'],
-      bossFightSuccess: ['The shadows dissipate. You are safe.'],
-      bossFightFail: ['You are lost in the void.'],
-      userFightSuccess: ['Your light pierces the darkness!'],
-      userFightFail: ['The shadows consume your attack.'],
-      userTalkSuccess: ['You pacify the restless shadows.'],
-      userTalkFail: ['The shadows lash out!'],
-      userHideSuccess: ['You become one with the gloom.'],
-      userHideFail: ['A sudden noise reveals you.'],
-      death: 'The last thing you feel is a cold embrace.',
-      relationshipGain: 'The shadows acknowledge your presence.',
-      win: 'The secrets of the shadows are unveiled.',
-    ),
-    enemyType: 'elf', // Using 'elf' for visual variety
-  ),
-  QuestData(
-    id: '7',
-    name: 'Ice Peak',
-    species: 'Blue Imp', // Changed for visual variety
-    characterClass: 'Frost Mage',
-    maxHP: 130,
-    relationshipGoal: 3,
-    stats: UserStats(
-      strength: 7,
-      dexterity: 9,
-      intelligence: 16,
-      charisma: 8,
-      defense: 6,
-    ),
-    reward: QuestReward(
-      gold: 80,
-      xp: 220,
-      items: [
-        RewardItem(itemId: 'frost_shard', quantity: 3),
+      "latitude": 28.6016,
+      "longitude": -81.2
+    },
+    "preFightMain": [
+      "Finally! Took you long enough to get everything.",
+      "I should have known a simple barista would take their sweet time even if they think the world is at stake.",
+      "Well, joke's on you, the world was perfectly fine, just filled with losers and blobs.",
+      "But now that I have these magical items, I am going to cleanse the world of trash.",
+      "That's right. IM EVIL PROFESSOR LEINECKER!!!!!!"
+    ]
+  },
+  {
+    "id": "685d5cb386585be7727d0622",
+    "name": "Just Dave",
+    "species": "Dragonborn",
+    "class": "Fighter",
+    "maxHP": 234,
+    "relationshipGoal": 40,
+    "stats": {
+      "strength": 6,
+      "dexterity": 2,
+      "intelligence": 1,
+      "charisma": 1,
+      "defense": 6
+    },
+    "level": 6,
+    "location": {
+      "sceneName": "Library",
+      "description": "Rows upon rows of ancient texts and arcane scrolls. Dust motes dance in the sunlight.",
+      "environmentTags": [
+        "indoor",
+        "knowledge",
+        "quiet"
       ],
-    ),
-    level: 4,
-    location: QuestLocation(
-      sceneName: 'Frozen Summit',
-      description: 'A towering peak covered in eternal ice.',
-      environmentTags: ['outdoor', 'cold', 'mountain'],
-      latitude: 28.6055,
-      longitude: -81.2010,
-    ),
-    dialogues: QuestDialogues(
-      ifNotUnlocked: 'The peak is too treacherous for you.',
-      preFightMain: ['A biting wind howls...', 'The ice shimmers ominously.'],
-      bossFightSuccess: ['The mountain is still. The cold embraces you no more.'],
-      bossFightFail: ['You become a part of the frozen landscape.'],
-      userFightSuccess: ['Your warmth melts the icy foe!'],
-      userFightFail: ['Your attacks freeze in the air.'],
-      userTalkSuccess: ['You find harmony with the frosty spirit.'],
-      userTalkFail: ['The ice elemental shrieks with cold rage!'],
-      userHideSuccess: ['You disappear into the blizzard.'],
-      userHideFail: ['A shard of ice falls, betraying your position.'],
-      death: 'The cold claims you, slowly and painfully.',
-      relationshipGain: 'The ice acknowledges your spirit.',
-      win: 'The chill of the peak reveals its secrets.',
-    ),
-    enemyType: 'blue_imp', // Using 'blue_imp' for visual variety
-  ),
-  QuestData(
-    id: '8',
-    name: 'Gothic Priestess',
-    species: 'Priestess',
-    characterClass: 'Cleric',
-    maxHP: 110,
-    relationshipGoal: 5,
-    stats: UserStats(
-      strength: 5,
-      dexterity: 7,
-      intelligence: 15,
-      charisma: 10,
-      defense: 6,
-    ),
-    reward: QuestReward(
-      gold: 90,
-      xp: 230,
-      items: [
-        RewardItem(itemId: 'holy_relic', quantity: 1),
+      "latitude": 28.600852,
+      "longitude": -81.20102
+    },
+    "preFightMain": [
+      "Good Marrow! Welcome to my collection of trinkets.",
+      "You’re the killer of the blob pest? Huzzah! I hope this world will one day be free of the blob infestation.",
+      "I know my dragon-like appearance might be frightening, but no fear.",
+      "I am merely a knowledge collector who also happens to be well-trained in murder.",
+      "The Sword of Destruction? I protect it here along with other historical pieces. You may not have it."
+    ]
+  },
+  {
+    "id": "685d5cb386585be7727d0623",
+    "name": "Shaq of the Forest",
+    "species": "Elf (w/dreads)",
+    "class": "Ranger",
+    "maxHP": 178,
+    "relationshipGoal": 20,
+    "stats": {
+      "strength": 2,
+      "dexterity": 4,
+      "intelligence": 2,
+      "charisma": 4,
+      "defense": 2
+    },
+    "level": 4,
+    "location": {
+      "sceneName": "Wooden Bridge",
+      "description": "A rickety bridge spanning a murky chasm. The wood creaks with every step under the bright daytime sun.",
+      "environmentTags": [
+        "outdoor",
+        "dangerous",
+        "nature",
+        "daytime"
       ],
-    ),
-    level: 5,
-    location: QuestLocation(
-      sceneName: 'Old Church',
-      description: 'A decaying church, filled with echoes of past prayers.',
-      environmentTags: ['indoor', 'gothic', 'eerie'],
-      latitude: 28.6035,
-      longitude: -81.1995,
-    ),
-    dialogues: QuestDialogues(
-      ifNotUnlocked: 'The church gates are sealed against you.',
-      preFightMain: ['A solemn chant fills the air...', 'Shadows dance on the altar.'],
-      bossFightSuccess: ['The church finds peace. The darkness recedes.'],
-      bossFightFail: ['You are bound to the church forever.'],
-      userFightSuccess: ['Your spirit breaks the corrupted faith!'],
-      userFightFail: ['Your attacks are met with divine protection.'],
-      userTalkSuccess: ['You calm the tormented soul.'],
-      userTalkFail: ['She screams, eyes burning with hatred!'],
-      userHideSuccess: ['You blend into the confessionals.'],
-      userHideFail: ['The creaking floorboards betray you.'],
-      death: 'Your last breath is a silent prayer.',
-      relationshipGain: 'The priestess feels a connection.',
-      win: 'The church\'s sacred knowledge is yours.',
-    ),
-    enemyType: 'gothic_priestess', // Using 'gothic_priestess' for visual variety
-  ),
+      "latitude": 28.602371,
+      "longitude": -81.199336
+    },
+    "preFightMain": [
+      "Hey Stranger. What brings you here?",
+      "Oh, you killed Blobman? THANK GOD HE SUCKED!!!!!!!!!!!!!!!",
+      "Well, as you go through this forest, be careful. And remember: Be Bear Aware, Follow Fire Safety Guidelines, and–",
+      "My enchanted armor? I kind of need it."
+    ]
+  }
 ];
 
 class GameMapPage extends StatefulWidget {
@@ -310,7 +235,7 @@ class _GameMapPageState extends State<GameMapPage>
 
   bool _inventoryModal = false;
   bool _preFightModal = false;
-  QuestData? _currentQuest;
+  Map<String, dynamic>? _currentQuest;
 
   late final AnimationController _pulseController;
   UserProfile? _userProfile;
@@ -450,7 +375,7 @@ class _GameMapPageState extends State<GameMapPage>
     return meters / metersPerPixel;
   }
 
-  void _handleClickQuest(QuestData quest) {
+  void _handleClickQuest(Map<String, dynamic> quest) {
     setState(() {
       _currentQuest = quest;
       _preFightModal = true;
@@ -458,27 +383,24 @@ class _GameMapPageState extends State<GameMapPage>
   }
 
   // Updated _buildQuestMarker to match the image's circular boss icons
-  Widget _buildQuestMarker(QuestData quest) {
+  Widget _buildQuestMarker(Map<String, dynamic> quest) {
     // Map enemyType to image asset path for bosses
     String imagePath;
-    switch (quest.enemyType) {
-      case 'ghost':
+    switch (quest["class"]) {
+      case 'Bard':
         imagePath = 'assets/img/boss/andrea/pixel.png';
         break;
-      case 'orc':
-        imagePath = 'assets/img/boss/andrea/pixel.png';
+      case 'Rogue':
+        imagePath = 'assets/img/boss/gabriel/pixel.png';
         break;
-      case 'dragon':
-        imagePath = 'assets/img/boss/andrea/pixel.png';
+      case 'Cleric':
+        imagePath = 'assets/img/boss/adrian/pixel.png';
         break;
-      case 'elf':
-        imagePath = 'assets/img/boss/andrea/pixel.png';
+      case 'Ranger':
+        imagePath = 'assets/img/boss/shaq/pixel.png';
         break;
-      case 'blue_imp':
-        imagePath = 'assets/img/boss/andrea/pixel.png';
-        break;
-      case 'gothic_priestess':
-        imagePath = 'assets/img/boss/andrea/pixel.png';
+      case 'Fighter':
+        imagePath = 'assets/img/boss/dave/pixel.png';
         break;
       default:
         imagePath = 'assets/img/boss/andrea/pixel.png';
@@ -486,7 +408,7 @@ class _GameMapPageState extends State<GameMapPage>
 
     return GestureDetector(
      onTap: () {
-        print('Quest ${quest.name} tapped');
+        print('Quest ${quest["name"]} tapped');
         _handleClickQuest(quest);
       },
 
@@ -550,14 +472,15 @@ class _GameMapPageState extends State<GameMapPage>
       // Quest markers
       MarkerLayer(
         markers: QUESTZONE.map((quest) {
+          final q = quest as Map<String, dynamic>;
           return Marker(
             point: LatLng(
-              quest.location.latitude,
-              quest.location.longitude,
+              q["location"]!["latitude"],
+              q["location"]!["longitude"],
             ),
             width: 50,
             height: 50,
-            child: _buildQuestMarker(quest),
+            child: _buildQuestMarker(q),
           );
         }).toList(),
       ),

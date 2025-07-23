@@ -97,10 +97,11 @@ class InventoryItem {
   final String id;
   final String name;
   final String description;
-  final int damage;
+  final int? damage;
   final String itemType;
   final String? imageURL;
   final int? healthAmount;
+  final int baseValue;
 
   InventoryItem({
     required this.id,
@@ -108,11 +109,13 @@ class InventoryItem {
     required this.description,
     required this.damage,
     required this.itemType,
+    required this.baseValue,
     this.imageURL,
-    this.healthAmount,
+    this.healthAmount
   });
 
   factory InventoryItem.fromJson(Map<String, dynamic> json) {
+
     int parseInt(dynamic value) {
       if (value == null) return 0; // or you can throw or set a default
       if (value is int) return value;
@@ -121,12 +124,14 @@ class InventoryItem {
     }
 
     return InventoryItem(
-      id: json['_id'] is Map ? json['_id']['\$oid'] ?? '' : json['_id']?.toString() ?? '',
-      name: json['name'] ?? '',
-      description: json['description'] ?? '',
-      damage: parseInt(json['damage']),
-      itemType: json['itemType'] ?? '',
+      // id: json['_id'] is Map ? json['_id']['\$oid'] ?? '' : json['_id']?.toString() ?? '',
+      id: json['_id'],
+      name: json['name'],
+      description: json['description'],
+      damage: json["damage"] != null ? parseInt(json['damage']) : null,
+      itemType: json['itemType'],
       imageURL: json['imageURL'],
+      baseValue: json['baseValue'] != null ?  parseInt(json['baseValue']) : 1,
       healthAmount: json['healthAmount'] != null
           ? parseInt(json['healthAmount'])
           : null,

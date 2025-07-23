@@ -25,6 +25,8 @@ class _InventorySystemState extends State<InventorySystem> {
   bool isShopOpen = false;
   bool isLoadingShop = false;
 
+  String buyError = "";
+  String usingError = "";
   List<CurrentLootItem> weapons = [];
   List<CurrentLootItem> potions = [];
   List<CurrentLootItem> keys = [];
@@ -83,15 +85,16 @@ class _InventorySystemState extends State<InventorySystem> {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final List<InventoryItem> items = (data['items'] as List)
-            .map((itemJson) => InventoryItem.fromJson(itemJson))
-            .toList();
+        final List<InventoryItem> items = (data as List<dynamic>)
+          .map((itemJson) => InventoryItem.fromJson(itemJson))
+          .toList();
 
+        print(items);
         setState(() {
           itemShopList = items;
         });
 
-        await storeJWT(data['token']); // If token refresh is returned
+        // await storeJWT(data['token']); // If token refresh is returned
       } else if (response.statusCode == 401 || response.statusCode == 403) {
         Navigator.pushReplacementNamed(context, '/');
       } else {
@@ -106,39 +109,221 @@ class _InventorySystemState extends State<InventorySystem> {
     }
   }
 
-  // Future<void> fetchItemShop() async {
-  //   try {
-  //     // final token = await fetchJWT();
-  //     // final res = await http.get(
-  //     //   Uri.parse("${getPath()}/api/auth/inventory"),
-  //     //   headers: {"Authorization": "Bearer $token"},
-  //     // );
-  //     // if (res.statusCode == 200) {
-  //     //   final json = jsonDecode(res.body);
-  //     //   final items = (json as List)
-  //     //       .map((itemJson) => InventoryItem.fromJson(itemJson))
-  //     //       .toList();
-  //     //   setState(() {
-  //     //     itemShopList = items;
-  //     //   });
-  //     // }
+  void handleOnPressDelete(BuildContext context) async {
+    final confirmDelete = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text("Confirm Delete"),
+          content: Text("Are you sure you want to delete your account?"),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: Text("Cancel"),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: Text("Delete"),
+            ),
+          ],
+        );
+      },
+    );
 
-  //     setState(() {
-  //       itemShopList = [
-  //         InventoryItem(
-  //           id: 'key001',
-  //           name: 'Phantom Eye Key',
-  //           description: 'Key to unlock the Specter boss.',
-  //           itemType: 'Key',
-  //           damage: 0,
-  //           imageURL: 'health_mini.png',
-  //         ),
-  //       ];
-  //     });
-  //   } catch (e) {
-  //     print("Failed to load shop items: $e");
-  //   }
-  // }
+    if (confirmDelete == true) {
+      try {
+        final token = await fetchJWT(); // your function to get the JWT
+        final url = Uri.parse("${getPath()}/api/user/delete-user-progress");
+
+        final response = await http.post(
+          url,
+          headers: {
+            'Authorization': 'Bearer $token',
+            'Content-Type': 'application/json',
+          },
+        );
+
+        if (response.statusCode == 200) {
+          Navigator.of(context).pushReplacementNamed('/');
+        } else if (response.statusCode == 401 || response.statusCode == 403) {
+          Navigator.of(context).pushReplacementNamed('/');
+        } else {
+          print("Error deleting account: ${response.body}");
+          setState(() {
+            buyError = "Something went wrong: ${response.body}";
+          });
+        }
+      } catch (e) {
+        print("Error deleting account: $e");
+        setState(() {
+          buyError = "Server Error";
+        });
+      }
+    }
+}
+
+  int countRealItems(List<CurrentLootItem> arr) {
+    int count = 0;
+    for (var itemData in arr) {
+      if (itemData.itemId.itemType != 'fake') {
+        count++;
+      }
+    }
+    return count;
+  }
+
+
+  Future<void> handleBuyItem(InventoryItem itemData, int quantity, int price) async {
+    setState(() {
+      buyError = "";
+    });
+
+    // Check for weapon slot
+    if (itemData.itemType == "Weapon") {
+      if (countRealItems(weapons ?? []) >= 1) {
+        setState(() {
+          buyError = "Weapon slot is already used";
+        });
+        return;
+      }
+    }
+
+    // Check for potion slot
+    if (itemData.itemType == "Potion") {
+      if (countRealItems(potions ?? []) >= 3) {
+        bool allowBuy = false;
+
+        for (int i = 0; i < 3; i++) {
+          final itemSlot = potions?[i];
+          if (itemSlot != null && itemSlot.itemId.id == itemData.id) {
+            allowBuy = true;
+            break;
+          }
+        }
+
+        if (!allowBuy) {
+          setState(() {
+            buyError = "All potion slots are full";
+          });
+          return;
+        }
+      }
+    }
+
+    // Keys can't be purchased
+    if (itemData.itemType == "Key") {
+      return;
+    }
+
+    try {
+      final token = await fetchJWT();
+      final response = await http.post(
+        Uri.parse("${getPath()}/api/user/purchase-item"),
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer $token"
+        },
+        body: jsonEncode({
+          "itemId": itemData.id,
+          "quantity": quantity,
+          "price": price
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final resData = jsonDecode(response.body);
+        print(resData['user']['CurrentLoot'][0]['itemId'].runtimeType); // Should be Map<String, dynamic>
+        print(resData['user']['Character'].runtimeType); // Check if this is a string or object
+
+        print(resData);
+        final profile = UserProfile.fromJson(resData['user']);
+
+        setState(() {
+          isShopOpen = false;
+        });
+        createInventorySections(profile.currentLoot);
+        storeJWT(resData["token"]);
+      } else {
+        final error = jsonDecode(response.body);
+        setState(() {
+          buyError = error["error"] ?? "Server Error";
+        });
+        
+
+        if (response.statusCode == 401 || response.statusCode == 403) {
+          Navigator.pushReplacementNamed(context, '/');
+        }
+      }
+    } catch (e) {
+       setState(() {
+          buyError = "Network Error";
+        });
+      print("Error buying item: $e");
+    }
+  }
+  
+  Future<void> handleUseItem(InventoryItem itemData) async {
+    setState(() {
+      usingError = "";
+    });
+
+    if (itemData.itemType != "Potion") {
+      setState(() {
+        usingError = "Cannot use Item";
+      });
+      return;
+    }
+
+    try {
+      final token = await fetchJWT();      
+
+      final response = await http.post(
+        Uri.parse("${getPath()}/api/user/use-item"),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({"itemId": itemData.id}),
+      );
+
+      if (response.statusCode == 200) {
+        
+        final data = jsonDecode(response.body);
+        print(data['user']['CurrentLoot'][0]['itemId'].runtimeType); // Should be Map<String, dynamic>
+        print(data['user']['Character'].runtimeType); // Check if this is a string or object
+
+        print(data);
+        final updatedUser = UserProfile.fromJson(data['user']);
+
+        final newToken = data['token'];
+
+        // Update local JWT
+        storeJWT(data["token"]);
+        print(updatedUser);
+        // Update current loot
+        createInventorySections(updatedUser.currentLoot);
+
+        setState(() {
+          usingItem = null;
+          usingError="";
+          userData = updatedUser;
+        });
+
+      } else if (response.statusCode == 401 || response.statusCode == 403) {
+        Navigator.of(context).pushReplacementNamed('/');
+      } else {
+        final error = jsonDecode(response.body)['error'] ?? "Server Error";
+        setState(() {
+          usingError = error;
+        });
+      }
+    } catch (e) {
+      print("Error using item: $e");
+      setState(() {
+        usingError = "Something went wrong. Please try again.";
+      });
+    }
+  }
 
   void createInventorySections(List<CurrentLootItem> loot) {
     weapons.clear();
@@ -182,9 +367,41 @@ Widget build(BuildContext context) {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          _buildSection(_buildInventory()),
+                          _buildSection(
+                            usingItem != null 
+                              ? _buildUsingItemPage(
+                                usingItem!,
+                                onClickUse: (item) {
+                                  handleUseItem(item); // Your custom logic
+                                },
+                                error: usingError,
+                                onPressBack: () {
+                                  setState(() {
+                                    usingItem = null;
+                                    usingError = "";
+                                  });
+                                },
+                              )
+                              : _buildInventory()
+                          ),
                           const SizedBox(height: 12),
-                          _buildSection(isShopOpen ? _buildShopSection() : _buildCharacterSection()),
+                          // Middle screen
+                          _buildSection(
+                            isShopOpen && purchasingItem != null
+                              ? _buildPurchasingSection(
+                                  itemData: purchasingItem!,
+                                  onClickBuy: (purchasingItem, quantity, price) => handleBuyItem(purchasingItem, quantity, price),
+                                  onPressBack: () {
+                                    setState(() {
+                                      purchasingItem = null;
+                                    });
+                                  },
+                                  error: buyError,
+                                )
+                              : isShopOpen
+                                  ? _buildShopSection()
+                                  : _buildCharacterSection(),
+                          ),
                           const SizedBox(height: 12),
                           _buildSection(_buildStatsSection()),
                         ],
@@ -237,10 +454,19 @@ Widget build(BuildContext context) {
       _buildHeader("Inventory"),
       const SizedBox(height: 16),
       _buildLabel("Boss Keys"),
-      _buildItemGrid(keys, 5, itemType: 'Key'),
+      _buildItemGrid( keys, 5, itemType: 'Key',),
       const SizedBox(height: 16),
       _buildLabel("Potions"),
-      _buildItemGrid(potions, 3, itemType: 'Potion'),
+      _buildItemGrid(
+        potions, 
+        3, 
+        itemType: 'Potion',
+        onItemTap: (item) {
+          setState(() {
+            usingItem = item.itemId;
+          });
+        },
+      ),
       const SizedBox(height: 16),
       _buildLabel("Weapon"),
       _buildWeaponSlot(weapons.isNotEmpty ? weapons[0] : null),
@@ -251,7 +477,7 @@ Widget build(BuildContext context) {
         crossAxisAlignment: WrapCrossAlignment.center,
         alignment: WrapAlignment.spaceBetween,
         children: [
-          _buildOpenShopButton(),
+          isShopOpen ? _buildCloseShopButton() : _buildOpenShopButton(),
           _buildCurrencyDisplay(userData!.currency),
         ],
       ),
@@ -262,23 +488,72 @@ Widget build(BuildContext context) {
 
 
 
-  Widget _buildItemGrid(List<CurrentLootItem> items, int totalSlots, {required String itemType}) {
+Widget _buildItemGrid(
+  List<CurrentLootItem> items,
+  int totalSlots, {
+  required String itemType,
+  void Function(CurrentLootItem)? onItemTap, 
+}) {
+  return LayoutBuilder(
+    builder: (context, constraints) {
+      final double spacing = 8.0;
+      final int crossAxisCount = (constraints.maxWidth / (50 + spacing)).floor();
+      final double itemWidth = (constraints.maxWidth - (crossAxisCount - 1) * spacing) / crossAxisCount;
+      final double itemSize = itemWidth > 0 ? itemWidth : 50.0;
+
+      List<Widget> slots = [];
+      for (int i = 0; i < totalSlots; i++) {
+        if (i < items.length) {
+          // Wrap slot with GestureDetector if onItemTap is provided
+          final itemWidget = _buildItemSlot(items[i], slotSize: itemSize);
+          slots.add(
+            GestureDetector(
+              onTap: () {
+                if (onItemTap != null) onItemTap(items[i]);
+              },
+              child: itemWidget,
+            ),
+          );
+        } else {
+          slots.add(_buildEmptySlot(slotSize: itemSize));
+        }
+      }
+
+      return Wrap(
+        spacing: spacing,
+        runSpacing: spacing,
+        children: slots,
+      );
+    },
+  );
+}
+
+
+  Widget _buildItemGrid_InvItem(List<InventoryItem> items, int totalSlots, {required String itemType,  required Function(InventoryItem) onItemTap,}) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        // Calculate item size dynamically based on available width and number of slots
         final double spacing = 8.0;
-        final int crossAxisCount = (constraints.maxWidth / (50 + spacing)).floor(); // Approx 50px per item
+        final int crossAxisCount = (constraints.maxWidth / (50 + spacing)).floor();
         final double itemWidth = (constraints.maxWidth - (crossAxisCount - 1) * spacing) / crossAxisCount;
-        final double itemSize = itemWidth > 0 ? itemWidth : 50.0; // Fallback for small constraints
+        final double itemSize = itemWidth > 0 ? itemWidth : 50.0;
+
+        // FILTER by itemType
+        List<InventoryItem> filteredItems = items.where((item) => item.itemType == itemType && item.imageURL!=null).toList();
 
         List<Widget> slots = [];
         for (int i = 0; i < totalSlots; i++) {
-          if (i < items.length) {
-            slots.add(_buildItemSlot(items[i], slotSize: itemSize));
+          if (i < filteredItems.length) {
+            slots.add(
+              GestureDetector(
+                onTap: () => onItemTap(filteredItems[i]),
+                child: _buildItemSlot_InvItem(filteredItems[i], slotSize: itemSize),
+              ),
+            );
           } else {
             slots.add(_buildEmptySlot(slotSize: itemSize));
           }
         }
+
         return Wrap(
           spacing: spacing,
           runSpacing: spacing,
@@ -287,6 +562,333 @@ Widget build(BuildContext context) {
       },
     );
   }
+  Widget _buildItemSlot_InvItem(InventoryItem item, {required double slotSize}) {
+    return Container(
+      width: slotSize,
+      height: slotSize,
+      decoration: BoxDecoration(
+        color: const Color(0xFF1A1D24),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: const Color.fromARGB(31, 66, 204, 11), width: 1),
+      ),
+      child: Stack(
+        children: [
+          if (item.imageURL != null)
+            Center(
+              child: Image.asset(
+                'assets/img/item${item.imageURL}.png',
+                fit: BoxFit.contain,
+                width: slotSize * 0.7,
+                height: slotSize * 0.7,
+              ),
+            ),
+          //if (item.itemType != 'Weapon') // Show quantity if not a weapon
+          Positioned(
+            bottom: 4,
+            right: 4,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+              decoration: BoxDecoration(
+                color: Colors.black54,
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: const Text(
+                'x1', // Always 1 for InventoryItem
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+Widget _buildUsingItemPage(
+  InventoryItem itemData, {
+  required VoidCallback onPressBack,
+  required void Function(InventoryItem) onClickUse,
+  String? error,
+}) {
+  return Container(
+    padding: const EdgeInsets.all(12),
+    decoration: BoxDecoration(
+      color: Colors.grey[800],
+      borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        // Header
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: Colors.grey[700],
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: const Center(
+            child: Text(
+              "Use Item",
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+          ),
+        ),
+
+        const SizedBox(height: 16),
+
+        // Name and Description
+        Text(
+          itemData.name ?? '',
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+            fontSize: 18,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          itemData.description ?? '',
+          style: const TextStyle(
+            color: Colors.white70,
+            fontSize: 14,
+          ),
+          textAlign: TextAlign.center,
+        ),
+
+        const SizedBox(height: 16),
+
+        // Image
+        Center(
+            child: Image.asset(
+              "assets/img/item${itemData.imageURL}.png",
+              fit: BoxFit.contain,
+              height: 120,
+            ),
+        ),
+
+        const SizedBox(height: 16),
+
+        // Buttons
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red[600],
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              ),
+              onPressed: onPressBack,
+              child: const Text("Back"),
+            ),
+            const SizedBox(width: 12),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green[600],
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              ),
+              onPressed: () => onClickUse(itemData),
+              child: const Text("Use"),
+            ),
+          ],
+        ),
+
+        // Error
+        if (error != null && error.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.only(top: 12),
+            child: Text(
+              error,
+              style: const TextStyle(
+                color: Colors.redAccent,
+                fontSize: 14,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ),
+      ],
+    ),
+  );
+}
+
+  Widget _buildPurchasingSection({
+  required InventoryItem itemData,
+  required Function(InventoryItem itemData, int quantity, int price) onClickBuy,
+  required VoidCallback onPressBack,
+  required String error,
+}) {
+  int quantity = 1;
+  int price = itemData.baseValue * quantity;
+
+  return StatefulBuilder(
+    builder: (context, setState) {
+      return Container(
+        padding: const EdgeInsets.all(12),
+        decoration: const BoxDecoration(
+          color: Color(0xFF374151), // bg-gray-700
+          borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            // Header
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: const Color(0xFF4B5563), // bg-gray-600
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Center(
+                child: Text(
+                  "Purchase Item",
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 16),
+
+            // Name and Description
+            Text(
+              itemData.name,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              itemData.description,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: Colors.white70,
+              ),
+            ),
+
+            const SizedBox(height: 12),
+
+            // Image
+            Center(
+                child: Image.asset(
+                  "assets/img/item${itemData.imageURL}.png",
+                  fit: BoxFit.contain,
+                  height: 120,
+                ),
+            ),
+
+            const SizedBox(height: 12),
+
+            // Quantity and Total
+            Column(
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Text(
+                      "Quantity:",
+                      style: TextStyle(color: Colors.white),
+                    ),
+                    const SizedBox(width: 8),
+                    Container(
+                      width: 60,
+                      height: 40,
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: TextField(
+                        keyboardType: TextInputType.number,
+                        onChanged: (val) {
+                          final q = int.tryParse(val) ?? 1;
+                          final clamped = q < 1 ? 1 : (q > 99 ? 99 : q);
+                          if (itemData.itemType == "Weapon") {
+                            setState(() {
+                              quantity = 1;
+                              price = itemData.baseValue;
+                            });
+                          } else {
+                            setState(() {
+                              quantity = clamped;
+                              price = itemData.baseValue * clamped;
+                            });
+                          }
+                        },
+                        controller: TextEditingController(text: quantity.toString()),
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(color: Colors.black),
+                        decoration: const InputDecoration(border: InputBorder.none),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  "Total: $price gold",
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 16),
+
+            // Buttons
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red[700],
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  ),
+                  onPressed: onPressBack,
+                  child: const Text("Back", style: TextStyle(color: Colors.white)),
+                ),
+                const SizedBox(width: 12),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green[700],
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  ),
+                  onPressed: () => onClickBuy(itemData, quantity, price),
+                  child: const Text("Buy", style: TextStyle(color: Colors.white)),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 10),
+
+            if (error.isNotEmpty)
+              Text(
+                error,
+                style: const TextStyle(color: Colors.red, fontWeight: FontWeight.w600),
+              ),
+          ],
+        ),
+      );
+    },
+  );
+}
+
 
   Widget _buildItemSlot(CurrentLootItem entry, {required double slotSize}) {
     final item = entry.itemId;
@@ -303,7 +905,7 @@ Widget build(BuildContext context) {
           if (item.imageURL != null)
             Center(
               child: Image.asset(
-                'assets/img/item/${item.imageURL}', // Ensure this path is correct
+                'assets/img/item${item.imageURL}.png', // Ensure this path is correct
                 fit: BoxFit.contain,
                 width: slotSize * 0.7, // Adjust image size within slot
                 height: slotSize * 0.7,
@@ -380,7 +982,7 @@ Widget build(BuildContext context) {
                   Positioned(
                     right: 0,
                     child: Image.asset(
-                      'assets/img/item/${item!.imageURL}', // Adjust path as needed
+                      'assets/img/item${item!.imageURL}.png', // Adjust path as needed
                       fit: BoxFit.contain,
                       width: slotHeight, // Use height for square image
                       height: slotHeight,
@@ -399,8 +1001,11 @@ Widget build(BuildContext context) {
       return ElevatedButton(
         onPressed: () {
           // Handle open shop logic
-          isShopOpen = true; // Open the shop modal
+          setState(() {
+            isShopOpen = true;
+          });
         },
+
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.transparent, // Transparent background
           elevation: 0, // No shadow
@@ -414,6 +1019,39 @@ Widget build(BuildContext context) {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           child: const Text(
             "Open Shop",
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 16,
+            ),
+            textAlign: TextAlign.center, // Center text in case it wraps
+          ),
+        ),
+      );
+    // );
+  }
+  Widget _buildCloseShopButton() {
+    // return Flexible(
+      return ElevatedButton(
+        onPressed: () {
+          // Handle open shop logic
+          setState(() {
+            isShopOpen = false;
+          });
+        },
+
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.transparent, // Transparent background
+          elevation: 0, // No shadow
+          padding: EdgeInsets.zero, // No internal padding
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(4),
+            side: const BorderSide(color: Colors.white54, width: 1), // White border
+          ),
+        ),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: const Text(
+            "Close Shop",
             style: TextStyle(
               color: Colors.white,
               fontSize: 16,
@@ -569,7 +1207,7 @@ Widget build(BuildContext context) {
       child: ElevatedButton(
         onPressed: () {
           // Handle delete account logic
-          print("Delete Account button pressed!");
+          handleOnPressDelete(context);
         },
         style: ElevatedButton.styleFrom(
           backgroundColor: const Color(0xFFEC5C54), // Red from image
@@ -648,66 +1286,32 @@ Widget build(BuildContext context) {
           const SizedBox(height: 12),
 
           // Weapons Section
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: Colors.green[800],
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Weapons',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
-                ),
-                const SizedBox(height: 8),
-                Wrap(
-                  spacing: 10,
-                  runSpacing: 10,
-                  children: itemShopList
-                      .where((item) => item.itemType == 'Weapon')
-                      .map((item) => ItemWidget(
-                            itemData: item,
-                            onClick: () => print(item),
-                          ))
-                      .toList(),
-                )
-              ],
-            ),
+          _buildLabel("Weapons"),
+          _buildItemGrid_InvItem(
+            itemShopList, 
+            5, 
+            itemType: 'Weapon',
+            onItemTap: (item) {
+              setState(() {
+                purchasingItem = item;
+              });
+            },
           ),
-
-          const SizedBox(height: 12),
-
+          const SizedBox(height: 16),
+          
           // Potions Section
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: Colors.purple[800],
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Potions',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
-                ),
-                const SizedBox(height: 8),
-                Wrap(
-                  spacing: 10,
-                  runSpacing: 10,
-                  children: itemShopList
-                      .where((item) => item.itemType == 'Potion')
-                      .map((item) => ItemWidget(
-                            itemData: item,
-                            onClick: () => print(item),
-                          ))
-                      .toList(),
-                )
-              ],
-            ),
+          _buildLabel("Potions"),
+          _buildItemGrid_InvItem(
+            itemShopList, 
+            5, 
+            itemType: 'Potion',
+            onItemTap: (item) {
+              setState(() {
+                purchasingItem = item;
+              });
+            },
           ),
+          const SizedBox(height: 16),
         ],
       ),
     );
@@ -751,6 +1355,7 @@ class ItemWidget extends StatelessWidget {
             padding: const EdgeInsets.all(6),
             child: Image.asset(
               'assets/item${itemData.imageURL}.png',
+              //'assets/img/item${itemData.imageURL}.png',
               fit: BoxFit.contain,
             ),
           ),

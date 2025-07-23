@@ -37,12 +37,23 @@ flutter:
     - assets/img/backgrounds/
     - assets/img/inventoryItem/
     - assets/img/item/
+    - assets/img/item/key/
+    - assets/img/item/weapon/
+    - assets/img/item/potion/
     - assets/img/MageScrollAnimation/
     - assets/img/playableCharacter/
     - assets/img/playableCharacter/barbarian/
+    - assets/img/playableCharacter/barbarian/scroll/
+    - assets/img/playableCharacter/barbarian/scroll/animation/
     - assets/img/playableCharacter/bard/
-    - assets/img/playableCharacter/changeling/
+    - assets/img/playableCharacter/bard/scroll/
+    - assets/img/playableCharacter/bard/scroll/animation/
+    - assets/img/playableCharacter/warlock/
+    - assets/img/playableCharacter/warlock/scroll/
+    - assets/img/playableCharacter/warlock/scroll/animation/
     - assets/img/playableCharacter/rogue/
+    - assets/img/playableCharacter/rogue/scroll/
+    - assets/img/playableCharacter/rogue/scroll/animation/
     - assets/gif/
 
 

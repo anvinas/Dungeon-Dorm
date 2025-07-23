@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'play_page.dart'; // Replace with your actual route
+import '../utils/get_path.dart';
+import '../utils/jwt_storage.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class CharacterSelectPage extends StatefulWidget {
   @override
@@ -12,12 +16,13 @@ class _CharacterSelectPageState extends State<CharacterSelectPage> {
   String? error;
   String? successMessage;
 
-  final List<int> allPossibleCharacterInfo = [
-    500,
-    943,
-    3584,
-    1255,
+  List<Map<String, String>> allPossibleCharacterInfo = [
+    {"id": "685d632886585be7727d064c", "name": "warlock"},
+    {"id": "68655295dd55124b4da9b83d", "name": "bard"},
+    {"id": "686552bddd55124b4da9b83e", "name": "barbarian"},
+    {"id": "68655353dd55124b4da9b83f", "name": "rogue"},
   ];
+
 
   void onCharacterSelected(int index) async {
     setState(() {
@@ -26,16 +31,39 @@ class _CharacterSelectPageState extends State<CharacterSelectPage> {
     });
 
     try {
-      // Simulate async API call
-      await Future.delayed(Duration(seconds: 1));
+      final token = await fetchJWT(); // Get your JWT token
 
-      setState(() {
-        successMessage = "Character selected successfully!";
-      });
+      final response = await http.post(
+        Uri.parse('${getPath()}/api/user/select-character'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({
+          'characterClassId': allPossibleCharacterInfo[index]['id'], 
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        await storeJWT(data['token']); // Store new token if needed
+
+        setState(() {
+          successMessage = "Character selected successfully!";
+        });
+
+        print(data); // For debugging
+      } else {
+        final data = jsonDecode(response.body);
+        setState(() {
+          error = data['error'] ?? 'Failed to select character.';
+        });
+      }
     } catch (e) {
       setState(() {
-        error = "Failed to select character. Please try again.";
+        error = "Server Error | contact admin";
       });
+      print("Error selecting character: $e");
     }
   }
 
@@ -75,12 +103,14 @@ class _CharacterSelectPageState extends State<CharacterSelectPage> {
                   child: Row(
                     children: allPossibleCharacterInfo.asMap().entries.map((entry) {
                       final index = entry.key;
-                      final delay = entry.value;
+                      final data = entry.value;
+                      final name = data["name"]!;
                       return Padding(
                         padding: const EdgeInsets.all(8.0),
                         child: ScrollCharacterModel(
                           index: index,
-                          animDelay: delay,
+                          name:name,
+                          animDelay: 100,
                           isSelected: selectedScrollIndex == index,
                           onSelect: () => setState(() => selectedScrollIndex = index),
                           onSelectCharacter: onCharacterSelected,
@@ -130,6 +160,7 @@ class _CharacterSelectPageState extends State<CharacterSelectPage> {
 
 class ScrollCharacterModel extends StatefulWidget {
   final int index;
+  final String name;
   final int animDelay;
   final bool isSelected;
   final VoidCallback onSelect;
@@ -137,6 +168,7 @@ class ScrollCharacterModel extends StatefulWidget {
 
   const ScrollCharacterModel({
     required this.index,
+    required this.name,
     required this.animDelay,
     required this.isSelected,
     required this.onSelect,
@@ -155,9 +187,14 @@ class _ScrollCharacterModelState extends State<ScrollCharacterModel> {
   final int totalFrames = 6;
   final int animationSpeed = 100;
 
-  String get framePath => 'assets/img/MageScrollAnimation/frame_${frame.clamp(0, totalFrames - 1)}.png';
-  String get defaultImage => 'assets/img/Closed_Pixel_Scroll_2.png';
-  String get hoverImage => 'assets/img/Mage_SliverOpen.png';
+  // String get framePath => 'assets/img/MageScrollAnimation/frame_${frame.clamp(0, totalFrames - 1)}.png';
+  String get framePath => 'assets/img/playableCharacter/${widget.name}/scroll/animation/frame_${frame.clamp(0, totalFrames - 1)}.png';
+
+  // String get defaultImage => 'assets/img/Closed_Pixel_Scroll_2.png';
+  String get defaultImage => 'assets/img/playableCharacter/${widget.name}/scroll/closed.png';
+
+  // String get hoverImage => 'assets/img/Mage_SliverOpen.png';
+  String get hoverImage => 'assets/img/playableCharacter/${widget.name}/scroll/peek.png';
 
   void startAnimation() {
     isClicked = true;
