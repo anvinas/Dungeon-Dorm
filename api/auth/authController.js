@@ -135,7 +135,7 @@ exports.registerUser = async (req, res) => {
 
         await newUser.save();
 
-        const verificationLink = `https://dungeons-dorm.online/verify?token=${emailVerificationToken}`; // Your frontend link
+        const verificationLink = `https://dungeons-dorms.online/verify?token=${emailVerificationToken}`; // Your frontend link
 
         const mailOptions = {
             from: process.env.SENDGRID_VERIFIED_SENDER_EMAIL, // <<<< CHANGE THIS: Use a SendGrid verified sender email
@@ -553,7 +553,7 @@ exports.forgotPassword = async (req, res) => {
         await user.save();
 
         // Construct the reset link (frontend will handle the token)
-        const resetLink = `https://dungeons-dorm.online/reset-password?token=${resetPasswordToken}`;
+        const resetLink = `https://dungeons-dorms.online/reset-password?token=${resetPasswordToken}`;
 
         const mailOptions = {
             from: process.env.SENDGRID_VERIFIED_SENDER_EMAIL, // <<<< CHANGE THIS: Use a SendGrid verified sender email
