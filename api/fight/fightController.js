@@ -1,3 +1,4 @@
+
 const User = require('../auth/authModel');
 const Boss = require('../global/Boss');
 const CommonEnemy = require('../global/CommonEnemy');
@@ -120,7 +121,7 @@ function applyStatGrowth(className, currentStats, level) //Class name, current s
     return growthFunction(currentStats, level);
 }
 
-exports.levelupUser = async (req, res) => {
+async function levelupUser (req, res) {
     const userId = req.user.userId;
     const user = await UserProfile.findById(userId).populate('Character');
 
@@ -394,7 +395,7 @@ function rollFlee(user, enemy)
   }
 }
 
-exports.startEncounter = async (req, res) => {
+async function startEncounter(req, res) {
   const userId = req.user.userId;
   const { enemyType, enemyId } = req.body; // Pass enemyType and enemyId from frontend
 
@@ -782,7 +783,7 @@ async function enemyAttackLogic(encounter, user, enemy)
   return result;
 }
 
-exports.userTurnAndEnemyResponse = async(req, res) => {
+async function userTurnAndEnemyResponse (req, res) {
   const userId = req.user.userId;
   const {action, item} = req.body;
   let userResult;
@@ -860,7 +861,7 @@ exports.userTurnAndEnemyResponse = async(req, res) => {
 
 }
 
-exports.getActiveEncounter =  async (req, res) => {
+async function getActiveEncounter(req, res) {
   const userId = req.user.userId;
   const encounter = await Encounter.findOne({userId, isActive: true});
   if (!encounter) {
@@ -868,6 +869,15 @@ exports.getActiveEncounter =  async (req, res) => {
   }
   res.json({inFight: true, encounter});
 }
+
+module.exports = {
+  loadEntity,
+  rollAttack,
+  levelupUser,
+  startEncounter,
+  userTurnAndEnemyResponse,
+  getActiveEncounter
+};
 
 // module.exports = {
 //   levelupUser,
