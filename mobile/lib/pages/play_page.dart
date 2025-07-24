@@ -305,57 +305,17 @@ class _GameMapPageState extends State<GameMapPage>
 
   Future<void> _fetchUserData() async {
     try {
-      // final token = await fetchJWT();
-      // final response = await http.get(
-      //   Uri.parse('${getPath()}/api/auth/profile'),
-      //   headers: {'Authorization': 'Bearer $token'},
-      // );
-      // if (response.statusCode == 200) {
-      //   final data = jsonDecode(response.body);
-      //   final userData = UserProfile.fromJson(data['userProfile']);
-      //   await storeJWT(data['token']);
-      //   setState(() => _userProfile = userData);
-      // }
-
-      // Mock user data matching the image's player character and HP
-      final mockUser = UserProfile(
-        id: '1',
-        email: 'test@mock.com',
-        gamerTag: 'MockKnight',
-        level: 3,
-        currency: 120,
-        maxHP: 100,
-        currentHP: 100, // Matching the image
-        currentStats: UserStats(
-          strength: 7,
-          dexterity: 5,
-          intelligence: 9,
-          charisma: 6,
-          defense: 4,
-        ),
-        currentLoot: [],
-        character: Character(
-          id: 'char123',
-          species: 'Elf',
-          characterClass: 'Rogue', // Matching the image character
-          maxHP: 100,
-          stats: {
-            'strength': 7,
-            'dexterity': 5,
-            'intelligence': 9,
-            'charisma': 6,
-            'defense': 4,
-          },
-        ),
-        bosses: [],
-        currentActiveBoss: null,
-        createdAt: '',
-        updatedAt: '',
-        toLevelUpXP: 200,
-        currentXP: 50,
+     final token = await fetchJWT();
+      final response = await http.get(
+       Uri.parse('${getPath()}/api/auth/profile'),
+      headers: {'Authorization': 'Bearer $token'},
       );
-
-      setState(() => _userProfile = mockUser);
+      if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      final userData = UserProfile.fromJson(data['userProfile']);
+      await storeJWT(data['token']);
+      setState(() => _userProfile = userData);
+      }
     } catch (e) {
       print('Failed to load user: $e');
     }
