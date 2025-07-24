@@ -1,19 +1,10 @@
-// Required imports
 import 'dart:async';
-<<<<<<< HEAD
-import 'play_page.dart'; // Replace with your actual route
-import '../utils/get_path.dart';
-import '../utils/jwt_storage.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
-=======
 
 import 'package:dungeon_and_dorms/utils/get_path.dart';
 import 'package:dungeon_and_dorms/utils/jwt_storage.dart';
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
->>>>>>> 01228c14742cb2455947650c5d63390d90dd57e5
 
 class CharacterSelectPage extends StatefulWidget {
   @override
@@ -25,17 +16,6 @@ class _CharacterSelectPageState extends State<CharacterSelectPage> {
   String? error;
   Map<String, dynamic>? successSelectionData;
 
-<<<<<<< HEAD
-  List<Map<String, String>> allPossibleCharacterInfo = [
-    {"id": "685d632886585be7727d064c", "name": "warlock"},
-    {"id": "68655295dd55124b4da9b83d", "name": "bard"},
-    {"id": "686552bddd55124b4da9b83e", "name": "barbarian"},
-    {"id": "68655353dd55124b4da9b83f", "name": "rogue"},
-  ];
-
-
-  void onCharacterSelected(int index) async {
-=======
   List<Map<String, dynamic>> allPossibleCharacterInfo = [
     {'id': "685d632886585be7727d064c", 'name': "warlock", 'animDelay': 500, 'scrollFrame': 1},
     {'id': "68655295dd55124b4da9b83d", 'name': "bard", 'animDelay': 943, 'scrollFrame': 1},
@@ -96,41 +76,12 @@ class _CharacterSelectPageState extends State<CharacterSelectPage> {
   }
 
   Future<void> handleCharacterSelect(int index) async {
->>>>>>> 01228c14742cb2455947650c5d63390d90dd57e5
     setState(() {
       error = null;
     });
 
     final selectedChar = allPossibleCharacterInfo[index];
     try {
-<<<<<<< HEAD
-      final token = await fetchJWT(); // Get your JWT token
-
-      final response = await http.post(
-        Uri.parse('${getPath()}/api/user/select-character'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-        body: jsonEncode({
-          'characterClassId': allPossibleCharacterInfo[index]['id'], 
-        }),
-      );
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        await storeJWT(data['token']); // Store new token if needed
-
-        setState(() {
-          successMessage = "Character selected successfully!";
-        });
-
-        print(data); // For debugging
-      } else {
-        final data = jsonDecode(response.body);
-        setState(() {
-          error = data['error'] ?? 'Failed to select character.';
-=======
       final token = await fetchJWT();
       final response = await http.post(
         Uri.parse('${getPath()}/api/user/select-character'),
@@ -148,14 +99,12 @@ class _CharacterSelectPageState extends State<CharacterSelectPage> {
         final data = jsonDecode(response.body);
         setState(() {
           error = data['error'] ?? 'Unknown error';
->>>>>>> 01228c14742cb2455947650c5d63390d90dd57e5
         });
       }
     } catch (e) {
       setState(() {
         error = "Server Error | contact admin";
       });
-      print("Error selecting character: $e");
     }
   }
 
@@ -165,61 +114,6 @@ class _CharacterSelectPageState extends State<CharacterSelectPage> {
       body: Stack(
         children: [
           AnimatedBackground(),
-<<<<<<< HEAD
-          Positioned(
-            top: 40,
-            right: 40,
-            child: IconButton(
-              icon: Icon(Icons.logout, color: Colors.white),
-              onPressed: () => Navigator.of(context).pop(),
-            ),
-          ),
-          Center(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  "Choose Your Character",
-                  style: TextStyle(
-                    fontSize: 36,
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontFamily: 'Jersey10',
-                    shadows: [
-                      Shadow(blurRadius: 4, offset: Offset(2, 2), color: Colors.black),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 30),
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    children: allPossibleCharacterInfo.asMap().entries.map((entry) {
-                      final index = entry.key;
-                      final data = entry.value;
-                      final name = data["name"]!;
-                      return Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: ScrollCharacterModel(
-                          index: index,
-                          name:name,
-                          animDelay: 100,
-                          isSelected: selectedScrollIndex == index,
-                          onSelect: () => setState(() => selectedScrollIndex = index),
-                          onSelectCharacter: onCharacterSelected,
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                ),
-                if (error != null)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 12),
-                    child: Container(
-                      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(6)),
-                      child: Text(error!, style: TextStyle(color: Colors.red)),
-=======
           if (successSelectionData == null)
             Center(
               child: Column(
@@ -232,7 +126,6 @@ class _CharacterSelectPageState extends State<CharacterSelectPage> {
                       color: Colors.white,
                       fontWeight: FontWeight.bold,
                       fontFamily: 'Jersey10',
->>>>>>> 01228c14742cb2455947650c5d63390d90dd57e5
                     ),
                   ),
                   SizedBox(height: 30),
@@ -296,12 +189,6 @@ class _CharacterSelectPageState extends State<CharacterSelectPage> {
 
 
 class ScrollCharacterModel extends StatefulWidget {
-<<<<<<< HEAD
-  final int index;
-  final String name;
-  final int animDelay;
-=======
->>>>>>> 01228c14742cb2455947650c5d63390d90dd57e5
   final bool isSelected;
   final int index;
   final VoidCallback onClick;
@@ -309,12 +196,6 @@ class ScrollCharacterModel extends StatefulWidget {
   final Map<String, dynamic> characterInfo;
 
   const ScrollCharacterModel({
-<<<<<<< HEAD
-    required this.index,
-    required this.name,
-    required this.animDelay,
-=======
->>>>>>> 01228c14742cb2455947650c5d63390d90dd57e5
     required this.isSelected,
     required this.index,
     required this.onClick,
@@ -334,16 +215,6 @@ class _ScrollCharacterModelState extends State<ScrollCharacterModel> {
   final int totalFrames = 5;
   final int animationSpeed = 100;
 
-<<<<<<< HEAD
-  // String get framePath => 'assets/img/MageScrollAnimation/frame_${frame.clamp(0, totalFrames - 1)}.png';
-  String get framePath => 'assets/img/playableCharacter/${widget.name}/scroll/animation/frame_${frame.clamp(0, totalFrames - 1)}.png';
-
-  // String get defaultImage => 'assets/img/Closed_Pixel_Scroll_2.png';
-  String get defaultImage => 'assets/img/playableCharacter/${widget.name}/scroll/closed.png';
-
-  // String get hoverImage => 'assets/img/Mage_SliverOpen.png';
-  String get hoverImage => 'assets/img/playableCharacter/${widget.name}/scroll/peek.png';
-=======
   @override
   void didUpdateWidget(covariant ScrollCharacterModel oldWidget) {
     super.didUpdateWidget(oldWidget);
@@ -361,7 +232,6 @@ class _ScrollCharacterModelState extends State<ScrollCharacterModel> {
       });
     }
   }
->>>>>>> 01228c14742cb2455947650c5d63390d90dd57e5
 
   void startAnimation() {
     animationTimer?.cancel();
