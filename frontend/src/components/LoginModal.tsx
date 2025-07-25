@@ -113,6 +113,8 @@ function LoginModal({onClickClose,isOpen} : LoginModalProps) {
 
       if(response.status == 200){
         console.log(response.statusText);
+        console.log(response.data);
+        setError(response.data.message); //It is a success even if the email does not exist. Response changes depending on return from controller.
       }
       else{
         console.log(response.data)
@@ -123,7 +125,9 @@ function LoginModal({onClickClose,isOpen} : LoginModalProps) {
     catch(e:any)
     {
      console.log(e);
-      //always does this until proper email
+      console.log(e.response.data.error)
+      //setError("Input Field Empty")
+      setError(e.response.data.error);
     }
   }
 
@@ -160,7 +164,7 @@ function LoginModal({onClickClose,isOpen} : LoginModalProps) {
                 <label htmlFor="password" className="block text-sm/6 font-medium text-gray-900"></label>
                 <div className="text-sm">
                   <a href="#" className="font-semibold text-indigo-600 hover:text-indigo-500" onClick={()=> {
-                    setMode("forgotPassword");
+                    setMode("forgotPassword"), setError(""), setLoginData({gamerTag: "", password: ""});
                     //forgotPassword();
                   }}>Forgot password?</a>
                 </div>
@@ -194,7 +198,7 @@ function LoginModal({onClickClose,isOpen} : LoginModalProps) {
                  
                   <div className="text-sm">
                     <a href="#" className="font-semibold text-indigo-600 hover:text-indigo-500" onClick={()=> {
-                      setMode("login");
+                      setMode("login"), setError(""), setEmailData({email: ""});
                     }}>Back To Login</a>
                   </div>
 
