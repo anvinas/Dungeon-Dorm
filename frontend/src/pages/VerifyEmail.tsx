@@ -36,7 +36,7 @@ function VerifyEmail() {
         if (response.data.message)
         {
           setMessage("✅ Email verified successfully! You may now log in.")
-          setTimeout(()=>{navigate("/");},1000) //Bring you back to login page
+          setTimeout(()=>{navigate("/");},6000) //Bring you back to login page
         } else {
             setMessage("❌ Something went wrong. Please try again.");
         }

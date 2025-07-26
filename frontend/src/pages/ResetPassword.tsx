@@ -3,7 +3,7 @@ import {useState} from "react"
 import GetServerPath from "../lib/GetServerPath.js"
 import {storeJWT} from "../lib/JWT.js"
 import axios from "axios"
-//import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useSearchParams } from 'react-router-dom';
 
 type NewPassword = {
@@ -21,7 +21,7 @@ function ResetPassword()
   const [message, setMessage] = useState("Please Enter A New Password");
 
   //const [error,setError] = useState("")
-  //const navigate = useNavigate(); Add back later
+  const navigate = useNavigate();
 
   const [searchParams] = useSearchParams();
   const token = searchParams.get("token");
@@ -78,19 +78,25 @@ function ResetPassword()
         //setInputErrorDisplay({...tempInputErrorDisplay})
         if(hasErrors) return;
         
-        setMessage("No errors <3");
+        //setMessage("No errors <3");
         
         // Completed Validation!
         try{
+
+          let payload = {
+            ...retypedData,
+            token: token
+          };
           
           setNewData(prev => ({...prev, token: token}));
           setRetypedData(prev => ({...prev, token: token}));
 
-          console.log("What is being passed:",retypedData);
+          //console.log("What is being passed:",retypedData);
+          console.log("What is being passed:", payload);
 
           let response = await axios.post(`${GetServerPath()}/api/auth/reset-password`,
           {
-            ...retypedData
+            ...payload
           })
           
 
@@ -99,7 +105,10 @@ function ResetPassword()
             storeJWT(response.data.token)
             console.log(response.data)
             console.log(response)
-            console.log("it worked :D")
+            
+            setMessage("Your password has been reset. You will be redirected to the login page momentarily.")
+            setTimeout(()=>{navigate("/");},6000) //Bring you back to login page
+
             //navigate("/verify");
           }else{
             // Failure
@@ -109,6 +118,8 @@ function ResetPassword()
 
         }catch(e:any){
           console.log(e)
+          //setMessage("Server Error | contact admin")
+          setMessage(e.response.data.error)
           //setError("Server Error | contact admin")
           //setError(e.response.data.error)
         }
@@ -134,12 +145,12 @@ function ResetPassword()
         <div className="bg-stone-800 bg-opacity-70 p-8 min-w-[40%] rounded-xl shadow-lg flex flex-col items-center gap-6">
            <div className="flex flex-col gap-1 w-[90%]">
                 <div className="text-white font-bold">New Password</div>
-                <input type="password" onChange={(e)=>setNewData((oldData)=>{oldData.newPassword = e.target.value; return oldData})} placeholder="xxxxxxxxxxxxx" className="bg-white border border-gray-400 rounded-sm h-10 pl-5" />           
+                <input type="password" onChange={(e)=>setNewData((oldData)=> ({ ...oldData , newPassword: e.target.value}))} placeholder="xxxxxxxxxxxxx" className="bg-white border border-gray-400 rounded-sm h-10 pl-5" />           
             </div>
 
             <div className="flex flex-col gap-1 w-[90%]">
                 <div className="text-white font-bold">Re-Type Password</div>
-                <input type="password" onChange={(e)=>setRetypedData((oldData)=>{oldData.newPassword = e.target.value; return oldData})} placeholder="xxxxxxxxxxxxx" className="bg-white border border-gray-400 rounded-sm h-10 pl-5" />
+                <input type="password" onChange={(e)=>setRetypedData((oldData)=> ({ ...oldData, newPassword: e.target.value}))} placeholder="xxxxxxxxxxxxx" className="bg-white border border-gray-400 rounded-sm h-10 pl-5" />
                            
             </div>
             <div className="text-sm text-gray-100">Password should have atleast 5 characters including a number and a symbol (!,@ etc)</div>
