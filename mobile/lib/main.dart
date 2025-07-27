@@ -16,10 +16,8 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Login UI',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
+      title: 'Dungeon & Dorms',
+      theme: ThemeData(primarySwatch: Colors.blue),
       initialRoute: '/',
       routes: {
         '/': (context) => const LoginPage(),
@@ -27,8 +25,8 @@ class MyApp extends StatelessWidget {
         '/play': (context) => const GameMapPage(),
         '/verify': (context) => VerifyEmailPage(),
         '/bossfight': (context) {
-          final questData = ModalRoute.of(context)!.settings.arguments as QuestData;
-          return BossFightPage(bossId: questData.id);
+          final bossId = ModalRoute.of(context)!.settings.arguments as String;
+          return BossFightPage(bossId: bossId);
         },
 
       },

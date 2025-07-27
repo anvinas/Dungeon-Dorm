@@ -402,23 +402,24 @@ class QuestData {
   });
 
   factory QuestData.fromJson(Map<String, dynamic> json) {
-    return QuestData(
-      id: (json['_id'] is Map && json['_id']['\$oid'] != null)
-          ? json['_id']['\$oid']
-          : json['_id']?.toString() ?? '',
-      name: json['name'] ?? '',
-      species: json['species'] ?? '',
-      characterClass: json['class'] ?? '',
-      maxHP: json['maxHP'] ?? 0,
-      relationshipGoal: json['relationshipGoal'] ?? 0,
-      stats: UserStats.fromJson(json['stats'] ?? {}),
-      reward: QuestReward.fromJson(json['reward'] ?? {}),
-      level: json['level'] ?? 1,
-      location: QuestLocation.fromJson(json['location'] ?? {}),
-      dialogues: QuestDialogues.fromJson(json['dialogues'] ?? {}),
-      enemyType: json['enemyType'] ?? '',
-    );
-  }
+  return QuestData(
+    id: (json['_id'] is Map && json['_id']['\$oid'] != null)
+        ? json['_id']['\$oid']
+        : json['_id']?.toString() ?? '',
+    name: json['name'] ?? '',
+    species: json['species'] ?? '',
+    characterClass: json['class'] ?? '',
+    maxHP: (json['maxHP'] as int?) ?? 0,
+    relationshipGoal: (json['relationshipGoal'] as int?) ?? 0,
+    stats: UserStats.fromJson(json['stats'] ?? {}),
+    reward: QuestReward.fromJson(json['reward'] ?? {}),
+    level: (json['level'] as int?) ?? 1,
+    location: QuestLocation.fromJson(json['location'] ?? {}),
+    dialogues: QuestDialogues.fromJson(json['dialogues'] ?? {}),
+    enemyType: json['enemyType'] ?? '',
+  );
+}
+
 }
 
 class QuestReward {

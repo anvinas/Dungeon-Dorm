@@ -1,402 +1,474 @@
-import 'dart:async';
 import 'dart:convert';
-import 'dart:math';
-import 'package:dungeon_and_dorms/widgets/fight_footer.dart';
-import 'package:dungeon_and_dorms/widgets/inventory_modal.dart';
+import 'dart:async';
 import 'package:flutter/material.dart';
-// import 'package:http/http.dart' as http;
-// import '../utils/get_path.dart';
-// import '../utils/jwt_storage.dart';
+import 'package:http/http.dart' as http;
 
-class Enemy {
-  final String name;
-  int currentHP;
-  final int maxHP;
-  Enemy({required this.name, required this.currentHP, required this.maxHP});
+import '../pages/play_page.dart'; // for QUESTZONE
+import '../utils/jwt_storage.dart';
+import '../utils/get_path.dart';
+import '../widgets/inventory_modal.dart';
+import '../widgets/fight_footer.dart';
 
-  factory Enemy.fromJson(Map<String, dynamic> json) {
-    return Enemy(
-      name: json['name'] ?? '',
-      currentHP: json['currentHP'] ?? 0,
-      maxHP: json['maxHP'] ?? 1,
-    );
-  }
-}
-
-class EncounterData {
-  Enemy enemy;
-  Map<String, dynamic> user;
-  EncounterData({required this.enemy, required this.user});
-
-  factory EncounterData.fromJson(Map<String, dynamic> json) {
-    return EncounterData(
-      enemy: Enemy.fromJson(json['enemy']),
-      user: json['user'] ?? {},
-    );
-  }
-}
+// Import the modals
+import '../widgets/modals.dart';
 
 class BossFightPage extends StatefulWidget {
   final String bossId;
-  const BossFightPage({super.key, required this.bossId});
+
+  const BossFightPage({Key? key, required this.bossId}) : super(key: key);
 
   @override
-  State<BossFightPage> createState() => _BossFightPageState();
+  _BossFightPageState createState() => _BossFightPageState();
 }
 
-class _BossFightPageState extends State<BossFightPage>
-    with TickerProviderStateMixin {
-  EncounterData? encounterData;
+class _BossFightPageState extends State<BossFightPage> {
+  Map<String, dynamic>? encounterData;
+  Map<String, dynamic>? userData;
+  late Map<String, dynamic> questData;
+
   bool loading = true;
-  bool showInventory = false;
+  bool inventoryOpen = false;
 
-  // Animation/Modal states
-  bool userAttackAnimating = false;
-  bool enemyAttackAnimating = false;
-  String damageText = '';
-  String messageText = '';
-  bool diedScreen = false;
-  bool runScreen = false;
+  // Modal states
+  bool showDeath = false;
+  bool showRun = false;
+  bool showWon = false;
+  bool showCharmed = false;
+  bool showDice = false;
+  bool showCharmAnim = false;
 
-  late AnimationController pulseController;
-  late AnimationController bobController;
+  // Dice & charm animation data
+  int diceRoll = 0;
+  String diceText = "";
+  int charmValue = 0;
+  int rewardsXP = 0;
+
+  // Animation states
+  bool playerAttacking = false;
+  bool bossAttacking = false;
+  String damageText = "";
 
   @override
   void initState() {
     super.initState();
-    pulseController = AnimationController(
-      duration: const Duration(seconds: 4),
-      vsync: this,
-    )..repeat(reverse: true);
-
-    bobController = AnimationController(
-      duration: const Duration(seconds: 5),
-      vsync: this,
-    )..repeat(reverse: true);
-
+    try {
+      questData = QUESTZONE.firstWhere((q) => q['id'] == widget.bossId);
+    } catch (e) {
+      debugPrint("Boss with ID ${widget.bossId} not found in QUESTZONE");
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        Navigator.pushReplacementNamed(context, "/play");
+      });
+      return;
+    }
     startEncounter();
+    fetchUserData();
   }
 
-  @override
-  void dispose() {
-    pulseController.dispose();
-    bobController.dispose();
-    super.dispose();
+  Future<void> fetchUserData() async {
+    try {
+      final token = await fetchJWT();
+      final res = await http.get(
+        Uri.parse('${getPath()}/api/auth/profile'),
+        headers: {'Authorization': 'Bearer $token'},
+      );
+      if (res.statusCode == 200) {
+        final data = jsonDecode(res.body);
+        setState(() => userData = data['userProfile']);
+        await storeJWT(data['token']);
+      } else if (res.statusCode == 401 || res.statusCode == 403) {
+        Navigator.pushReplacementNamed(context, '/');
+      }
+    } catch (e) {
+      debugPrint("Error fetching user data: $e");
+    }
   }
 
   Future<void> startEncounter() async {
     try {
-       // final token = await fetchJWT();
-      // final res = await http.post(
-      //   Uri.parse("${getPath()}/api/fight/startEncounter"),
-      //   headers: {
-      //     "Content-Type": "application/json",
-      //     "Authorization": "Bearer $token",
-      //   },
-      //   body: jsonEncode({
-      //     "enemyId": widget.bossId,
-      //     "enemyType": "boss",
-      //   }),
-      // );
-      // if (res.statusCode == 200) {
-      //   setState(() {
-      //     encounterData = EncounterData.fromJson(jsonDecode(res.body));
-      //     loading = false;
-      //   });
-      // } else {
-      //   debugPrint("Failed: ${res.body}");
-      // }
+      final token = await fetchJWT();
+      final response = await http.post(
+        Uri.parse('${getPath()}/api/fight/startEncounter'),
+        headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
 
-      await Future.delayed(const Duration(milliseconds: 500));
-      setState(() {
-        encounterData = EncounterData(
-          enemy: Enemy(name: "Gabriel the Hidden", currentHP: 100, maxHP: 100),
-          user: {
-            "name": "MockPlayer",
-            "level": 7,
-            "currentHP": 100,
-            "maxHP": 100,
-            "stats": {
-              "strength": 5,
-              "dexterity": 5,
-              "intelligence": 5,
-              "charisma": 5,
-              "defense": 5,
-            },
-          },
-        );
-        loading = false;
-      });
+        body: jsonEncode({'enemyId': widget.bossId, 'enemyType': 'boss'}),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        setState(() {
+          encounterData = data;
+          loading = false;
+        });
+        await storeJWT(data['token']);
+      } else {
+        debugPrint("Failed to start encounter: ${response.body}");
+        setState(() => loading = false);
+      }
     } catch (e) {
       debugPrint("Error starting encounter: $e");
       setState(() => loading = false);
     }
   }
 
-  Future<void> _sendTurnAction(String action) async {
-    try {
-      // final token = await fetchJWT();
-      // final res = await http.post(
-      //   Uri.parse("${getPath()}/api/fight/userTurn"),
-      //   headers: {
-      //     "Content-Type": "application/json",
-      //     "Authorization": "Bearer $token",
-      //   },
-      //   body: jsonEncode({
-      //     "action": action,
-      //     "item": null,
-      //   }),
-      // );
-      // debugPrint("Turn result: ${res.body}");
+  // --- Dice animation then callback ---
+  Future<void> animateDice(int roll, String text, VoidCallback callback) async {
+    setState(() {
+      diceRoll = roll;
+      diceText = text;
+      showDice = true;
+    });
+    await Future.delayed(const Duration(seconds: 2));
+    setState(() => showDice = false);
+    callback();
+  }
 
-      debugPrint("Dummy action sent: $action");
-    } catch (e) {
-      debugPrint("Error sending turn action: $e");
+  // --- Animate player attack ---
+  Future<void> animatePlayerAttack(String dmg, VoidCallback callback) async {
+    setState(() {
+      damageText = dmg;
+      playerAttacking = true;
+    });
+    await Future.delayed(const Duration(milliseconds: 600));
+    setState(() {
+      playerAttacking = false;
+      damageText = "";
+    });
+    callback();
+  }
+
+  // --- Animate boss attack ---
+  Future<void> animateBossAttack(String dmg, VoidCallback callback) async {
+    setState(() {
+      damageText = dmg;
+      bossAttacking = true;
+    });
+    await Future.delayed(const Duration(milliseconds: 600));
+    setState(() {
+      bossAttacking = false;
+      damageText = "";
+    });
+    callback();
+  }
+
+
+  Future<void> animateCharm(int value, VoidCallback callback) async {
+    setState(() {
+      charmValue = value;
+      showCharmAnim = true;
+    });
+    await Future.delayed(const Duration(seconds: 2));
+    setState(() => showCharmAnim = false);
+    callback();
+  }
+
+  // --- Handle updating UI after a move ---
+  void updateUIAfterMove(Map<String, dynamic> data) {
+    setState(() => encounterData = data);
+
+    if (data['postTurnEnemyHP'] != null && data['postTurnEnemyHP'] <= 0) {
+      setState(() {
+        rewardsXP = data['rewards']?['xp'] ?? 0;
+        showWon = true;
+      });
+      return;
+    }
+    if (data['enemyResult']?['postTurnUserHP'] != null &&
+        data['enemyResult']['postTurnUserHP'] <= 0) {
+      setState(() => showDeath = true);
+    }
+    if (data['message'] == "Enemy charmed successfully!") {
+      setState(() {
+        rewardsXP = data['rewards']?['xp'] ?? 0;
+        showCharmed = true;
+      });
     }
   }
 
-  void _animateUserAttack({required bool hit, required int dmg}) {
-    setState(() {
-      userAttackAnimating = true;
-      damageText = hit ? dmg.toString() : "MISS";
-    });
-    Future.delayed(const Duration(milliseconds: 600), () {
-      setState(() {
-        userAttackAnimating = false;
-        damageText = '';
-        if (encounterData != null) {
-          encounterData!.enemy.currentHP -= dmg;
-          if (encounterData!.enemy.currentHP <= 0) {
-            encounterData!.enemy.currentHP = 0;
-            messageText = "Enemy Defeated!";
+
+  Future<void> handleAttack() async {
+    try {
+      final token = await fetchJWT();
+      final response = await http.post(
+        Uri.parse('${getPath()}/api/fight/userTurn'),
+        headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+
+        body: jsonEncode({'action': 'attack', 'item': null}),
+      );
+      final data = jsonDecode(response.body);
+
+      final userAttack = data['userAttack'] ?? data['userResult']['userAttack'];
+      final bossResponse = data['enemyResult'];
+      final userDmg = userAttack['hit'] ? userAttack['damage'].toString() : "MISS";
+      final bossDmg = bossResponse != null
+          ? (bossResponse['enemyAttack']['hit']
+              ? bossResponse['enemyAttack']['damage'].toString()
+              : "MISS")
+          : "";
+
+      await animateDice(userAttack['d20'], "Attack Roll!", () async {
+        await animatePlayerAttack(userDmg, () async {
+          if (bossResponse != null) {
+            await animateBossAttack(bossDmg, () => updateUIAfterMove(data));
+          } else {
+            updateUIAfterMove(data);
+          }
+        });
+      });
+    } catch (e) {
+      debugPrint("Error on attack: $e");
+    }
+  }
+
+
+  Future<void> handleTalk() async {
+    try {
+      final token = await fetchJWT();
+      final response = await http.post(
+        Uri.parse('${getPath()}/api/fight/userTurn'),
+        headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+        body: jsonEncode({'action': 'talk', 'item': null}),
+      );
+      final data = jsonDecode(response.body);
+
+      final userTalk = data['userTalk'] ?? data['userResult']['userTalk'];
+      final bossResponse = data['enemyResult'];
+      final bossDmg = bossResponse != null
+          ? (bossResponse['enemyAttack']['hit']
+              ? bossResponse['enemyAttack']['damage'].toString()
+              : "MISS")
+          : "";
+
+      await animateDice(userTalk['d20'], "Charm Roll!", () async {
+        if (userTalk['success'] == true) {
+          await animateCharm(userTalk['friendshipContribution'], () async {
+            if (bossResponse != null) {
+              await animateBossAttack(bossDmg, () => updateUIAfterMove(data));
+            } else {
+              updateUIAfterMove(data);
+            }
+          });
+        } else {
+          if (bossResponse != null) {
+            await animateBossAttack(bossDmg, () => updateUIAfterMove(data));
+          } else {
+            updateUIAfterMove(data);
           }
         }
       });
-    });
-  }
-
-  Future<void> handleClickAttack() async {
-    await _sendTurnAction("attack");
-    final strength = encounterData!.user['stats']['strength'] ?? 5;
-    final roll = Random().nextInt(6) + 1;
-    final dmg = roll + strength;
-    _animateUserAttack(hit: true, dmg: 5);
-  }
-
-  Future<void> handleClickTalk() async {
-    await _sendTurnAction("talk");
-    final charisma = encounterData!.user['stats']['charisma'] ?? 5;
-    final roll = Random().nextInt(20) + 1;
-    if (roll + charisma >= 20) {
-      setState(() {
-        messageText = "You charmed the enemy! They flee peacefully.";
-        encounterData!.enemy.currentHP = 0;
-      });
-    } else {
-      setState(() {
-        messageText = "Your charm failed.";
-      });
+    } catch (e) {
+      debugPrint("Error on talk: $e");
     }
   }
 
-  Future<void> handleClickRun() async {
-    await _sendTurnAction("flee");
-    setState(() {
-      runScreen = true;
-    });
-  }
 
-  void toggleInventory() {
-    setState(() {
-      showInventory = !showInventory;
-    });
+  Future<void> handleRun() async {
+    try {
+      final token = await fetchJWT();
+      final response = await http.post(
+        Uri.parse('${getPath()}/api/fight/userTurn'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+
+        body: jsonEncode({'action': 'flee', 'item': null}),
+      );
+      final data = jsonDecode(response.body);
+
+      if (data['success'] == true) {
+        setState(() => showRun = true);
+      } else if (data['enemyResult']?['postTurnUserHP'] != null &&
+          data['enemyResult']['postTurnUserHP'] <= 0) {
+        setState(() => showDeath = true);
+      }
+
+      updateUIAfterMove(data);
+    } catch (e) {
+      debugPrint("Error on run: $e");
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    if (loading || encounterData == null) {
+    if (loading) {
       return const Scaffold(
         body: Center(child: CircularProgressIndicator()),
       );
     }
 
-    final enemy = encounterData!.enemy;
-    final hpPercent = (enemy.currentHP / enemy.maxHP);
+    final enemyCurrentHP =
+        encounterData?['enemy']?['currentHP'] ?? questData['maxHP'];
+    final enemyMaxHP = questData['maxHP'];
+    final hpPercent = (enemyCurrentHP / enemyMaxHP).clamp(0.0, 1.0);
 
     return Scaffold(
       body: Stack(
         children: [
-          Container(
-            decoration: const BoxDecoration(
-              image: DecorationImage(
-                image: AssetImage('assets/img/backgrounds/fight_bg_2.png'),
-                fit: BoxFit.cover,
-              ),
-            ),
-          ),
-          FadeTransition(
-            opacity: Tween(begin: 0.0, end: 0.1).animate(pulseController),
-            child: Container(color: Colors.black),
-          ),
+          Container(color: Colors.grey[900]),
 
+          // Player
           Positioned(
-            bottom: MediaQuery.of(context).size.height * 0.2,
-            left: 20,
-            child: SlideTransition(
-              position: Tween(begin: Offset.zero, end: const Offset(0, -0.01))
-                  .animate(bobController),
-              child: Stack(
-                alignment: Alignment.center,
+            bottom: 150,
+            left: 30,
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 300),
+              transform: Matrix4.translationValues(
+                  playerAttacking ? 30 : 0, 0, 0),
+              child: Column(
                 children: [
-                  Image.asset(
-                    'assets/img/character.png',
-                    width: MediaQuery.of(context).size.width * 0.3,
-                  ),
-                  if (userAttackAnimating && damageText.isNotEmpty)
-                    Positioned(
-                      top: 0,
-                      child: Text(
-                        damageText,
+                  if (damageText.isNotEmpty && playerAttacking)
+                    Text(damageText,
                         style: const TextStyle(
-                          fontSize: 32,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.purple,
-                        ),
-                      ),
+                            color: Colors.purple,
+                            fontSize: 32,
+                            fontWeight: FontWeight.bold)),
+                  if (userData != null)
+                    Image.asset(
+                      'assets/img/playableCharacter/${userData?["Character"]["class"].toString().toLowerCase()}/pixel.png',
+                      height: 150,
                     ),
                 ],
               ),
             ),
           ),
 
+          // Boss
           Positioned(
-            bottom: MediaQuery.of(context).size.height * 0.3,
-            right: MediaQuery.of(context).size.width * 0.05,
-            child: SlideTransition(
-              position: Tween(begin: Offset.zero, end: const Offset(0, -0.01))
-                  .animate(bobController),
+            bottom: 150,
+            right: 30,
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 300),
+              transform: Matrix4.translationValues(
+                  bossAttacking ? -30 : 0, 0, 0),
               child: Column(
                 children: [
                   Text(
-                    '${enemy.currentHP}/${enemy.maxHP} HP',
+                    "${questData['name']}",
                     style: const TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                      shadows: [
-                        Shadow(blurRadius: 2, color: Colors.black, offset: Offset(1, 1)),
-                      ],
-                    ),
+                        fontSize: 26,
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 10),
+                  Text(
+                    "$enemyCurrentHP / $enemyMaxHP HP",
+                    style: const TextStyle(
+                        fontSize: 20,
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold),
+                  ),
                   Container(
                     width: 200,
-                    height: 10,
+                    height: 20,
                     decoration: BoxDecoration(
-                      color: Colors.blueGrey.shade400,
-                      border: Border.all(color: Colors.blue.shade800),
-                      borderRadius: BorderRadius.circular(4),
+                      color: Colors.blueGrey,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: Colors.blue, width: 2),
                     ),
-                    child: Align(
-                      alignment: Alignment.centerLeft,
-                      child: FractionallySizedBox(
-                        widthFactor: hpPercent,
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: hpPercent > 0.8
-                                ? Colors.green
-                                : hpPercent > 0.4
-                                    ? Colors.orange
-                                    : Colors.red,
-                            borderRadius: BorderRadius.circular(4),
-                          ),
+                    child: FractionallySizedBox(
+                      widthFactor: hpPercent,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: hpPercent > 0.8
+                              ? Colors.green
+                              : hpPercent > 0.4
+                                  ? Colors.orange
+                                  : Colors.red,
+                          borderRadius: BorderRadius.circular(10),
                         ),
                       ),
                     ),
                   ),
                   const SizedBox(height: 10),
+                  if (damageText.isNotEmpty && bossAttacking)
+                    Text(damageText,
+                        style: const TextStyle(
+                            color: Colors.red,
+                            fontSize: 32,
+                            fontWeight: FontWeight.bold)),
                   Image.asset(
-                    'assets/img/boss/gabriel/pixel.png',
-                    width: 150,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stack) => const Icon(Icons.error, size: 100, color: Colors.red),
+                    'assets/img/boss/${questData["name"].toString().toLowerCase().split(" ").first}/pixel.png',
+                    height: 150,
                   ),
                 ],
               ),
             ),
           ),
 
-          if (messageText.isNotEmpty)
-            Positioned(
-              top: 40,
-              left: 0,
-              right: 0,
-              child: Center(
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.6),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    messageText,
-                    style: const TextStyle(color: Colors.white, fontSize: 18),
-                  ),
-                ),
+          // Inventory
+          if (inventoryOpen)
+            Positioned.fill(
+              child: InventorySystem(
+                onClose: () => setState(() => inventoryOpen = false),
               ),
             ),
 
+          // Fight footer
           Positioned(
             bottom: 0,
             left: 0,
             right: 0,
             child: FightFooter(
-              onClickAttack: handleClickAttack,
-              onClickTalk: handleClickTalk,
-              onClickInventory: toggleInventory,
-              onClickRun: handleClickRun,
-              userData: encounterData!.user,
+              onClickInventory: () => setState(() => inventoryOpen = true),
+              onClickAttack: () => handleAttack(),
+              onClickTalk: () => handleTalk(),
+              onClickRun: () => handleRun(),
+              userData: encounterData?['user'] ?? userData ?? {},
             ),
           ),
 
-          if (showInventory)
-            _buildOverlayModal(
-              child: InventorySystem(onClose: toggleInventory),
-            ),
-
-          if (diedScreen)
-            _buildOverlayModal(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Text('YOU DIED!', style: TextStyle(color: Colors.red, fontSize: 48, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 16),
-                  ElevatedButton(onPressed: () => Navigator.pop(context), child: const Text('Respawn')),
-                ],
+          // --- Modals ---
+          if (showDeath)
+            Positioned.fill(
+              child: DeathScreenModal(
+                onClickRespawn: () =>
+                    Navigator.pushReplacementNamed(context, "/play"),
               ),
             ),
-
-          if (runScreen)
-            _buildOverlayModal(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Text('Successfully Fled!', style: TextStyle(color: Colors.green, fontSize: 36, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 16),
-                  ElevatedButton(onPressed: () => Navigator.pop(context), child: const Text('Leave Area')),
-                ],
+          if (showRun)
+            Positioned.fill(
+              child: RunScreenModal(
+                onClickLeave: () =>
+                    Navigator.pushReplacementNamed(context, "/play"),
               ),
+            ),
+          if (showWon)
+            Positioned.fill(
+              child: WonScreenModal(
+                xp: rewardsXP,
+                onClickLeave: () =>
+                    Navigator.pushReplacementNamed(context, "/play"),
+              ),
+            ),
+          if (showCharmed)
+            Positioned.fill(
+              child: CharmedScreenModal(
+                xp: rewardsXP,
+                onClickLeave: () =>
+                    Navigator.pushReplacementNamed(context, "/play"),
+              ),
+            ),
+          if (showDice)
+            Positioned.fill(
+              child: CurrentMoveScreen(
+                diceRoll: diceRoll,
+                mainText: diceText,
+              ),
+            ),
+          if (showCharmAnim)
+            Positioned.fill(
+              child: CharmedActivatedScreen(value: charmValue),
             ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildOverlayModal({required Widget child}) {
-    return Positioned.fill(
-      child: Container(
-        color: Colors.black.withOpacity(0.8),
-        child: Center(child: child),
       ),
     );
   }
