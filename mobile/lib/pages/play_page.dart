@@ -625,12 +625,14 @@ class _GameMapPageState extends State<GameMapPage>
               child: PrefightModal(
                 questData: _currentQuest!,
                 onClickFight: () {
-                  Navigator.pushNamed(
-                    context,
-                    '/bossfight',
-                    arguments: _currentQuest,
-                  );
-                  setState(() => _preFightModal = false);
+                  if (_currentQuest != null) {
+                    Navigator.pushNamed(
+                      context,
+                      '/bossfight',
+                      arguments: _currentQuest!['id'],  // Safely get the bossId
+                    );
+                    setState(() => _preFightModal = false);
+                  }
                 },
                 onClickExit: () => setState(() => _preFightModal = false),
               ),

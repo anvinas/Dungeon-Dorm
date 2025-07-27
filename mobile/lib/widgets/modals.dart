@@ -6,18 +6,28 @@ class DeathScreenModal extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        const Text('YOU DIED!',
-            style: TextStyle(
-                color: Colors.red, fontSize: 48, fontWeight: FontWeight.bold)),
-        const SizedBox(height: 16),
-        const Text('You lost 10 gold',
-            style: TextStyle(color: Colors.white, fontSize: 18)),
-        ElevatedButton(
-            onPressed: onClickRespawn, child: const Text('Respawn')),
-      ],
+    return Container(
+      color: Colors.black87,
+      width: double.infinity,
+      height: double.infinity,
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('YOU DIED!',
+                style: TextStyle(
+                    color: Colors.red, fontSize: 48, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 16),
+            const Text('You lost 10 gold',
+                style: TextStyle(color: Colors.white, fontSize: 18)),
+            const SizedBox(height: 24),
+            ElevatedButton(
+                onPressed: onClickRespawn,
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.purple),
+                child: const Text('Respawn')),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -28,14 +38,25 @@ class RunScreenModal extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        const Text('Successfully Fled!',
-            style: TextStyle(
-                color: Colors.green, fontSize: 36, fontWeight: FontWeight.bold)),
-        ElevatedButton(onPressed: onClickLeave, child: const Text('Leave Area')),
-      ],
+    return Container(
+      color: Colors.black87,
+      width: double.infinity,
+      height: double.infinity,
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('Successfully Fled!',
+                style: TextStyle(
+                    color: Colors.green, fontSize: 36, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 24),
+            ElevatedButton(
+                onPressed: onClickLeave,
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.purple),
+                child: const Text('Leave Area')),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -47,16 +68,28 @@ class WonScreenModal extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        const Text('Boss Defeated!',
-            style: TextStyle(
-                color: Colors.green, fontSize: 36, fontWeight: FontWeight.bold)),
-        Text('You gained $xp XP',
-            style: const TextStyle(color: Colors.white, fontSize: 18)),
-        ElevatedButton(onPressed: onClickLeave, child: const Text('Leave Area')),
-      ],
+    return Container(
+      color: Colors.black87,
+      width: double.infinity,
+      height: double.infinity,
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('Boss Defeated!',
+                style: TextStyle(
+                    color: Colors.green, fontSize: 36, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 12),
+            Text('You gained $xp XP',
+                style: const TextStyle(color: Colors.white, fontSize: 18)),
+            const SizedBox(height: 24),
+            ElevatedButton(
+                onPressed: onClickLeave,
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.purple),
+                child: const Text('Leave Area')),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -68,16 +101,28 @@ class CharmedScreenModal extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        const Text('Successfully Charmed!',
-            style: TextStyle(
-                color: Colors.pink, fontSize: 36, fontWeight: FontWeight.bold)),
-        Text('You gained $xp XP',
-            style: const TextStyle(color: Colors.white, fontSize: 18)),
-        ElevatedButton(onPressed: onClickLeave, child: const Text('Leave Area')),
-      ],
+    return Container(
+      color: Colors.black87,
+      width: double.infinity,
+      height: double.infinity,
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('Successfully Charmed!',
+                style: TextStyle(
+                    color: Colors.pink, fontSize: 36, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 12),
+            Text('You gained $xp XP',
+                style: const TextStyle(color: Colors.white, fontSize: 18)),
+            const SizedBox(height: 24),
+            ElevatedButton(
+                onPressed: onClickLeave,
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.purple),
+                child: const Text('Leave Area')),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -89,27 +134,34 @@ class CurrentMoveScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(mainText,
-            style: const TextStyle(color: Colors.white, fontSize: 32)),
-        const SizedBox(height: 16),
-        Stack(
-          alignment: Alignment.center,
+    return Container(
+      color: Colors.black54,
+      width: double.infinity,
+      height: double.infinity,
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Image.asset('assets/img/20dice.png', width: 150),
-            Text(
-              '$diceRoll',
-              style: const TextStyle(
-                  fontSize: 48,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                  shadows: [Shadow(blurRadius: 2, color: Colors.black)]),
+            Text(mainText,
+                style: const TextStyle(color: Colors.white, fontSize: 32)),
+            const SizedBox(height: 16),
+            Stack(
+              alignment: Alignment.center,
+              children: [
+                Image.asset('assets/img/20dice.png', width: 150),
+                Text(
+                  '$diceRoll',
+                  style: const TextStyle(
+                      fontSize: 48,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      shadows: [Shadow(blurRadius: 2, color: Colors.black)]),
+                ),
+              ],
             ),
           ],
         ),
-      ],
+      ),
     );
   }
 }
@@ -120,15 +172,22 @@ class CharmedActivatedScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text('CHARMED + $value',
-            style: const TextStyle(
-                color: Colors.red, fontSize: 36, fontWeight: FontWeight.bold)),
-        const SizedBox(height: 16),
-        Image.asset('assets/img/heart.png', width: 120),
-      ],
+    return Container(
+      color: Colors.black54,
+      width: double.infinity,
+      height: double.infinity,
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('CHARMED + $value',
+                style: const TextStyle(
+                    color: Colors.red, fontSize: 36, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 16),
+            Image.asset('assets/img/heart.png', width: 120),
+          ],
+        ),
+      ),
     );
   }
 }
