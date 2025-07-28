@@ -483,7 +483,7 @@ class _GameMapPageState extends State<GameMapPage>
             width: 40,
             height: 40,
             child: Image.asset(
-              'assets/img/character.png',
+              'assets/img/playableCharacter/${_userProfile?.character.characterClass.toLowerCase()}/pixel.png',
               fit: BoxFit.contain,
             ),
           ),
@@ -524,7 +524,7 @@ class _GameMapPageState extends State<GameMapPage>
               ),
               child: ClipOval(
                 child: Image.asset(
-                  'assets/img/character.png',
+                  'assets/img/playableCharacter/${_userProfile?.character.characterClass.toLowerCase()}/pixel.png',
                   fit: BoxFit.cover, // Use cover to fill the circle
                 ),
               ),
@@ -597,7 +597,7 @@ class _GameMapPageState extends State<GameMapPage>
           ),
           child: Center(
             child: Image.asset(
-              'assets/img/character.png',
+              'assets/img/playableCharacter/${_userProfile?.character.characterClass.toLowerCase()}/pixel.png',
               width: 45,
               height: 45,
               color: Colors.white.withOpacity(0.8), // Slightly translucent white
@@ -629,7 +629,7 @@ class _GameMapPageState extends State<GameMapPage>
               Positioned.fill(
                 child: IgnorePointer(
                   child: CustomPaint(
-                    painter: HotzoneCirclePainter(radiusPixels, _userLocation, _zoom),
+                    //painter: HotzoneCirclePainter(radiusPixels, _userLocation, _zoom),
                   ),
                 ),
               ),
