@@ -40,6 +40,9 @@ class _LoginModalState extends State<LoginModal> {
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({"gamerTag": gamerTag, "password": password}),
       );
+      
+      print('Login status code: ${response.statusCode}');
+      print('Login response body: ${response.body}');
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -53,6 +56,9 @@ class _LoginModalState extends State<LoginModal> {
             'Content-Type': 'application/json'
           },
         );
+
+            print('Profile status code: ${profileResponse.statusCode}');
+    print('Profile response body: ${profileResponse.body}');
 
         if (profileResponse.statusCode == 200) {
           final profileData = jsonDecode(profileResponse.body);
