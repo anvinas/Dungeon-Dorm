@@ -7,8 +7,9 @@ import 'package:http/http.dart' as http;
 
 class InventorySystem extends StatefulWidget {
   final VoidCallback onClose;
+  final void Function(int) onHealthChange;
 
-  const InventorySystem({required this.onClose, Key? key}) : super(key: key);
+  const InventorySystem({required this.onClose,required this.onHealthChange, Key? key}) : super(key: key);
 
   @override
   State<InventorySystem> createState() => _InventorySystemState();
@@ -243,6 +244,7 @@ class _InventorySystemState extends State<InventorySystem> {
         });
         createInventorySections(profile.currentLoot);
         storeJWT(resData["token"]);
+
       } else {
         final error = jsonDecode(response.body);
         setState(() {
@@ -289,10 +291,11 @@ class _InventorySystemState extends State<InventorySystem> {
       if (response.statusCode == 200) {
         
         final data = jsonDecode(response.body);
-        print(data['user']['CurrentLoot'][0]['itemId'].runtimeType); // Should be Map<String, dynamic>
-        print(data['user']['Character'].runtimeType); // Check if this is a string or object
+        // print(data['user']['CurrentLoot'][0]['itemId'].runtimeType); // Should be Map<String, dynamic>
+        // print(data['user']['Character'].runtimeType); // Check if this is a string or object
 
         print(data);
+        print("heree after token");
         final updatedUser = UserProfile.fromJson(data['user']);
 
         final newToken = data['token'];
@@ -308,7 +311,8 @@ class _InventorySystemState extends State<InventorySystem> {
           usingError="";
           userData = updatedUser;
         });
-
+        widget.onHealthChange(updatedUser.currentHP);
+        
       } else if (response.statusCode == 401 || response.statusCode == 403) {
         Navigator.of(context).pushReplacementNamed('/');
       } else {

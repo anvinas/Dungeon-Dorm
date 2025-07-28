@@ -28,6 +28,7 @@ class _BossFightPageState extends State<BossFightPage> {
 
   bool loading = true;
   bool inventoryOpen = false;
+  double currentRelationship = 0;
 
   // Modal states
   bool showDeath = false;
@@ -98,6 +99,8 @@ class _BossFightPageState extends State<BossFightPage> {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
+        print(data);
+        print("HI!");
         setState(() {
           encounterData = data;
           loading = false;
@@ -166,7 +169,33 @@ class _BossFightPageState extends State<BossFightPage> {
 
   // --- Handle updating UI after a move ---
   void updateUIAfterMove(Map<String, dynamic> data) {
-    setState(() => encounterData = data);
+    Map<String, dynamic>? newEncounterData = encounterData;
+    print(data);
+    //UPDATE HP 
+    if (data['enemyResult'] != null) {
+      if(data["enemyResult"]["postTurnUserHP"]!=null){
+        if(newEncounterData!=null){
+          newEncounterData["user"]["currentHP"] = data["enemyResult"]["postTurnUserHP"];
+          newEncounterData["enemy"]["currentHP"] = data["enemyResult"]["postTurnEnemyHP"];
+        }
+      }
+    }
+
+    //Update charm
+    if(data["userResult"]){
+      if(data["userResult"]["userTalk"] != null){
+        if(data["userResult"]["userTalk"]["friendshipContribution"]!=null){
+          double newRelationshipVal  = currentRelationship;
+          newRelationshipVal+= data["userResult"]["userTalk"]["friendshipContribution"];
+          setState(() {
+            currentRelationship = newRelationshipVal;
+          });
+        }
+      }
+    }
+    
+    print(newEncounterData);
+    setState(() => encounterData = newEncounterData);
 
     if (data['postTurnEnemyHP'] != null && data['postTurnEnemyHP'] <= 0) {
       setState(() {
@@ -185,6 +214,7 @@ class _BossFightPageState extends State<BossFightPage> {
         showCharmed = true;
       });
     }
+    
   }
 
 
@@ -201,12 +231,12 @@ class _BossFightPageState extends State<BossFightPage> {
         body: jsonEncode({'action': 'attack', 'item': null}),
       );
       final data = jsonDecode(response.body);
-
+      print(data);
       final userAttack = data['userAttack'] ?? data['userResult']['userAttack'];
       final bossResponse = data['enemyResult'];
-      final userDmg = userAttack['hit'] ? userAttack['damage'].toString() : "MISS";
+      final userDmg = (userAttack['hit']==true || userAttack['hit']==1)? userAttack['damage'].toString() : "MISS";
       final bossDmg = bossResponse != null
-          ? (bossResponse['enemyAttack']['hit']
+          ? ((bossResponse['enemyAttack']['hit'] == true || bossResponse['enemyAttack']['hit'] ==1 )
               ? bossResponse['enemyAttack']['damage'].toString()
               : "MISS")
           : "";
@@ -225,6 +255,17 @@ class _BossFightPageState extends State<BossFightPage> {
     }
   }
 
+  void handleOnInventoryHealthChange(hp){
+    Map<String, dynamic>? newEncounterData = encounterData;
+
+    if(newEncounterData != null){
+      newEncounterData["user"]["currentHP"] = hp;
+    }
+
+    setState(() {
+      encounterData = newEncounterData;
+    });
+  }
 
   Future<void> handleTalk() async {
     try {
@@ -238,6 +279,7 @@ class _BossFightPageState extends State<BossFightPage> {
         body: jsonEncode({'action': 'talk', 'item': null}),
       );
       final data = jsonDecode(response.body);
+
 
       final userTalk = data['userTalk'] ?? data['userResult']['userTalk'];
       final bossResponse = data['enemyResult'];
@@ -309,6 +351,9 @@ class _BossFightPageState extends State<BossFightPage> {
         encounterData?['enemy']?['currentHP'] ?? questData['maxHP'];
     final enemyMaxHP = questData['maxHP'];
     final hpPercent = (enemyCurrentHP / enemyMaxHP).clamp(0.0, 1.0);
+
+    final relationshipGoal = encounterData?["enemy"]["relationshipGoal"] ?? 0;
+    double charmPercent = currentRelationship / relationshipGoal;
 
     return Scaffold(
       body: Stack(
@@ -413,6 +458,35 @@ class _BossFightPageState extends State<BossFightPage> {
                       height: 150,
                     ),
                   ),
+                  
+
+                  Text(
+                    "$currentRelationship / $relationshipGoal Charmed",
+                    style: const TextStyle(
+                      fontSize: 20,
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  Container(
+                    width: 200,
+                    height: 20,
+                    decoration: BoxDecoration(
+                      color: Colors.pink.shade100,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: Colors.pinkAccent, width: 2),
+                    ),
+                    child: FractionallySizedBox(
+                      alignment: Alignment.centerLeft,
+                      widthFactor: charmPercent.clamp(0.0, 1.0),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.pink,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -423,6 +497,7 @@ class _BossFightPageState extends State<BossFightPage> {
             Positioned.fill(
               child: InventorySystem(
                 onClose: () => setState(() => inventoryOpen = false),
+                onHealthChange:(hp) => handleOnInventoryHealthChange(hp)
               ),
             ),
 

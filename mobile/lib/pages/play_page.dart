@@ -302,6 +302,35 @@ class _GameMapPageState extends State<GameMapPage>
 }
 
 
+  void handleOnInventoryHealthChange(hp){
+    UserProfile? newUserProfile = _userProfile;
+    print(hp);
+    print("in");
+    if(newUserProfile != null){
+      newUserProfile= UserProfile(
+        id: newUserProfile.id,
+        email: newUserProfile.email,
+        gamerTag: newUserProfile.gamerTag,
+        level: newUserProfile.level,
+        currency: newUserProfile.currency,
+        maxHP: newUserProfile.maxHP,
+        currentHP: hp, // ✅ updated HP
+        currentStats: newUserProfile.currentStats,
+        currentLoot: newUserProfile.currentLoot,
+        character: newUserProfile.character,
+        bosses: newUserProfile.bosses,
+        currentActiveBoss: newUserProfile.currentActiveBoss,
+        createdAt: newUserProfile.createdAt,
+        updatedAt: newUserProfile.updatedAt,
+        toLevelUpXP: newUserProfile.toLevelUpXP,
+        currentXP: newUserProfile.currentXP,
+      );
+    }
+
+    setState(() {
+      _userProfile = newUserProfile;
+    });
+  }
 
   Future<void> _fetchUserData() async {
     try {
@@ -619,6 +648,7 @@ class _GameMapPageState extends State<GameMapPage>
             Center(
               child: InventorySystem(
                 onClose: () => setState(() => _inventoryModal = false),
+                onHealthChange: (hp) => handleOnInventoryHealthChange(hp),
               ),
             ),
 
