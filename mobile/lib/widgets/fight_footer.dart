@@ -6,6 +6,7 @@ class FightFooter extends StatelessWidget {
   final VoidCallback onClickInventory;
   final VoidCallback onClickRun;
   final Map<String, dynamic> userData;
+  final bool isInventoryOpen;
 
   const FightFooter({
     super.key,
@@ -14,10 +15,15 @@ class FightFooter extends StatelessWidget {
     required this.onClickInventory,
     required this.onClickRun,
     required this.userData,
+    required this.isInventoryOpen,
   });
 
   @override
   Widget build(BuildContext context) {
+    if (isInventoryOpen) {
+      return const SizedBox.shrink(); //hides fight footer when inventory opened
+    }
+
     final isMobile = MediaQuery.of(context).size.width < 768;
     final int hp = (userData["currentHP"] ?? 0);
     final int max = (userData["maxHP"] ?? 1);
@@ -25,8 +31,8 @@ class FightFooter extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.8),
-        border: const Border(top: BorderSide(color: Colors.grey, width: 2)),
+        color: const Color.fromARGB(255, 20, 1, 43).withOpacity(1),//0.8
+        border: const Border(top: BorderSide(color: Color.fromARGB(255, 20, 1, 43), width: 2)),
       ),
       child: isMobile ? _mobileLayout(hp, max) : _desktopLayout(hp, max),
     );

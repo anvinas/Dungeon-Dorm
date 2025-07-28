@@ -28,6 +28,10 @@ flutter:
   assets:
     - assets/login/
     - assets/img/
+    - assets/img/boss/
+    - assets/img/boss/evil/
+    - assets/img/boss/queen/
+    - assets/img/boss/just/
     - assets/img/boss/andrea/
     - assets/img/boss/shaq/
     - assets/img/boss/gabriel/

@@ -263,7 +263,7 @@ class _ScrollCharacterModelState extends State<ScrollCharacterModel> {
     // Logic to determine what image to show
     final imageToShow = widget.isSelected
         ? frameImage
-        : (isHovered ? peekImage : closedImage);
+        : (isHovered ? peekImage : peekImage);//changed the else to be the peekImage as there is no hover on mobile
 
     return GestureDetector(
       onTap: widget.onClick,

@@ -313,11 +313,20 @@ class _BossFightPageState extends State<BossFightPage> {
     return Scaffold(
       body: Stack(
         children: [
-          Container(color: Colors.grey[900]),
+          //Container(color: Colors.grey[900]), Background Color
+
+          // Background image
+          Positioned(
+            bottom: 200,
+            child: Image.asset(
+              'assets/img/backgrounds/fight_bg_2.png',
+              fit: BoxFit.cover,
+            ),
+          ),
 
           // Player
           Positioned(
-            bottom: 150,
+            bottom: 215,
             left: 30,
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 300),
@@ -343,8 +352,8 @@ class _BossFightPageState extends State<BossFightPage> {
 
           // Boss
           Positioned(
-            bottom: 150,
-            right: 30,
+            bottom: 400,
+            right: 10,
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 300),
               transform: Matrix4.translationValues(
@@ -395,9 +404,14 @@ class _BossFightPageState extends State<BossFightPage> {
                             color: Colors.red,
                             fontSize: 32,
                             fontWeight: FontWeight.bold)),
-                  Image.asset(
-                    'assets/img/boss/${questData["name"].toString().toLowerCase().split(" ").first}/pixel.png',
-                    height: 150,
+                  Transform(
+                    alignment: Alignment.center,
+                    transform: Matrix4.identity()..scale(-1.0, 1.0),
+                    child:
+                    Image.asset(
+                      'assets/img/boss/${questData["name"].toString().toLowerCase().split(" ").first}/pixel.png',
+                      height: 150,
+                    ),
                   ),
                 ],
               ),
@@ -418,6 +432,7 @@ class _BossFightPageState extends State<BossFightPage> {
             left: 0,
             right: 0,
             child: FightFooter(
+              isInventoryOpen: inventoryOpen, //to make footer dissapear when inventory is opened
               onClickInventory: () => setState(() => inventoryOpen = true),
               onClickAttack: () => handleAttack(),
               onClickTalk: () => handleTalk(),

@@ -1115,7 +1115,7 @@ Widget _buildUsingItemPage(
       ),
       const SizedBox(height: 16),
       Image.asset(
-        'assets/img/playableCharacter/rogue/pixel.png',
+        'assets/img/playableCharacter/${userData!.character.characterClass.toLowerCase()}/pixel.png',
         fit: BoxFit.contain,
         height: 120,
       ),

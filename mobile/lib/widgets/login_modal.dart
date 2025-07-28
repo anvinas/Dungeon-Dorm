@@ -92,7 +92,7 @@ class _LoginModalState extends State<LoginModal> {
       );
 
       if (response.statusCode == 200) {
-        setState(() => "Reset link sent to your email!");
+        setState(() => error = "Reset link sent to your email!");
       } else {
         final data = jsonDecode(response.body);
         setState(() => error = data['error'] ?? "Failed to send reset link.");
@@ -157,7 +157,10 @@ class _LoginModalState extends State<LoginModal> {
                 Align(
                   alignment: Alignment.centerRight,
                   child: GestureDetector(
-                    onTap: () => setState(() => forgotPasswordMode = true),
+                    onTap: () => setState(() {
+                      forgotPasswordMode = true;
+                      error = ""; // Clear error when switching
+                    }),
                     child: const Text(
                       "Forgot password?",
                       style: TextStyle(color: Colors.blue),
@@ -179,7 +182,10 @@ class _LoginModalState extends State<LoginModal> {
                 ),
                 const SizedBox(height: 10),
                 GestureDetector(
-                  onTap: () => setState(() => forgotPasswordMode = false),
+                  onTap: () => setState(() {
+                    forgotPasswordMode = false;
+                    error = ""; // Clear error when switching back
+                  }),
                   child: const Text(
                     "Back to Login",
                     style: TextStyle(color: Colors.blue),
