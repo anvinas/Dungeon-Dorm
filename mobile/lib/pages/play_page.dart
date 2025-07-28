@@ -362,6 +362,9 @@ class _GameMapPageState extends State<GameMapPage>
       case 'Fighter':
         imagePath = 'assets/img/boss/dave/pixel.png';
         break;
+      case 'Wizard':
+        imagePath = 'assets/img/boss/evil/pixel.png';
+        break;
       default:
         imagePath = 'assets/img/boss/andrea/pixel.png';
     }
