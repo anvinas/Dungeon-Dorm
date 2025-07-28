@@ -134,7 +134,7 @@ function InventorySystem({onClose,onHealthChange}:{onClose:()=>void;onHealthChan
   }
 
   const handlePopupDeleteModal = async()=>{
-    const answer = confirm("Are you sure you want to delete your account?")
+    const answer = confirm("Are you sure you want to delete your character?")
     if(answer){
       try {
         const token = fetchJWT(); // Assuming this retrieves token from localStorage
@@ -443,7 +443,7 @@ function InventorySystem({onClose,onHealthChange}:{onClose:()=>void;onHealthChan
             </div>
 
             <div className="w-full bg-red-600 rounded text-center hover:bg-red-800 cursor-pointer text-white font-bold py-2" onClick={()=>handlePopupDeleteModal()}>
-              Delete Account
+              Delete Character
             </div>
 
             {/* {isTryingToDelete && 
