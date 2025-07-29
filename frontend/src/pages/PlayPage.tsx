@@ -186,10 +186,12 @@ function App() {
             )
           })}
           
-          {/* HOTZONE CIRCLES */}
+          {/*
+          {/* HOTZONE CIRCLES }
           <Source id="hotzones" type="geojson" data={hotzoneGeoJSON}>
             <Layer {...hotzoneLayer} />
           </Source>
+          */}
 
         </Map>
       </div>
