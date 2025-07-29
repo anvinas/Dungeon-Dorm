@@ -80,7 +80,7 @@ class _VerifyEmailPageState extends State<VerifyEmailPage> {
         if (data['message'] != null) {
           setState(() => message = "✅ Email verified successfully! You may now log in.");
           Future.delayed(const Duration(seconds: 1), () {
-            Navigator.pushReplacementNamed(context, '/select');
+            Navigator.pushReplacementNamed(context, '/');
           });
         } else {
           setState(() => message = "❌ Something went wrong. Please try again.");

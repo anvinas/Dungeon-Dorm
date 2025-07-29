@@ -182,7 +182,7 @@ class _BossFightPageState extends State<BossFightPage> {
     }
 
     //Update charm
-    if(data["userResult"]){
+    if(data["userResult"] != null){
       if(data["userResult"]["userTalk"] != null){
         if(data["userResult"]["userTalk"]["friendshipContribution"]!=null){
           double newRelationshipVal  = currentRelationship;
