@@ -116,7 +116,7 @@ class _InventorySystemState extends State<InventorySystem> {
       builder: (BuildContext context) {
         return AlertDialog(
           title: Text("Confirm Delete"),
-          content: Text("Are you sure you want to delete your account?"),
+          content: Text("Are you sure you want to delete your character?"),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(false),
@@ -1221,7 +1221,7 @@ Widget _buildUsingItemPage(
           ),
         ),
         child: const Text(
-          "Delete Account",
+          "Delete Character",
           style: TextStyle(
             color: Colors.white,
             fontSize: 16,
