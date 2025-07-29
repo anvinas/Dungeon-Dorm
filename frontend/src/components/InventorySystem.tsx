@@ -155,6 +155,15 @@ function InventorySystem({onClose,onHealthChange}:{onClose:()=>void;onHealthChan
     }
   }
 
+
+  const handlePopupLogoutModal = async()=>{
+    const answer = confirm("Are you sure you want to logout?")
+    if (answer) {
+      localStorage.removeItem('jwt'); // Remove token
+      navigate("/")
+    }
+  }
+
   const handleBuyItem = async(itemData:InventoryItem_T,quantity:number,price:number)=>{
     setBuyError("")
     // If buying weapon
@@ -441,10 +450,12 @@ function InventorySystem({onClose,onHealthChange}:{onClose:()=>void;onHealthChan
                 )
               })}
             </div>
-
-            <div className="w-full bg-red-600 rounded text-center hover:bg-red-800 cursor-pointer text-white font-bold py-2" onClick={()=>handlePopupDeleteModal()}>
-              Delete Character
+            
+            <div className="flex justify-between gap-4">
+              <div className="w-full bg-blue-600 rounded text-center hover:bg-blue-800 cursor-pointer text-white font-bold py-2" onClick={()=>handlePopupLogoutModal()}>Logout</div>
+              <div className="w-full bg-red-600 rounded text-center hover:bg-red-800 cursor-pointer text-white font-bold py-2" onClick={()=>handlePopupDeleteModal()}>Delete Character</div>
             </div>
+           
 
             {/* {isTryingToDelete && 
               <div className="flex flex-col gap-2">

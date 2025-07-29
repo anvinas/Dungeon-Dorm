@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../utils/types.dart';
 import '../utils/get_path.dart';
 import '../utils/jwt_storage.dart';
@@ -108,7 +109,39 @@ class _InventorySystemState extends State<InventorySystem> {
         isLoadingShop = false;
       });
     }
+  } 
+
+  void handleOnPressLogout(BuildContext context) async {
+    final confirmLogout = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text("Confirm Logout"),
+          content: Text("Are you sure you want to log out of your account?"),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: Text("Cancel"),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: Text("Logout"),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmLogout == true) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('jwt'); // Remove the stored JWT
+      print("JWT removed");
+
+      // Navigate to the root route and remove all previous routes from the stack
+      Navigator.of(context).pushNamedAndRemoveUntil('/', (Route<dynamic> route) => false);
+    }
   }
+
 
   void handleOnPressDelete(BuildContext context) async {
     final confirmDelete = await showDialog<bool>(
@@ -161,7 +194,7 @@ class _InventorySystemState extends State<InventorySystem> {
         });
       }
     }
-}
+  }
 
   int countRealItems(List<CurrentLootItem> arr) {
     int count = 0;
@@ -1184,7 +1217,14 @@ Widget _buildUsingItemPage(
       _buildStatRow("CHARISMA", stats.charisma, maxStatValue, const Color(0xFF75B853)),
       _buildStatRow("DEFENSE", stats.defense, maxStatValue, const Color(0xFFEC5C54)),
       const SizedBox(height: 12),
-      _buildDeleteAccountButton(),
+      Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          _buildLogoutButton(), 
+          const SizedBox(width: 12),
+          _buildDeleteAccountButton(),
+        ],
+    ),
     ],
   );
 }
@@ -1203,6 +1243,32 @@ Widget _buildUsingItemPage(
         _buildProgressBar(percent, barColor),
         const SizedBox(height: 10), // Spacing between stat bars
       ],
+    );
+  }
+
+  Widget _buildLogoutButton() {
+    return Center(
+      child: ElevatedButton(
+        onPressed: () {
+          // Handle delete account logic
+          handleOnPressLogout(context);
+        },
+        style: ElevatedButton.styleFrom(
+          backgroundColor: const Color.fromARGB(255, 218, 84, 236), // Red from image
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
+        ),
+        child: const Text(
+          "Logout",
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
     );
   }
 
