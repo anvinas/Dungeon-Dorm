@@ -25,6 +25,9 @@ function FightFooter({
     };
     maxHP: number;
     currentHP: number;
+    Character: {
+      class: string;
+    };
   };
 
 }){

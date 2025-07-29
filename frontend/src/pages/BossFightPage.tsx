@@ -557,7 +557,13 @@ function BossFightPage() {
             OnClickTalk = {()=>handleClickTalk()}
             OnClickRun = {()=>handleClickRun()}
 
-            userData = {encounterData.user}
+            //userData = {encounterData.user}
+            userData={{
+              ...encounterData.user,
+              Character: {
+                class: userData?.Character.class ?? "warlock",
+              }
+            }}
           />
         </div>
       </div>
