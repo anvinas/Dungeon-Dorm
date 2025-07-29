@@ -39,7 +39,7 @@ function LoginPage() {
 
                        {/* Buttons Container */}
                         <div className="flex justify-around absolute z-4 translate-x-[-50%] translate-y-[-50%] bottom-[10%] left-[50%] w-full">
-                          <div className="p-3 pr-4 pl-4 rounded-md bg-[#6b8e23] text-[#ffffff] border-1 transition delay-150 duration-300 ease-in-out hover:-translate-y-1 hover:scale-110 hover:cursor-pointer "onClick={()=>setSignupModalOpen(true)} >Signup</div>
+                          <div className="p-3 pr-4 pl-4 rounded-md bg-[#6b8e23] border-black text-black border-1 transition delay-150 duration-300 ease-in-out hover:-translate-y-1 hover:scale-110 hover:cursor-pointer "onClick={()=>setSignupModalOpen(true)} >Signup</div>
                           <div className="p-3 pr-4 pl-4 rounded-md bg-indigo-500 text-[#ffffff] border-black border-1  transition delay-150 duration-300 ease-in-out hover:-translate-y-1 hover:scale-110 hover:cursor-pointer hover:bg-indigo-500" onClick={()=>setLoginModalOpen(true)}>Login</div>
                         </div>
                     </div>
