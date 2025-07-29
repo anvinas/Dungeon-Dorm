@@ -317,6 +317,8 @@ const purchaseItem = async (req, res) => {
             // If item is new, push a new object with itemId and quantity
             user.CurrentLoot.push({ itemId: itemId, quantity: quantity });
         }
+        await user.populate('CurrentLoot.itemId');
+
         await user.save();
 
         res.json({
@@ -347,7 +349,8 @@ const usePotionItem = async (req, res) => {
   try {
     const user = await UserProfile.findById(userId)
       .select('-passwordHash -isEmailVerified -__v')
-      .populate('CurrentLoot.itemId'); // This loads the actual item details
+      .populate('CurrentLoot.itemId') // This loads the actual item details
+      .populate('Character');
 
     if (!user) {
       return res.status(404).json({ error: 'User not found.' });
