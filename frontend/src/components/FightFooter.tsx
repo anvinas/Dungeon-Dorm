@@ -44,7 +44,7 @@ function FightFooter({
           onClick={OnClickAttack}
           className="w-16 h-16 md:w-20 md:h-20 bg-gray-400 border-3 border-gray-500 rounded-full p-2 hover:cursor-pointer hover:bg-white hover:border-purple-800 hover:p-1"
         >
-          <img src="/assets/fight.webp" className="w-full h-full object-cover" />
+          <img src="/assets/fight.webp" className="w-full h-full object-cover" alt="attackButton" />
         </div>
         <div className="font-bold text-sm md:text-base">attack</div>
       </div>
@@ -55,7 +55,7 @@ function FightFooter({
           onClick={OnClickRun}
           className="w-16 h-16 md:w-20 md:h-20 bg-gray-400 border-3 border-gray-500 rounded-full p-2 hover:cursor-pointer hover:bg-white hover:border-purple-800 hover:p-1"
         >
-          <img src="/assets/run.png" className="w-full h-full object-cover" />
+          <img src="/assets/run.png" className="w-full h-full object-cover" alt="runButton"/>
         </div>
         <div className="font-bold text-sm md:text-base">run</div>
       </div>
@@ -66,7 +66,7 @@ function FightFooter({
           onClick={OnClickTalk}
           className="w-16 h-16 md:w-20 md:h-20 bg-gray-400 border-3 border-gray-500 rounded-full p-2 hover:cursor-pointer hover:bg-white hover:border-purple-800 hover:p-1"
         >
-          <img src="/assets/talk.png" className="w-full h-full object-cover" />
+          <img src="/assets/talk.png" className="w-full h-full object-cover" alt="talkButton"/>
         </div>
         <div className="font-bold text-sm md:text-base">talk</div>
       </div>
@@ -100,7 +100,7 @@ function FightFooter({
             {/* FIGHT BUTTON */}
             <div className="flex flex-col justify-center items-center">
               <div onClick={()=>OnClickAttack()} className="w-20 h-20 bg-gray-400 border-3 border-gray-500 rounded-[50%] p-2 hover:cursor-pointer hover:bg-white hover:border-purple-800 hover:p-1">
-                <img src="/assets/fight.webp" className="w-full h-full object-cover"/>
+                <img src="/assets/fight.webp" className="w-full h-full object-cover" alt="fightButton"/>
               </div>
               <div className="font-bold">attack</div>
             </div>
@@ -108,7 +108,7 @@ function FightFooter({
             {/* RUN BUTTON */}
             <div className="flex flex-col justify-center items-center">
               <div onClick={()=>OnClickRun()} className="w-20 h-20 bg-gray-400 border-3 border-gray-500 rounded-[50%] p-2 hover:cursor-pointer hover:bg-white hover:border-purple-800 hover:p-1">
-                <img src="/assets/run.png" className="w-full h-full object-cover"/>
+                <img src="/assets/run.png" className="w-full h-full object-cover" alt="runButton"/>
               </div>
               <div className="font-bold">run</div>
             </div>
@@ -116,7 +116,7 @@ function FightFooter({
             {/* Talk Button */}
             <div className="flex flex-col justify-center items-center">
               <div onClick={()=>OnClickTalk()} className="w-20 h-20 bg-gray-400 border-3 border-gray-500 rounded-[50%] p-2 hover:cursor-pointer hover:bg-white hover:border-purple-800 hover:p-1">
-                <img src="/assets/talk.png" className="w-full h-full object-cover"/>
+                <img src="/assets/talk.png" className="w-full h-full object-cover" alt="talkButton"/>
               </div>
               <div className="font-bold">talk</div>
             </div>

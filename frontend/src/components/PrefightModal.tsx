@@ -21,7 +21,7 @@ const PrefightModal = ({questData,onClickExit,onClickFight}:{questData:QuestData
             {/* main */}
             <div className="flex gap-4 flex-col md:flex-row overflow-auto md:overflow-visible flex-1">
                 <div className="flex items-center justify-center w-[30%]">
-                    <img className={`${styles.bossImg} aspect-square w-full  object-cover object-top `} src={`/assets/boss/${getBossFolderName(questData.name)}/real.png`}/>   
+                    <img className={`${styles.bossImg} aspect-square w-full   object-cover object-top `} alt="bossImage" src={`/assets/boss/${getBossFolderName(questData.name)}/real.png`}/>   
                 </div>
 
                 {/* Dialog Container */}

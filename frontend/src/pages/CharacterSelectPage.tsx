@@ -75,7 +75,7 @@ function CharacterSelectPage(){
         <div className="relative w-screen h-screen overflow-hidden">
             {/* BG container */}
             <div className="relative w-screen h-screen ">
-                <img src="/img/pixel_bg2.png" className={`w-screen max-w-screen h-screen ${styles.bgContainer}`}/>
+                <img src="/img/pixel_bg2.png" className={`w-screen max-w-screen h-screen ${styles.bgContainer}`} alt="bg"/>
 
                 {!successSelectionData && 
                     <div className={`absolute h-fit w-full h-fit translate-x-[50%] translate-y-[-50%]  top-[50%] right-[50%] z-3 `}>

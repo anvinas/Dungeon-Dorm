@@ -322,7 +322,7 @@ function InventorySystem({onClose,onHealthChange}:{onClose:()=>void;onHealthChan
                     <div className="text-yellow-500 font-bold text-4xl">${userData.Currency}</div>
                     <div className="flex flex-col items-center justify-center" onClick={()=>setIsShopOpen(!isShopOpen)}>
                       <div className={`h-20 w-20 ${isShopOpen?"bg-red-800":"bg-gray-800"} rounded-[50%] p-3 hover:p-2 hover:cursor-pointer`}>
-                          <img className="h-full w-full" src="/assets/shopIcon.png"/>
+                          <img className="h-full w-full" src="/assets/shopIcon.png" alt="shopIcon"/>
                       </div>
                       <div className="font-bold text-white text-xl">{isShopOpen?"Close":"Open"} Shop</div>
                     </div>

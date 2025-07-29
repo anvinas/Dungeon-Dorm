@@ -22,20 +22,20 @@ function LoginPage() {
 
         {/* BG container */}
         <div className="relative w-screen h-screen ">
-            <img src="/img/pixel_bg2.png" className={`w-screen max-w-screen h-screen ${styles.bgContainer}`}/>
+            <img src="/img/pixel_bg2.png" className={`w-screen max-w-screen h-screen ${styles.bgContainer}`} alt="bg"/>
 
             {/* Banner */}
             <div className={`absolute h-fit w-full h-fit translate-x-[50%] translate-y-[-50%]  top-[43%] right-[50%] z-3 ${styles.bannerContainer}`}>
                 <div className="relative w-full h-fit flex items-center justify-center">
                    {/* Left Chain */}
-                    <img src="/img/chain.png" className={`md:h-100 h-60 absolute z-2  top-[100%] left-[40.5%] ${styles.chain}`}/>
+                    <img src="/img/chain.png" className={`md:h-100 h-60 absolute z-2  top-[100%] left-[40.5%] ${styles.chain}`} alt="chain1"/>
                     
                     {/* Right Chain */}
-                    <img src="/img/chain.png" className={`md:h-100 h-60 absolute z-2 top-[0%] left-[59.75%] ${styles.chain}`} />
+                    <img src="/img/chain.png" className={`md:h-100 h-60 absolute z-2 top-[0%] left-[59.75%] ${styles.chain}`} alt="chain2"/>
                     
                     {/* Wood container */}
                     <div className="relative w-fit">
-                      <img src="/img/wood_texture2.png" className={`h-70 md:h-120 z-3 ${styles.banner}`}/>
+                      <img src="/img/wood_texture2.png" className={`h-70 md:h-120 z-3 ${styles.banner}`} alt="banner"/>
 
                        {/* Buttons Container */}
                         <div className="flex justify-around absolute z-4 translate-x-[-50%] translate-y-[-50%] bottom-[10%] left-[50%] w-full">

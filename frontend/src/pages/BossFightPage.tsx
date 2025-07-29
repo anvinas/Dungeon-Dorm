@@ -529,7 +529,7 @@ function BossFightPage() {
             {/* Boss Charm BAR*/}
             <div className="flex flex-col gap-1 w-full items-center justify-center">
                 <div className="flex justify-center items-center w-full">
-                  <img src="/assets/heart.png" className="h-10"/>
+                  <img src="/assets/heart.png" className="h-10" alt="charm"/>
                   <div className={`relative w-[50%] h-5 border-2 bg-[#697284e3] border-blue-800 rounded-lg`}>
                     <div 
                       className={`absolute h-full  bg-[#c0392b] rounded-sm`} 
@@ -628,7 +628,7 @@ const CurrentMoveScreen = ({
     
     {/* SHOW DICE */}
     <div className="w-[30vw] relative">
-      <img src={"/assets/20dice.png"} className=""/>
+      <img src={"/assets/20dice.png"} className="" alt="dice"/>
       <div className="text-white absolute top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%] flex justify-center items-center">
         <div className="font-bold text-7xl" style={{WebkitTextStroke: '2px black',}} >{diceRoll20}</div>
       </div>
@@ -651,7 +651,7 @@ const CharmedActivatedScreen = ({
     
     {/* SHOW Heart */}
     <div className="w-[40vw] relative flex items-center justify-center">
-      <img src={"/assets/heart.png"} className={`${styles.beatingHeart}`}/>
+      <img src={"/assets/heart.png"} className={`${styles.beatingHeart}`} alt="heart"/>
     </div>
 
 

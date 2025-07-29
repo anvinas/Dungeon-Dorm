@@ -135,7 +135,7 @@ function ResetPassword()
       <div className="relative w-screen h-screen overflow-hidden">
         {/* BG container */}
         <div className="absolute inset-0 z-0 ">
-            <img src="/img/pixel_bg2.png" className={`w-screen max-w-screen h-screen ${styles.bgContainer}`}/>
+            <img src="/img/pixel_bg2.png" className={`w-screen max-w-screen h-screen ${styles.bgContainer}`} alt="bg"/>
         </div>
 
       {/*Information Container*/}
