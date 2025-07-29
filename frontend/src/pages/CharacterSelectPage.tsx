@@ -145,10 +145,10 @@ type ScrollCharacterModelProps = {
 };
 
 const ScrollCharacterModel = ({isSelected,index,characterInfo,onClick,setScrollFrame,setPageError,setSuccessSelectionData}: ScrollCharacterModelProps)=>{
-    console.log("Character ",index)
+    
     const [isHovered, setIsHovered] = useState(false);
 
-    const totalFrames = 6; // How many frames you have in your folder
+    const totalFrames = 5; // How many frames you have in your folder
     const animationSpeed = 100; // milliseconds per frame
 
     
@@ -158,21 +158,45 @@ const ScrollCharacterModel = ({isSelected,index,characterInfo,onClick,setScrollF
     const defaultImage = `/assets/playableCharacter/${characterInfo.name}/scroll/closed.png`;
     const hoverImage = `/assets/playableCharacter/${characterInfo.name}/scroll/peek.png`;
 
+    // useEffect(() => {
+    //     if (!isSelected) return;
+
+    //     let currentFrame = characterInfo.scrollFrame;
+
+    //     const interval = setInterval(() => {
+    //         currentFrame++;
+    //         if (currentFrame >= totalFrames) {
+    //             clearInterval(interval);
+    //         } else {
+    //             setScrollFrame(currentFrame);
+    //         }
+    //     }, animationSpeed);
+
+    //     return () => clearInterval(interval);
+    // }, [isSelected]);
+
     useEffect(() => {
         if (!isSelected) return;
 
-        let currentFrame = characterInfo.scrollFrame;
+        let frame = characterInfo.scrollFrame;
+        let start: number;
 
-        const interval = setInterval(() => {
-            currentFrame++;
-            if (currentFrame >= totalFrames) {
-                clearInterval(interval);
-            } else {
-                setScrollFrame(currentFrame);
+        const animate = (timestamp: number) => {
+            if (!start) start = timestamp;
+            const elapsed = timestamp - start;
+
+            if (elapsed >= animationSpeed) {
+            frame++;
+            setScrollFrame(frame);
+            start = timestamp;
             }
-        }, animationSpeed);
 
-        return () => clearInterval(interval);
+            if (frame < totalFrames) {
+                requestAnimationFrame(animate);
+            }
+        };
+
+        requestAnimationFrame(animate);
     }, [isSelected]);
 
     const handleMouseEnter = () => {
