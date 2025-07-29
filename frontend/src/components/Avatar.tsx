@@ -16,7 +16,7 @@ function Avatar({
         <div className="h-[20vw] w-[20vw] md:h-[10vw] md:w-[10vw] rounded-full bg-gradient-to-br from-blue-600 to-blue-400 shadow-md p-1">
           <div className="h-full w-full rounded-full overflow-hidden border-4 border-blue-700 bg-purple-100">
             <img
-              src="/assets/playableCharacter/warlock/head.png"
+              src={`/assets/playableCharacter/${userData.Character.class.toLowerCase()}/pixel.png`}
               className="w-full h-full object-cover transform scale-x-[-1] bobAvatar"
               alt="Avatar"
               style={{ animationDelay: '0s' }} 
