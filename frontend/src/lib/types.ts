@@ -49,6 +49,7 @@ export interface InventoryItem_T {
   itemType: string;
   imageURL: string | null;
   healthAmount?: number;
+  baseValue:number;
 }
 export interface UserStats {
   strength: number;

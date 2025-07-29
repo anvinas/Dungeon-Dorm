@@ -1,7 +1,7 @@
 import { useState ,useEffect} from "react"
 import { fetchJWT,storeJWT } from "../lib/JWT"
 import { useNavigate } from 'react-router-dom';
-
+import IntroDialogScreen from "../components/IntroDialogScreen"
 import axios from "axios"
 import GetServerPath from "../lib/GetServerPath"
 import styles from "./characterPage.module.css"
@@ -113,12 +113,15 @@ function CharacterSelectPage(){
                 
                 {/* START GAME */}
                 {successSelectionData &&
-                    <div className={`absolute flex flex-col h-fit w-fit opacity-[0.99] translate-x-[50%] translate-y-[-50%]  top-[50%] right-[50%] z-3 bg-white p-10 rounded gap-5`}>
-                        <div className="text-center font-semibold">{successSelectionData?.message}</div>
-                        <div className="flex justify-center">
-                            <div className="text-center font-bold bg-green-400 w-fit px-5 py-4 rounded hover:bg-green-500 hover:cursor-pointer" onClick={()=>navigate("/play")}>BEGIN YOUR JOURNEY</div>
-                        </div>
+                    <div className="absolute left-[50%] top-[50%] translate-x-[-50%] translate-y-[-50%] w-[50%] h-[50%]">
+                        <IntroDialogScreen onClickFinish={()=>navigate("/play")} />
                     </div>
+                    // <div className={`absolute flex flex-col h-fit w-fit opacity-[0.99] translate-x-[50%] translate-y-[-50%]  top-[50%] right-[50%] z-3 bg-white p-10 rounded gap-5`}>
+                    //     <div className="text-center font-semibold">{successSelectionData?.message}</div>
+                    //     <div className="flex justify-center">
+                    //         <div className="text-center font-bold bg-green-400 w-fit px-5 py-4 rounded hover:bg-green-500 hover:cursor-pointer" onClick={()=>navigate("/play")}>BEGIN YOUR JOURNEY</div>
+                    //     </div>
+                    // </div>
                 }
 
             </div>

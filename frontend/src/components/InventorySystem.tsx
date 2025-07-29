@@ -207,6 +207,17 @@ function InventorySystem({onClose,onHealthChange}:{onClose:()=>void;onHealthChan
       handleCreatePaddingForItems(res.data.user.CurrentLoot)
       setIsShopOpen(false)
       storeJWT(res.data.token)
+      try{
+        setUserData(old => {
+          if (!old) return old; // Or you can throw or handle it differently
+          return {
+            ...old,
+            currency: res.data.user.currency,
+          };
+        });
+      }catch{}
+      
+
     } catch (err:any) {
       console.error("Error buying item:", err)
       setBuyError(err.response.data.error || "Server Error")
@@ -255,7 +266,7 @@ function InventorySystem({onClose,onHealthChange}:{onClose:()=>void;onHealthChan
   }
 
   const userHealthPercentage = (userData.currentHP/userData.maxHP)*100 
-  const userXPPercentage = Math.min(100,(userData.currentXP/userData.toLevelUpXP)*100 )
+  const userXPPercentage = Math.min(100,(userData.currentXP/(userData.currentXP + userData.toLevelUpXP))*100 )
   return(
     <div className={`${styles.container} w-full max-h-full h-full bg-gray-800 p-5 rounded-t-lg flex flex-col gap-2`}>
       <div className="text-center font-bold text-white text-2xl bg-red-400 px-5 py-2 rounded-lg cursor-pointer hover:bg-red-500" onClick={()=>onClose()}>Close</div>
@@ -307,13 +318,15 @@ function InventorySystem({onClose,onHealthChange}:{onClose:()=>void;onHealthChan
 
 
                   {/* Shop button */}
-                  <div className="flex flex-col items-center justify-center" onClick={()=>setIsShopOpen(!isShopOpen)}>
-                    <div className={`h-20 w-20 ${isShopOpen?"bg-red-800":"bg-gray-800"} rounded-[50%] p-3 hover:p-2 hover:cursor-pointer`}>
-                        <img className="h-full w-full" src="/assets/shopIcon.png"/>
+                  <div className="flex items-center">
+                    <div className="text-yellow-500 font-bold text-4xl">${userData.Currency}</div>
+                    <div className="flex flex-col items-center justify-center" onClick={()=>setIsShopOpen(!isShopOpen)}>
+                      <div className={`h-20 w-20 ${isShopOpen?"bg-red-800":"bg-gray-800"} rounded-[50%] p-3 hover:p-2 hover:cursor-pointer`}>
+                          <img className="h-full w-full" src="/assets/shopIcon.png"/>
+                      </div>
+                      <div className="font-bold text-white text-xl">{isShopOpen?"Close":"Open"} Shop</div>
                     </div>
-                    <div className="font-bold text-white text-xl">{isShopOpen?"Close":"Open"} Shop</div>
                   </div>
-                  
                 </div>
               </div>
 
@@ -360,7 +373,7 @@ function InventorySystem({onClose,onHealthChange}:{onClose:()=>void;onHealthChan
                 <div className="flex flex-col gap-2">
                   <div className="flex gap-2">
                     <div className="text-xl text-white font-bold">Level: {userData.level} --</div>
-                    <div className="text-xl text-white font-bold">XP: {userData.currentXP} / {userData.toLevelUpXP}</div>
+                    <div className="text-xl text-white font-bold">XP: {userData.currentXP} / {(userData.currentXP + userData.toLevelUpXP)}</div>
                   </div>
                   <div className={`relative top-[-10%] w-[100%] h-5 border-2 bg-[#697284e3]  rounded-md`}>
                       <div 
@@ -574,7 +587,7 @@ const UsingItemScreen  = ({itemData,onClickUse,onPressBack,error}:
           </div>
         </div>
 
-        {/* Buy Button */}
+        {/* Use Button */}
         <div className="w-full flex justify-center gap-3">
           <button
             className="bg-red-600 cursor-pointer hover:bg-red-700 text-white font-bold py-2 px-6 rounded shadow-lg transition-all duration-200 "
@@ -603,7 +616,8 @@ const PurchaseItemScreen = ({itemData,onClickBuy,onPressBack,error}:
   }
 )=>{
   const [quantity, setQuantity] = useState(1);
-  const price = (1 || 0) * quantity;
+  const basePrice = itemData.baseValue;
+  const price = (basePrice|1) * quantity;
 
   return(
     <div className="flex-1 bg-gray-700 rounded-t-lg p-2 gap-3 flex flex-col">
@@ -677,5 +691,6 @@ const FAKEITEM:InventoryItem_T = {
   itemType: "fake",
   healthAmount: 200,
   imageURL: null,
-  damage:3
+  damage:3,
+  baseValue:0
 }
