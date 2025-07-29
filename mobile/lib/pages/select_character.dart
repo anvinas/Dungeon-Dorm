@@ -5,7 +5,7 @@ import 'package:dungeon_and_dorms/utils/jwt_storage.dart';
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-
+import '../widgets/intro_dialog_screen.dart';
 class CharacterSelectPage extends StatefulWidget {
   @override
   _CharacterSelectPageState createState() => _CharacterSelectPageState();
@@ -160,27 +160,22 @@ class _CharacterSelectPageState extends State<CharacterSelectPage> {
                 ],
               ),
             ),
-          if (successSelectionData != null)
+          
+            
+            if (successSelectionData != null)
             Center(
-              child: Container(
-                padding: EdgeInsets.all(24),
-                decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(successSelectionData?['message'] ?? "Success", style: TextStyle(fontWeight: FontWeight.bold)),
-                    SizedBox(height: 16),
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(backgroundColor: Colors.green, foregroundColor: Colors.black),
-                      onPressed: () {
-                        Navigator.pushReplacementNamed(context, '/play');
-                      },
-                      child: Text("BEGIN YOUR JOURNEY"),
-                    ),
-                  ],
-                ),
+              child: Padding(
+              padding: const EdgeInsets.all(24), // Adjust spacing as needed
+              child: IntroDialogScreen(
+                onClickFinish: () {
+                  setState(() {
+                    successSelectionData = null;
+                  });
+                  Navigator.pushReplacementNamed(context, '/play');
+                },
               ),
             ),
+          )
         ],
       ),
     );
